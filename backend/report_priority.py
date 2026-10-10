@@ -41,7 +41,7 @@ EXIT_REASON_WEIGHT = 0.4
 # Celstaten verdiepingskolom (spec par. 6): vaste copy, klantentaal.
 # Staat 1 heeft een dynamische tekst (telling + optietekst) en staat niet hier.
 CELL_NO_MAJORITY = "geen toelichting gekozen door een duidelijke meerderheid"
-CELL_TOO_FEW = "te weinig beantwoorders voor duiding"
+CELL_TOO_FEW = "te weinig antwoorden om iets over te zeggen"
 CELL_CAP_REACHED = "niet aangeboden: maximum aantal verdiepingen per respondent bereikt"
 # Staat 5 = niemand haalde de triggerregel. "Score boven de drempel" las als de
 # 5 van de kleuren en was onwaar bij een onderwerp onder de 5 waar toch

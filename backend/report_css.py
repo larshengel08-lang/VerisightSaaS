@@ -38,7 +38,7 @@ def build_css(scan_type: str = "exit") -> str:
   margin: 18mm 16mm 20mm 16mm;
   background: """ + CHALK + r""";
   @bottom-left {
-    content: "VERTROUWELIJK · LOEP · GROEPSOUTPUT";
+    content: "VERTROUWELIJK · LOEP · ALLEEN GROEPSCIJFERS";
     font-family: 'JetBrains Mono', monospace;
     font-size: 7px; letter-spacing: 0.12em; color: """ + STEEL + r""";
   }

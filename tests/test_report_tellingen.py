@@ -27,8 +27,10 @@ from backend.report_html import (
 LOW_GROWTH = {f"growth_{i}": 1 for i in (1, 2, 3)} | {f"{fk}_{i}": 5 for fk in
               ("leadership", "culture", "compensation", "workload", "role_clarity") for i in (1, 2, 3)}
 
-REGEL = (" Duidelijk laag: gemiddeld 2,5 of lager op 1 tot 5, minstens twee stellingen op 2 of "
-         "lager, of een 1 bij gemiddeld hoogstens 3,5. Een andere regel dan ‘onder de 5’.")
+REGEL = (" Duidelijk laag: op de antwoordschaal van de vragenlijst (1 is ‘helemaal niet’, "
+         "5 is ‘helemaal wel’) gemiddeld 2,5 of lager, minstens twee stellingen op 2 of "
+         "lager, of een 1 bij gemiddeld hoogstens 3,5. De andere scores in dit rapport zijn "
+         "omgerekend naar 1 tot 10.")
 
 ANON_LABEL = ("Automatisch geanonimiseerd: herkende namen, e-mailadressen, telefoonnummers "
               "en postcodes verwijderd")
@@ -72,7 +74,7 @@ def test_anders_block_alleen_aantal_onder_vijf():
     teksten = ["Toelichting alfa.", "Toelichting beta.", "Toelichting gamma.", "Toelichting delta."]
     t = _plain(_anders_block(other_n=4, answered=16, texts=teksten))
     assert "4 van de 16 kozen ‘Anders’ en schreven een eigen toelichting" in t
-    assert "De teksten tonen we pas vanaf 5, om herleidbaarheid te voorkomen." in t
+    assert "De teksten staan er pas vanaf 5, om herleidbaarheid te voorkomen." in t
     assert not any(x in t for x in teksten)
     # Zonder teksten ook geen anonimiseringslabel: er staat niets om te anonimiseren.
     assert ANON_LABEL not in t
@@ -129,7 +131,7 @@ def test_anders_block_toont_geen_teksten_onder_de_quote_staffel():
     blijven onzichtbaar, ook als zes mensen "Anders" kozen."""
     teksten = ["Alfa.", "Beta.", "Gamma.", "Delta."]
     t = _plain(_anders_block(other_n=6, answered=12, texts=teksten))
-    assert f"De teksten tonen we pas vanaf {MIN_QUOTES_N}" in t
+    assert f"De teksten staan er pas vanaf {MIN_QUOTES_N}" in t
     assert not any(x in t for x in teksten)
 
 
@@ -751,7 +753,8 @@ def test_keten_zegt_welke_regel_laag_is_en_leest_niet_als_onder_de_5():
     zin = _deepening_chain(AGG_D, "retention", "growth", n_total=39)
     assert "laag scoorde" not in zin and "scoorden hier laag" not in zin
     assert "duidelijk laag" in zin
-    assert "andere regel dan ‘onder de 5’" in zin
+    assert "omgerekend naar 1 tot 10" in zin
+    assert "1 is ‘helemaal niet’, 5 is ‘helemaal wel’" in zin
     assert f"gemiddeld {str(dp.TRIGGER_AVG_MAX).replace('.', ',')} of lager" in zin
     assert f"gemiddeld hoogstens {str(dp.TRIGGER_WITH_ONE_AVG_MAX).replace('.', ',')}" in zin
     assert f"stellingen op {dp.TRIGGER_LOW_ITEM_MAX} of lager" in zin
@@ -772,8 +775,8 @@ def test_triggerregel_staat_een_keer_en_elke_keten_zegt_duidelijk_laag():
         t = _tekst(_RENDER[scan](_vol(scan)).split("</style>")[-1])
         ketens = t.count("hier duidelijk laag")
         assert ketens >= 2, scan
-        assert t.count("Duidelijk laag: gemiddeld") == 1, scan
-        assert t.index("Duidelijk laag: gemiddeld") > t.index("hier duidelijk laag")
+        assert t.count("Duidelijk laag: op de antwoordschaal") == 1, scan
+        assert t.index("Duidelijk laag: op de antwoordschaal") > t.index("hier duidelijk laag")
         assert "laag scoorde" not in t and "laag scoorden" not in t
 
 

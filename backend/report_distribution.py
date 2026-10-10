@@ -10,7 +10,8 @@ from backend.report_css import RAG_HIGH, RAG_LOW, RAG_MID
 ZONE_LOW = 5.0   # < ZONE_LOW  -> kwetsbaar punt (laagste zone)
 ZONE_HIGH = 6.5  # < ZONE_HIGH -> aandachtspunt; >= ZONE_HIGH -> relatief sterk
 
-# Polarisatie: beide buitenzones >= 25% en samen >= 60% van de respondenten.
+# Polarisatie: beide buitenzones >= 25% en samen >= 60% van de respondenten,
+# en de middengroep kleiner dan elk van beide buitengroepen (polijstronde R17).
 _POL_EACH = 0.25
 _POL_COMBINED = 0.60
 
@@ -24,8 +25,13 @@ def score_distribution(values: list[float]) -> dict:
     high = sum(1 for v in vals if v >= ZONE_HIGH)
     mid = len(vals) - low - high
     n = len(vals)
+    # De laatste voorwaarde (polijstronde R17): "twee verschillende ervaringen"
+    # is alleen waar als het midden dun is. Bij 15 / 14 / 10 is de middengroep
+    # bijna even groot als de laagste en groter dan de hoogste; dan beschrijft
+    # het gemiddelde drie groepen, niet twee. 4 / 2 / 4 blijft verdeeld.
     polarized = (low / n >= _POL_EACH and high / n >= _POL_EACH
-                 and (low + high) / n >= _POL_COMBINED)
+                 and (low + high) / n >= _POL_COMBINED
+                 and mid < low and mid < high)
     return {
         "zones": (low, mid, high),
         "dots": sorted(vals),
@@ -237,8 +243,11 @@ def distribution_block(values: list[float], width: int = 440, height: int = 34,
     low, mid, high = dist["zones"]
     labels = _ZONE_LABELS_INVERT if invert_scale else _ZONE_LABELS
     c_low, c_high = _zone_ends(invert_scale)
+    # De tellingen zijn even breed als de strook (polijstronde R24): over de
+    # volle tekstbreedte stond "STERK 4" rechts naast een strook die op twee
+    # derde ophield, tegen de kantlijn.
     counts = (
-        f'<div style="display:flex;justify-content:space-between;margin-top:3px;'
+        f'<div style="display:flex;justify-content:space-between;width:{width}px;margin-top:3px;'
         f"font-family:'JetBrains Mono', monospace;font-size:8px;letter-spacing:0.08em;"
         f'text-transform:uppercase;">'
         f'<span style="color:{c_low};">{labels[0]} {low}</span>'

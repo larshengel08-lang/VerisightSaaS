@@ -182,7 +182,7 @@ def test_eerlijke_zin_noemt_aantal_en_drempel(scan_type):
 
 @pytest.mark.parametrize("scan_type,belofte", [
     ("exit", "de opgegeven vertrekredenen"),
-    ("retention", "de behoudscontext"),
+    ("retention", "de cijfers over blijven en vertrekken"),
     ("onboarding", "het checkpointoverzicht"),
 ])
 def test_eerlijke_zin_is_per_product_toegesneden(scan_type, belofte):

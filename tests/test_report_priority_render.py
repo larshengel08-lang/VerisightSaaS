@@ -161,10 +161,11 @@ def test_agenda_kolom_en_gelijkspel():
     html = _render()
     assert "Startpunt" in html
     assert "Tweede punt" in html
-    assert "vrijwel gelijk aan Werkdruk en herstelruimte" in html
+    assert ("Werkdruk en herstelruimte en Leiderschap staan in de rangorde "
+            "vrijwel gelijk (5.4 tot 5.6).") in html
     # C13: die melding staat als volle zin onder de tabel, niet in de smalle
     # agendakolom waar hij over vier regels brak.
-    assert html.index("vrijwel gelijk aan") > html.index("</table>")
+    assert html.index("vrijwel gelijk (5.4") > html.index("</table>")
     # Geen rangnummer-verwijzingen (spec par. 8).
     assert "nr." not in html
 

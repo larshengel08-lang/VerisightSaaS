@@ -1753,7 +1753,7 @@ SECTION_INTROS: dict[str, str] = {
         "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
         "de landingsdomeinen samengebracht tot &eacute;&eacute;n getal tussen "
         "1 en 10. Hoe hoger, hoe beter. "
-        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "Onder de 5,0 heet een score een kwetsbaar punt, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing: "
         "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
         "starters of hun begeleiders."
@@ -1773,7 +1773,7 @@ SECTION_INTROS: dict[str, str] = {
         "geen interpretatie achteraf. Wat er volgens hen moet gebeuren staat bij de gespreksagenda."
     ),
     "werkbeleving": (
-        "Naast de onderwerpen over het werk meten we drie psychologische basisbehoeften: autonomie (regie "
+        "Naast de onderwerpen over het werk meet de vragenlijst drie psychologische basisbehoeften: autonomie (regie "
         "over de eigen werkwijze), competentie (ervaren bekwaamheid) en verbondenheid (de band "
         "met collega's en organisatie). Onderzoek naar werkmotivatie laat consistent zien dat "
         "deze drie bepalen hoe duurzaam iemand op zijn plek zit. De onderwerpen over het werk "
@@ -1795,14 +1795,14 @@ SECTION_INTROS: dict[str, str] = {
         "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
         "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;. "
         "De kolom met het laagste onderwerp toont per afdeling het onderwerp dat daar het laagst "
-        "scoort. Bij kleine afdelingen (5 tot 9 antwoorden) tonen we bewust alleen een "
-        "duidingslabel, geen cijfer achter de komma; alle onderwerpen per afdeling met hun "
+        "scoort. Bij kleine afdelingen (5 tot 9 antwoorden) staat er bewust alleen een "
+        "label zoals &lsquo;aandachtspunt&rsquo;, geen cijfer achter de komma; alle onderwerpen per afdeling met hun "
         "scores staan er vanaf 10 antwoorden."
     ),
     "open_toelichtingen": (
         "Dit zijn de open antwoorden zoals respondenten ze zelf schreven, alleen ontdaan van "
         "herkende namen, e-mailadressen, telefoonnummers en postcodes. Ze staan in ontvangstvolgorde: er is niet geselecteerd "
-        "op inhoud en er is geen automatische duiding op losgelaten. De stemmen hieronder geven "
+        "op inhoud en er is niets automatisch uit afgeleid. De stemmen hieronder geven "
         "kleur aan de cijfers; wat ze betekenen en hoe zwaar ze wegen, bepaal je in de bespreking."
     ),
     "appendix": (
@@ -2677,7 +2677,7 @@ def raster_intro(scan_type: str, deepening_active: bool,
     staart = f" {_RASTER_DIRECTION_CLAUSE}" if direction_active else ""
     return (f"Dit overzicht weegt alle zes onderwerpen tegen elkaar af op "
             f"{_TELWOORD[len(signals)]} signalen: {lijst}. {waar}{staart} Zo is de "
-            "volgorde navolgbaar. De bespreking beslist; dit raster structureert.")
+            "volgorde navolgbaar. Het MT beslist; de rangorde helpt alleen ordenen.")
 
 
 def raster_uitleg(scan_type: str, deepening_active: bool,
@@ -2750,6 +2750,66 @@ def _raster_deepening_cell(row: dict, scan_type: str) -> str:
         return f'{cnt} van {answered} kozen: "{_h(opt)}"'
     return _h({2: CELL_NO_MAJORITY, 3: CELL_TOO_FEW,
                4: CELL_CAP_REACHED, 5: CELL_NOT_TRIGGERED}.get(state, ""))
+
+
+def _bijna_gelijk_zinnen(ranked: list[dict]) -> list[str]:
+    """De bijna-gelijkregel onder het raster, één zin per groep (polijstronde R26).
+
+    Eerder stond er per koppeling een zin ("B staat vrijwel gelijk aan A; C
+    staat vrijwel gelijk aan B"), ook als drie onderwerpen op dezelfde 7.1
+    stonden. Nu vormen opeenvolgende near_tie_with-koppelingen een groep. Zijn
+    alle getoonde scores in de groep gelijk, dan staan ze gelijk op die score;
+    anders staan ze "in de rangorde vrijwel gelijk" met het bereik erbij. "In
+    de rangorde", want bijna-gelijk gaat over de rangschikking, die bij Loep
+    Vertrek ook de vertrekredenen weegt: de scores zelf kunnen dan verder uit
+    elkaar liggen dan de marge.
+
+    Een groep groeit alleen zolang de nieuwe rij binnen de marge van de
+    eerste rij van de groep ligt. near_tie_with vergelijkt telkens twee buren,
+    dus een keten van koppelingen kan samen verder uit elkaar liggen dan de
+    marge (6.8, 7.0, 7.2, 7.5): die vier "vrijwel gelijk" noemen zou meer
+    beweren dan de rangschikking deed. Valt een rij buiten de marge van de
+    groep, dan begint een nieuwe groep met de vorige rij erbij, zodat elke
+    koppeling in precies een zin blijft staan en elke zin waar is.
+
+    near_tie_with wijst naar de vorige rij (rank_factors). Wijst hij naar een
+    rij die niet direct voorafgaat, dan begint er een nieuwe groep met die rij
+    erbij. Een sleutel die in de lijst ontbreekt (hoort niet voor te komen)
+    geeft geen fout in een klantrapport: dan staat de sleutel als naam en telt
+    hij niet mee in het bereik.
+    """
+    def _base(x: dict) -> float | None:
+        return x.get("base", x.get("score"))
+
+    def _binnen_marge(groep: list[dict], r: dict) -> bool:
+        a, b = _base(groep[0]), _base(r)
+        return a is not None and b is not None and abs(b - a) < PRIORITY_TIE_MARGIN
+
+    groepen: list[list[dict]] = []
+    vorige: dict | None = None
+    for r in ranked:
+        ref = r.get("near_tie_with")
+        if ref:
+            if (groepen and vorige is not None and groepen[-1][-1] is vorige
+                    and vorige["key"] == ref and _binnen_marge(groepen[-1], r)):
+                groepen[-1].append(r)
+            else:
+                doel = next((x for x in ranked if x["key"] == ref),
+                            {"key": ref, "label": ref, "score": None})
+                groepen.append([doel, r])
+        vorige = r
+    zinnen = []
+    for g in groepen:
+        namen = _opsomming([x["label"] for x in g])
+        scores = [_shown(x["score"]) for x in g if x.get("score") is not None]
+        if scores and min(scores) == max(scores) and len(scores) == len(g):
+            zinnen.append(f"{namen} staan gelijk op {scores[0]:.1f}.")
+        elif scores:
+            zinnen.append(f"{namen} staan in de rangorde vrijwel gelijk "
+                          f"({min(scores):.1f} tot {max(scores):.1f}).")
+        else:
+            zinnen.append(f"{namen} staan in de rangorde vrijwel gelijk.")
+    return zinnen
 
 
 def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
@@ -2910,14 +2970,9 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     legenda = f'<p class="r-legend">{RASTER_LEGENDA}</p>' if any_full_spread else ""
 
     # C13: de gelijkspel-meldingen als volle zinnen onder de tabel, in dezelfde
-    # volgorde als de rijen. De fallback op de sleutel blijft staan (zoals in de
-    # oude agendacel): near_tie_with hoort naar een rij in deze lijst te wijzen,
-    # maar een ontbrekende rij mag geen StopIteration in een klantrapport geven.
-    ties = [f'{_h(r["label"])} staat vrijwel gelijk aan '
-            + _h(next((x["label"] for x in ranked if x["key"] == r["near_tie_with"]),
-                      r["near_tie_with"]))
-            for r in ranked if r["near_tie_with"]]
-    ties_html = f'<p class="r-legend">{"; ".join(ties)}.</p>' if ties else ""
+    # volgorde als de rijen. Zie _bijna_gelijk_zinnen (polijstronde R26).
+    ties = _bijna_gelijk_zinnen(ranked)
+    ties_html = f'<p class="r-legend">{_h(" ".join(ties))}</p>' if ties else ""
 
     # Kop in een <thead> (ronde 2 observatie 4): in een <tbody> herhaalt WeasyPrint
     # hem niet, dus stond de tabel op een vervolgpagina zonder kolomnamen.
@@ -4453,7 +4508,7 @@ OTHER_MIN_N = 2
 # drempel met dezelfde woorden; twee kopieën van deze zin kunnen stil uiteen
 # lopen, en dan legt de tabel iets anders uit dan het blok doet.
 ANDERS_TEKST_DREMPEL = (
-    f"De teksten tonen we pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen")
+    f"De teksten staan er pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen")
 
 # Precies wat backend.scoring.anonymize_text weghaalt (_PATTERNS: [NAAM],
 # [EMAIL], [TELEFOON], [POSTCODE]); geen "locaties", want plaatsnamen blijven
@@ -4523,9 +4578,16 @@ def _trigger_regel() -> str:
     Daarom "duidelijk laag" met de regel erbij, en de getallen uit de
     constanten die _is_triggered echt gebruikt."""
     cnt = _TELWOORD.get(TRIGGER_LOW_ITEM_COUNT, str(TRIGGER_LOW_ITEM_COUNT))
-    return (f"Duidelijk laag: gemiddeld {_komma(TRIGGER_AVG_MAX)} of lager op 1 tot 5, minstens "
-            f"{cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij gemiddeld "
-            f"hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}. Een andere regel dan ‘onder de 5’.")
+    # Polijstronde R25: dit is de enige plek in het rapport met de schaal van 1
+    # tot 5, dus de regel zegt welke schaal het is (de antwoordlabels van de
+    # stellingen, templates/survey/shared-org.html) en dat de rest van het
+    # rapport is omgerekend naar 1 tot 10. Dat vervangt "een andere regel dan
+    # onder de 5", dat de schaal niet uitlegde.
+    return (f"Duidelijk laag: op de antwoordschaal van de vragenlijst (1 is ‘helemaal "
+            f"niet’, 5 is ‘helemaal wel’) gemiddeld {_komma(TRIGGER_AVG_MAX)} of lager, "
+            f"minstens {cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij "
+            f"gemiddeld hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}. De andere scores in "
+            f"dit rapport zijn omgerekend naar 1 tot 10.")
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int,
@@ -4941,7 +5003,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
                  "beoordeling en geen voorspelling van uitval.")
         cells_r1 = [
             ("Groepsniveau",       "Alle scores zijn groepsgemiddelden van de instroomgroep. Geen individuele gegevens."),
-            ("Eén meetmoment",     "Dit is een enkel meetmoment (30/60/90). Een volgende meting bespreken we los van dit rapport."),
+            ("Eén meetmoment",     "Dit is een enkel meetmoment (30/60/90). Een volgende meting krijgt een eigen rapport."),
             ("Geen beoordeling",   "Scores duiden de ervaring van nieuwe medewerkers op groepsniveau. Geen prestatiebeoordeling van individuen of managers."),
         ]
         cells_r2 = [
@@ -6204,6 +6266,7 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     kwetsbaar = [l for l, s in ranked if _factor_level(s) == 0]
     aandacht  = [l for l, s in ranked if _factor_level(s) == 1]
     sterk     = [l for l, s in ranked if _factor_level(s) == 2]
+    sterk_sc  = [s for l, s in ranked if _factor_level(s) == 2]
     laag_sc = ranked[0][1] if ranked else None
     if ranked and len(laagste) == len(ranked) and len(ranked) > 1:
         laagste_zin = (f"{_alle_onderwerpen(len(ranked)).capitalize()} scoren "
@@ -6222,7 +6285,22 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     else:
         laagste_zin = ""
     if kwetsbaar and sterk:
-        summary = f"{laagste_zin} {sterk[-1]} vormt een relatief sterke basis."
+        # R9 (polijstronde): delen meerdere sterke onderwerpen de hoogste
+        # getoonde score, dan noemt de zin ze allemaal. Eerder stond er alleen
+        # het onderwerp dat toevallig als laatste gesorteerd was, terwijl de
+        # balken eronder drie keer 7.1 lieten zien. Hoogste eerst, net als de
+        # band-indeling hieronder.
+        top_sc = _shown(sterk_sc[-1])
+        top = [l for l, s in sorted(zip(sterk, sterk_sc), key=lambda x: -x[1])
+               if _shown(s) == top_sc]
+        if len(top) > 1:
+            alle = "allebei" if len(top) == 2 else f"alle {_TELWOORD[len(top)]}"
+            sterk_zin = (f"{_TELWOORD[len(top)].capitalize()} onderwerpen vormen een "
+                         f"relatief sterke basis ({alle} {_score_str(top_sc)}): "
+                         f"{', '.join(top)}.")
+        else:
+            sterk_zin = f"{sterk[-1]} vormt een relatief sterke basis."
+        summary = f"{laagste_zin} {sterk_zin}"
     elif kwetsbaar:
         summary = laagste_zin[:-1] + "; geen enkel onderwerp scoort relatief sterk."
     elif aandacht:
@@ -6354,7 +6432,7 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                 ) if has_profile else ""
 
     return f"""<div class="pb sec">
-  {opener_html or '<span class="slabel">Vertrekcontext</span>'}
+  {opener_html or '<span class="slabel">Waarom mensen vertrokken</span>'}
   {_intro("vertrekcontext" if has_profile else "vertrekcontext_geen_profiel")}
   <div class="tcol">
     <div class="tc-l"><div class="card accent"><h3>Hoofdredenen van vertrek</h3>
@@ -6407,7 +6485,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         scol = _rag_color(stay_intent)
         rows += (f'<div class="sigrow"><div class="sigrow-title">Blijfintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Als het aan mij ligt, werk ik over 12 maanden nog steeds hier.&rdquo; '
-                  f'Enkelvoudige richtingsvraag, indicatief.</div>'
+                  f'E&eacute;n vraag; lees hem als indicatie.</div>'
                   f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span>'
                   f'<span class="sigrow-note">{_factor_label(stay_intent).lower()}</span></div></div>')
     if turnover is not None:
@@ -6434,7 +6512,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # de kleur op 5,0 / 6,5 lag); de note volgt nu de ladder van de kleur.
         note = _factor_label(engagement).lower()
         rows += (f'<div class="sigrow"><div class="sigrow-title">Bevlogenheid</div>'
-                  f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES). Gemiddelde van 3 stellingen.</div>'
+                  f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan. Gemiddelde van 3 stellingen.</div>'
                   f'<div><span class="sigrow-score" style="color:{ecol};">{engagement:.1f}/10</span>'
                   f'<span class="sigrow-note">{note}</span></div></div>')
 
@@ -6459,7 +6537,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                        f'{label}</div>{blk}</div>')
 
     page = f"""<div class="pb sec">
-  {opener_html or '<span class="slabel">Behoudscontext</span>'}
+  {opener_html or '<span class="slabel">Blijven en vertrekken</span>'}
   {_intro("behoudscontext")}
   {stat_rows}
   {enps_html}
@@ -6471,7 +6549,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     # groot formaat, met een korte leesuitleg.
     if strips:
         page += f"""<div class="pb sec">
-  {_ChapterCounter.vervolg("Behoudscontext")}
+  {_ChapterCounter.vervolg("Blijven en vertrekken")}
   <h3>Spreiding per signaal</h3>
   <p class="sec-intro" style="margin-top:2px;">Elke stip is &eacute;&eacute;n respondent; de donkere lijn markeert het
     groepsgemiddelde. Zo zie je of een gemiddelde &eacute;&eacute;n gedeelde ervaring beschrijft
@@ -6589,6 +6667,24 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     balk = 44 if twee_kolommen else 80
     kaarten = [k for k in (_card(dim) for dim in dims) if k]
     overzichtskaart = f'<div class="card" style="margin-bottom:14px;">{overview}</div>'
+    # R10 (polijstronde): de intro zegt dat een lage onderwerpscore met een
+    # gezonde werkbeleving een ander gesprek vraagt dan wanneer beide onder druk
+    # staan, maar liet de lezer zelf uitzoeken welk geval hier geldt. Eén zin,
+    # alleen als het beeld eenduidig is en alle dimensies gemeten zijn; bij een
+    # gemengd beeld staat er niets (dat zie je aan de balken). Op het niveau van
+    # de getoonde score, dezelfde grens als de bandlabels ernaast.
+    niveaus = [_factor_level(sdt_a.get(dim)) for dim in dims]
+    duiding = ""
+    if len(dims) == len(SDT_LABELS) and len(dims) in _TELWOORD:
+        telw = _TELWOORD[len(dims)]
+        if all(niv < 2 for niv in niveaus):
+            duiding = (f"Hier staat de werkbeleving zelf ook onder druk: geen van de "
+                       f"{telw} scoort relatief sterk.")
+        elif all(niv == 2 for niv in niveaus):
+            duiding = f"Hier scoort de werkbeleving op alle {telw} relatief sterk."
+    if duiding:
+        overzichtskaart += (f'<p style="font-size:11px;color:#374151;max-width:66ch;'
+                            f'margin:-4px 0 14px;">{_h(duiding)}</p>')
     if not twee_kolommen:
         inhoud = overzichtskaart + "".join(kaarten)
     else:
@@ -6989,7 +7085,7 @@ def render_exit_report_html(data: dict) -> str:
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=_raster_primary_label,
-                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext", anchor=LEIDRAAD_ANKERS["context"]),
+                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Waarom mensen vertrokken", anchor=LEIDRAAD_ANKERS["context"]),
                          has_profile=not _geen_profiel,
                          # eNPS staat bij de context i.p.v. op een eigen,
                          # vrijwel lege pagina (H13, B9).
@@ -7070,7 +7166,7 @@ def render_exit_report_html(data: dict) -> str:
             # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
             # richtingkaart ernaar (_wat_moet_gebeuren_block).
             _toelichting_n[fk] = deep_agg[fk]["answered"]
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=660)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
         # verdiepingen stromen door onder hun voorganger en verhuizen als geheel
         # zodra ze niet meer passen.
@@ -7332,7 +7428,7 @@ def render_retention_report_html(data: dict) -> str:
             n,
             drempelzin=(f"Daarvoor zijn minimaal {MIN_AGGREGATE_N} antwoorden nodig; "
                         f"bij minder telt elk los antwoord te zwaar mee."),
-            wel=["de behoudscontext op de volgende pagina" if signal is not None else "",
+            wel=["de cijfers over blijven en vertrekken op de volgende pagina" if signal is not None else "",
                  "de werkbeleving" if sdt_a else "",
                  "de werkgeversaanbeveling" if _enps_score is not None else "",
                  "de meetgegevens onderaan deze pagina"],
@@ -7383,7 +7479,7 @@ def render_retention_report_html(data: dict) -> str:
         # zie _werkbeeld_zin.
         exec_line = (_werkbeeld_zin(signal)
                      if signal and band_lbl
-                     else "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont.")
+                     else "Zie de cijfers over blijven en vertrekken en de meetgegevens voor wat dit rapport wel toont.")
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
@@ -7444,7 +7540,7 @@ def render_retention_report_html(data: dict) -> str:
         turnover=avg_to,
         engagement=avg_eng,
         intent_resp=data.get("intent_resp"),
-        opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext", anchor=LEIDRAAD_ANKERS["context"]),
+        opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Blijven en vertrekken", anchor=LEIDRAAD_ANKERS["context"]),
         # eNPS bij de context i.p.v. op een eigen, vrijwel lege pagina (H13, B9).
         enps_html=_enps_block(_enps_score, _enps_detail),
     )
@@ -7511,7 +7607,7 @@ def render_retention_report_html(data: dict) -> str:
             # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
             # richtingkaart ernaar (_wat_moet_gebeuren_block).
             _toelichting_n[fk] = deep_agg[fk]["answered"]
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=660)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
         # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
@@ -7666,11 +7762,11 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_htm
             f'<table class="sg"><tr>'
             f'<td><div class="sc-l">{_h(label)}</div>'
             f'<div class="sc-v" style="color:{_rag_color(score)};">{_score_str(score)}</div>'
-            f'<div class="sc-b">Enkelvoudig meetmoment</div></td>'
+            f'<div class="sc-b">Eén meetmoment</div></td>'
             f'</tr></table>'
             # Geen belofte over automatische fasevergelijking: geen code-pad aggregeert
             # meerdere checkpoints in één rapport (besluit C2, 2026-07-13 audit).
-            f'<p class="trustline">Dit rapport beslaat één meetmoment; een volgende meting bespreken we los.</p>'
+            f'<p class="trustline">Dit rapport beslaat één meetmoment; een volgende meting krijgt een eigen rapport.</p>'
         )
 
     return f"""<div class="pb sec">
@@ -7957,7 +8053,7 @@ def render_onboarding_report_html(data: dict) -> str:
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=660)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
         # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk

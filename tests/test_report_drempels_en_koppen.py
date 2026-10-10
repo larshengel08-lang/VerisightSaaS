@@ -56,7 +56,7 @@ def test_drempeltabel_noemt_ook_de_anders_drempels_met_dezelfde_woorden():
     aandeel van 20%, de vloer van 2 waarboven het Anders-blok verschijnt en de 5
     waaronder alleen een aantal wordt getoond, in de woorden van het blok zelf."""
     t = _tekst(_drempeltabel("retention"))
-    zelfde_woorden = (f"De teksten tonen we pas vanaf {MIN_QUOTES_N}, om "
+    zelfde_woorden = (f"De teksten staan er pas vanaf {MIN_QUOTES_N}, om "
                       "herleidbaarheid te voorkomen")
     assert zelfde_woorden in t
     assert zelfde_woorden in _tekst(_anders_block(other_n=2, answered=6, texts=["a", "b"]))
@@ -231,9 +231,10 @@ def test_ranglijst_kop_staat_in_thead_en_heet_onderwerp():
 def test_vrijwel_gelijk_staat_onder_de_tabel_niet_in_de_agendakolom():
     html = _raster()
     tabel_einde = html.index("</table>")
-    i = html.index("vrijwel gelijk aan Werkdruk en herstelruimte")
+    i = html.index("staan in de rangorde vrijwel gelijk")
     assert i > tabel_einde
-    assert "Leiderschap staat vrijwel gelijk aan Werkdruk en herstelruimte" in html
+    assert ("Werkdruk en herstelruimte en Leiderschap staan in de rangorde vrijwel "
+            "gelijk (5.4 tot 5.6).") in html
 
 
 def test_ranglijst_en_afdelingen_verwijzen_naar_de_drempeltabel():

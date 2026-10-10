@@ -124,15 +124,15 @@ def test_exit_cover_primary_signal_is_lowest_factor():
 
 
 def test_exit_flow_managementspoor_after_vertrekcontext():
-    """Contract: in exit-HTML staat 'Vertrekcontext' vóór 'Eerste managementspoor'."""
+    """Contract: in exit-HTML staat 'Waarom mensen vertrokken' vóór 'Eerste managementspoor'."""
     fragment = (
-        '<span class="slabel">Vertrekcontext</span>',
+        '<span class="slabel">Waarom mensen vertrokken</span>',
         '<span class="slabel">Eerste managementspoor</span>',
     )
     combined = "\n".join(fragment)
-    vc_pos = combined.find("Vertrekcontext")
+    vc_pos = combined.find("Waarom mensen vertrokken")
     ms_pos = combined.find("Eerste managementspoor")
-    assert vc_pos < ms_pos, "Vertrekcontext moet vóór Eerste managementspoor staan"
+    assert vc_pos < ms_pos, "Waarom mensen vertrokken moet vóór Eerste managementspoor staan"
 
 
 def test_responsbasis_datastatus_block_when_unavailable():
