@@ -539,14 +539,14 @@ def test_factor_score_heeft_geen_default_in_de_renderhelpers():
 def test_p02_line_for_the_new_states():
     assert _direction_p02_line({"growth": PLURALITY}, "growth", "retention",
                                factor_score=5.2) == (
-        # Geen haakje om een telling die zelf een percentage tussen haakjes
-        # draagt (taalronde, taak 13): de nuance staat tussen komma's, zoals de
-        # clear-tak zijn noemer al achter "volgens" zet.
+        # Polijstronde taak 2 (R18, spec 2026-10-09 par. 5): eerst de opdracht,
+        # dan de noemer in een slotzin, zonder percentage op pagina twee.
         # Spec 2026-10-07 taak 7: de telling op de 55 veranderkeuzes, de 15
-        # niets-stemmen als eigen zin erachter.
-        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
-        "en om verandering vroeg, 27 van de 55 (49%), zonder meerderheid: Maak zichtbaar "
-        "welke mogelijkheden er voor medewerkers zijn. 15 vinden dat hier niets hoeft.")
+        # niets-stemmen in dezelfde slotzin erachter.
+        "Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak "
+        "zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 27 van de 55 "
+        "die dit het laagst scoorden en om verandering vroegen; 15 vinden dat hier "
+        "niets hoeft.")
     assert _direction_p02_line({"growth": SPLIT_NONE}, "growth", "retention",
                                factor_score=4.5) == (
         "Wat er moet gebeuren: de 31 die dit het laagst scoorden en de vraag beantwoordden "

@@ -9,7 +9,9 @@ naast een tabel met 3 niets-stemmen als een rekenfout.
 
 Zonder niets-stemmen (en zonder rijen zonder keuze) blijft elke zin byte-gelijk:
 BASELINE hieronder is de uitvoer van HEAD (a8db33a3) vóór deze wijziging,
-letterlijk overgenomen.
+letterlijk overgenomen; de */p02-regels zijn bijgewerkt na polijstronde taak 2
+(R18: geen percentage op pagina twee; bij de grootste groep eerst de opdracht,
+dan de noemer in een slotzin).
 """
 import itertools
 import logging
@@ -68,15 +70,15 @@ BASELINE = {
     'retention/clear0/card': '<td class="dir-card dir-clear"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><div class="dir-src">Volgens 6 van de 8; die 8 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij zijn</td><td class="is">6 van de 8</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">2 van de 8</td></tr></table><div class="dir-chain">8 van de 8 respondenten hadden dit als eigen laagste onderwerp; 8 van de 8 beantwoordden de vraag.</div></td>',
     'retention/clear0/p02': 'Wat er moet gebeuren volgens 6 van de 8 die dit het laagst scoorden en de vraag beantwoordden: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
     'retention/plur0/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij zijn’, zonder meerderheid.</div><div class="dir-src">3 van de 7 kozen die richting; 1 koos ‘Een concreter gesprek over mijn ontwikkeling’. Die 7 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij zijn</td><td class="is">3 van de 7</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei wordt bepaald</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">1 van de 7</td></tr></table><div class="dir-chain">7 van de 7 respondenten hadden dit als eigen laagste onderwerp; 7 van de 7 beantwoordden de vraag.</div></td>',
-    'retention/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'retention/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden.',
     'retention/plur0big/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij zijn’, zonder meerderheid.</div><div class="dir-src">8 van de 20 (40%) kozen die richting; 5 kozen ‘Een concreter gesprek over mijn ontwikkeling’. Die 20 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij zijn</td><td class="is">8 van de 20 (40%)</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">5 van de 20 (25%)</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">4 van de 20 (20%)</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei wordt bepaald</td><td class="is">3 van de 20 (15%)</td></tr></table><div class="dir-chain">20 van de 20 respondenten hadden dit als eigen laagste onderwerp; 20 van de 20 beantwoordden de vraag.</div></td>',
-    'retention/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, 8 van de 20 (40%) die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'retention/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 8 van de 20 die dit het laagst scoorden en de vraag beantwoordden.',
     'exit/clear0/card': '<td class="dir-card dir-clear"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><div class="dir-src">Volgens 6 van de 8; die 8 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij waren</td><td class="is">6 van de 8</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">2 van de 8</td></tr></table><div class="dir-chain">8 van de 8 respondenten hadden dit als eigen laagste onderwerp; 8 van de 8 beantwoordden de vraag.</div></td>',
     'exit/clear0/p02': 'Wat er moet gebeuren volgens 6 van de 8 die dit het laagst scoorden en de vraag beantwoordden: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
     'exit/plur0/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij waren’, zonder meerderheid.</div><div class="dir-src">3 van de 7 kozen die richting; 1 koos ‘Een concreter gesprek over mijn ontwikkeling’. Die 7 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij waren</td><td class="is">3 van de 7</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei werd bepaald</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">1 van de 7</td></tr></table><div class="dir-chain">7 van de 7 respondenten hadden dit als eigen laagste onderwerp; 7 van de 7 beantwoordden de vraag.</div></td>',
-    'exit/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'exit/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden.',
     'exit/plur0big/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij waren’, zonder meerderheid.</div><div class="dir-src">8 van de 20 (40%) kozen die richting; 5 kozen ‘Een concreter gesprek over mijn ontwikkeling’. Die 20 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij waren</td><td class="is">8 van de 20 (40%)</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">5 van de 20 (25%)</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">4 van de 20 (20%)</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei werd bepaald</td><td class="is">3 van de 20 (15%)</td></tr></table><div class="dir-chain">20 van de 20 respondenten hadden dit als eigen laagste onderwerp; 20 van de 20 beantwoordden de vraag.</div></td>',
-    'exit/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, 8 van de 20 (40%) die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'exit/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 8 van de 20 die dit het laagst scoorden en de vraag beantwoordden.',
 }
 # fmt: on
 
@@ -160,9 +162,9 @@ def test_plurality_kaart_met_niets_kleiner_dan_de_route(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_plurality_p02_met_niets_kleiner_dan_de_route(scan_type):
     assert p02(PLUR_NIETS_KLEIN, scan_type) == (
-        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
-        f"en om verandering vroeg, 5 van de 12 (42%), zonder meerderheid: {IMP_VIS} "
-        "4 vinden dat hier niets hoeft.")
+        "Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: "
+        f"{IMP_VIS} Dat zijn 5 van de 12 die dit het laagst scoorden en om "
+        "verandering vroegen; 4 vinden dat hier niets hoeft.")
 
 
 def test_enkelvoud_bij_een_niets_stem():
@@ -221,9 +223,9 @@ def test_plurality_met_rijen_zonder_keuze_en_zonder_niets():
         f"concreter gesprek over mijn ontwikkeling’. Die 10 {NOEMER} Bij 1 van hen is "
         f"geen keuze vastgelegd. Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
     assert p02(a, "retention") == (
-        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
-        f"en om verandering vroeg, 4 van de 9, zonder meerderheid: {IMP_VIS} Bij 1 "
-        "antwoord is geen keuze vastgelegd.")
+        "Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: "
+        f"{IMP_VIS} Dat zijn 4 van de 9 die dit het laagst scoorden en om "
+        "verandering vroegen. Bij 1 antwoord is geen keuze vastgelegd.")
 
 
 def test_plurality_tweede_is_nooit_de_niets_optie():
@@ -264,6 +266,7 @@ def test_getallen_tellen_op_in_clear_en_plurality():
             assert re.search(rf"van de {st['change_n']}( \(\d+%\))? die om verandering vroegen", s), s
             r = p02(a, "retention")
             assert "om verandering vroeg" in r, r
+            assert "%" not in r, r  # R18: pagina twee zonder percentage
             if st["none_n"]:
                 vorm = "koos" if st["none_n"] == 1 else "kozen"
                 assert f"{st['none_n']} {vorm} ‘Niets" in s, s

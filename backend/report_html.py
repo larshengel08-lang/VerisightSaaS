@@ -2926,10 +2926,12 @@ DIRECTION_HEAD_SPLIT_NONE = ("Verdeeld: een deel zegt dat hier niets hoeft, een 
                              "{deel} deel vraagt om ‘{opt}’.")
 
 
-def _telling(x: int, y: int) -> str:
+def _telling(x: int, y: int, *, pct: bool = True) -> str:
     """Vaste tellingsvorm (B14): "X van de Y (P%)" vanaf MIN_DISTRIBUTION_N,
     anders zonder percentage (dezelfde staffel als de tabellen; onder tien
     antwoorden suggereert een percentage precisie die er niet is).
+
+    pct=False alleen voor pagina twee (R18); de kaart houdt het percentage.
 
     De uitleg van de noemer hoort in de zin en niet hier: die verschilt per
     plaats (_dir_n_wie voor de richtingkaarten, "= wie hier duidelijk laag antwoordde" in de
@@ -2941,8 +2943,8 @@ def _telling(x: int, y: int) -> str:
     """
     if y <= 0:
         raise ValueError(f"_telling: telling {x} zonder noemer (y={y})")
-    pct = f" ({round(x / y * 100)}%)" if y >= MIN_DISTRIBUTION_N else ""
-    return f"{x} van de {y}{pct}"
+    aandeel = f" ({round(x / y * 100)}%)" if pct and y >= MIN_DISTRIBUTION_N else ""
+    return f"{x} van de {y}{aandeel}"
 
 
 def _respondenten(n: int) -> str:
@@ -3038,13 +3040,14 @@ def _op_veranderkeuzes(st: dict) -> bool:
     return st["change_n"] != st["n"]
 
 
-def _richting_telling(st: dict) -> str:
+def _richting_telling(st: dict, *, pct: bool = True) -> str:
     """De telling achter een richting (clear, plurality): de grootste route op
     de veranderkeuzes als die afwijken van alle beantwoorders, anders op alle
     beantwoorders. Eén bron voor kaart en pagina twee; die verschillen alleen
-    in het zinskader eromheen."""
+    in het zinskader eromheen, en pagina twee toont geen percentage (pct=False,
+    R18)."""
     noemer = st["change_n"] if _op_veranderkeuzes(st) else st["n"]
-    return _telling(st["top_n"], noemer)
+    return _telling(st["top_n"], noemer, pct=pct)
 
 
 def _zonder_keuze_n(st: dict) -> int:
@@ -4126,29 +4129,31 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
     # wie dit het laagst scoorde én om verandering vroeg. De niets-stemmen en de
     # rijen zonder keuze volgen als eigen korte zinnen, zodat pagina twee nooit
     # een telling toont die niet optelt.
+    # Geen percentage op pagina twee (R18: "11 van de 15" is sterk genoeg); de
+    # kaart op de gespreksagenda houdt het. Bij de grootste groep eerst de
+    # opdracht en dan de noemer in een slotzin (spec 2026-10-09 par. 5): de
+    # oude regel zette telling, label en "zonder meerderheid" allemaal vóór de
+    # dubbele punt en werd zo de langste zin van de pagina.
+    if st["state"] in ("clear", "plurality"):
+        imp = direction_imperative(scan_type, factor_key, st["top_key"])
+        telling = _richting_telling(st, pct=False)
     if st["state"] in ("clear", "plurality") and _op_veranderkeuzes(st):
-        slot = (f"{direction_imperative(scan_type, factor_key, st['top_key'])}"
-                + (f" {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft."
-                   if st["none_n"] else "")
-                + _zonder_keuze_p02(st))
+        wie = "die dit het laagst scoorden en om verandering vroegen"
         if st["state"] == "clear":
-            return (f"Wat er moet gebeuren volgens {_richting_telling(st)} die dit het "
-                    f"laagst scoorden en om verandering vroegen: {slot}")
-        return (f"Wat er moet gebeuren volgens de grootste groep van wie dit het laagst "
-                f"scoorde en om verandering vroeg, {_richting_telling(st)}, zonder "
-                f"meerderheid: {slot}")
+            return (f"Wat er moet gebeuren volgens {telling} {wie}: {imp}"
+                    + (f" {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft."
+                       if st["none_n"] else "")
+                    + _zonder_keuze_p02(st))
+        return (f"Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: "
+                f"{imp} Dat zijn {telling} {wie}"
+                + (f"; {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft"
+                   if st["none_n"] else "")
+                + "." + _zonder_keuze_p02(st))
     if st["state"] == "clear":
-        return (f"Wat er moet gebeuren volgens {_richting_telling(st)} "
-                f"{DIR_N_DIE_WIE}: "
-                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+        return f"Wat er moet gebeuren volgens {telling} {DIR_N_DIE_WIE}: {imp}"
     if st["state"] == "plurality":
-        # Geen haakje om een telling die zelf een percentage tussen haakjes
-        # draagt: "(27 van de 62 (44%) die dit ..., zonder meerderheid)" zette
-        # twee haakjesniveaus in elkaar (taalronde, taak 13). Zelfde vorm als de
-        # clear-tak, met de nuance als bijstelling tussen komma's.
-        return (f"Wat er moet gebeuren volgens de grootste groep, "
-                f"{_richting_telling(st)} {DIR_N_DIE_WIE}, zonder meerderheid: "
-                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+        return (f"Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: "
+                f"{imp} Dat zijn {telling} {DIR_N_DIE_WIE}.")
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
         # Met noemer, zoals de drie andere takken: twee kale tellingen naast
@@ -4170,7 +4175,7 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
         return (f"Over wat hier moet gebeuren zijn de {n} {DIR_N_DIE_WIE} "
                 "verdeeld. Zie de gespreksagenda.")
     if st["state"] == "none_needed":
-        return (f"{_telling(st['top_n'], n)} {DIR_N_DIE_WIE} zeggen: "
+        return (f"{_telling(st['top_n'], n, pct=False)} {DIR_N_DIE_WIE} zeggen: "
                 "hier hoeft niets.")
     return ""
 

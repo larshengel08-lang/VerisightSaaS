@@ -479,12 +479,14 @@ def test_p02_regel_labelt_de_noemer_net_als_de_kaart(staat):
     # Spec 2026-10-07 taak 7: clear en plurality rusten op de veranderkeuzes
     # zodra die afwijken van alle beantwoorders (zelfde predicaat als de code)
     # en zeggen dat met het volle label; de andere staten houden het label van
-    # de beantwoorders.
+    # de beantwoorders. Polijstronde taak 2 (spec 2026-10-09 par. 5): bij de
+    # grootste groep staat dat label in de slotzin na de opdracht.
     st = direction_state(agg, "growth", score)
     if st["state"] in ("clear", "plurality") and st["change_n"] != st["n"]:
         label = {"clear": "die dit het laagst scoorden en om verandering vroegen: ",
-                 "plurality": "van wie dit het laagst scoorde en om verandering "
-                              "vroeg, "}[st["state"]]
+                 "plurality": " Dat zijn " + str(st["top_n"]) + " van de "
+                              + str(st["change_n"]) + " die dit het laagst scoorden "
+                              "en om verandering vroegen"}[st["state"]]
         assert label in regel, regel
         if st["none_n"]:
             assert "dat hier niets hoeft." in regel, regel
@@ -493,7 +495,9 @@ def test_p02_regel_labelt_de_noemer_net_als_de_kaart(staat):
     assert "het laagst scoor" not in _zonder_juiste_claims(regel), regel
 
 
-def test_p02_en_kaart_noemen_hetzelfde_getal_met_percentage():
+def test_p02_en_kaart_noemen_hetzelfde_getal_kaart_met_percentage_p02_zonder():
+    """Pagina twee en kaart noemen hetzelfde getal; de kaart met percentage,
+    pagina twee zonder (R18, polijstronde taak 2)."""
     from backend.report_html import _direction_p02_line
 
     agg, score = STATEN["plurality"]
@@ -503,8 +507,10 @@ def test_p02_en_kaart_noemen_hetzelfde_getal_met_percentage():
                                         n_total=39, factor_score=score))
     # Spec 2026-10-07 taak 7: met een niets-stem rusten beide op de 9
     # veranderkeuzes (onder de tien, dus zonder percentage).
-    assert "4 van de 9," in regel and "4 van de 9 die om verandering vroegen" in kaart
-    # Zonder niets-stem blijft de noemer alle beantwoorders, met percentage.
+    assert "4 van de 9 die dit het laagst scoorden en om verandering vroegen" in regel
+    assert "4 van de 9 die om verandering vroegen" in kaart
+    # Zonder niets-stem blijft de noemer alle beantwoorders; de kaart met
+    # percentage, pagina twee zonder.
     zonder = _dir_agg(10, {"grd_visibility": 4, "grd_time": 2, "grd_criteria": 2,
                            "grd_conversation": 2}, skipped=3)
     regel = _direction_p02_line({"growth": zonder}, "growth", "retention", score)
@@ -512,7 +518,8 @@ def test_p02_en_kaart_noemen_hetzelfde_getal_met_percentage():
                                         scan_type="retention", factor_key="growth",
                                         n_total=39, factor_score=score))
     assert direction_state(zonder, "growth", score)["state"] == "plurality"
-    assert "4 van de 10 (40%)" in regel and "4 van de 10 (40%)" in kaart
+    assert "4 van de 10 (40%)" in kaart
+    assert "4 van de 10 die dit het laagst scoorden" in regel and "%" not in regel
 
 
 def test_totaalregel_meldt_wie_de_vraag_niet_kreeg():
