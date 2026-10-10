@@ -394,8 +394,11 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* R23 (polijstronde): de kop van het blok (eyebrow, uitleg, totaalregel) blijft
    bij de kaarten, zodat de kaarten nooit zonder kop bovenaan een vel beginnen.
    Niet via break-inside op .dir-block: zie de toelichting daar (scenario 14).
-   De eyebrow is een inline span; break-before op de uitleg houdt hem erbij. */
-.dir-intro, .dir-totals { break-after: avoid; page-break-after: avoid; }
+   De eyebrow is een inline span; break-before op de uitleg houdt hem erbij.
+   Alleen binnen .dir-block: .dir-intro staat ook in het werkvragenblok, waar
+   break-after de uitleg aan de onbreekbare .wq-grid zou lijmen, de eyebrow
+   alleen kon laten staan en het anker sec-werkvragen een vel kon verschuiven. */
+.dir-block .dir-intro, .dir-block .dir-totals { break-after: avoid; page-break-after: avoid; }
 .dir-block .dir-intro { break-before: avoid; page-break-before: avoid; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */

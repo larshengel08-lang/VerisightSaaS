@@ -1035,7 +1035,7 @@ def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
     # percentage erachter, net als de kaart.
     assert _richtingen_weging(st, "retention", "workload") == (
         "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn "
-        "‘Meer ruimte om te herstellen en werk goed af te ronden’ (3) en ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 2). "
+        "‘Meer ruimte om te herstellen en werk goed af te ronden’ (3); ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 2). "
         "‘Niets, dit zit hier goed’, gekozen door 2 van de 10 (20%), is geen richting en "
         "telt hier niet mee.")
 
@@ -1055,7 +1055,7 @@ def test_weging_zonder_niets_heeft_geen_niets_zin():
     st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_planning=2), "workload", 5.8)
     zin = _richtingen_weging(st, "retention", "workload")
     assert "Niets" not in zin
-    assert zin == ("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 3) en "
+    assert zin == ("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 3); "
                    "‘Planning en bezetting beter laten aansluiten op het werk dat er ligt’ (2).")
 
 
@@ -1078,7 +1078,7 @@ def test_weging_telt_anders_niet_als_richting():
     st = direction_state(_agg(wld_peaks=3, wld_scope=1, wld_other=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3) en ‘Takenpakket en werkvolume beter afbakenen’ (1). "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3); ‘Takenpakket en werkvolume beter afbakenen’ (1). "
         "‘Niets, dit zit hier goed’, gekozen door 1 van de 7, is geen richting en telt hier "
         "niet mee, net als ‘Anders’.")
 
@@ -1089,7 +1089,7 @@ def test_weging_verklaart_anders_naast_een_even_hoge_richting():
     st = direction_state(_agg(wld_peaks=3, wld_other=2, wld_scope=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3) en ‘Takenpakket en werkvolume beter afbakenen’ (2). "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3); ‘Takenpakket en werkvolume beter afbakenen’ (2). "
         "‘Niets, dit zit hier goed’, gekozen door 1 van de 8, is geen richting en telt hier "
         "niet mee, net als ‘Anders’.")
 
@@ -1099,7 +1099,7 @@ def test_weging_verklaart_een_overgeslagen_anders_zonder_niets():
                          "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3) en ‘Planning en bezetting beter laten aansluiten op het werk dat er ligt’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 1). "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3); ‘Planning en bezetting beter laten aansluiten op het werk dat er ligt’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 1). "
         "‘Anders’ is geen richting en telt hier niet mee.")
 
 

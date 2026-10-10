@@ -99,7 +99,7 @@ def test_weegregel_noemt_de_richtingen_bij_naam():
     tweeden = sorted(["wld_peaks", "wld_scope", "wld_planning"])
     assert _richtingen_weging(s, "retention", "workload") == (
         "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn "
-        f"‘{t['wld_recovery']}’ (3) en ‘{t[tweeden[0]]}’, ‘{t[tweeden[1]]}’ en "
+        f"‘{t['wld_recovery']}’ (3); ‘{t[tweeden[0]]}’, ‘{t[tweeden[1]]}’ en "
         f"‘{t[tweeden[2]]}’ (elk 2). ‘Niets, dit zit hier goed’, gekozen door 2 van de 11 "
         "(18%), is geen richting en telt hier niet mee.")
 
@@ -266,11 +266,40 @@ def test_start_heeft_geen_richtingkaart_en_geen_verwijzing():
 
 def test_kop_blijft_bij_de_kaarten():
     css = re.sub(r"\s+", " ", build_css("retention"))
-    assert re.search(r"\.dir-intro, \.dir-totals \{[^}]*break-after: avoid", css)
+    assert re.search(r"\.dir-block \.dir-intro, \.dir-block \.dir-totals \{[^}]*break-after: avoid", css)
     assert re.search(r"\.dir-tbl tr\.dir-niets td \{[^}]*border-top", css)
     assert re.search(r"\.dir-unchosen \{[^}]*font-size: 10px", css)
     # .dir-block zelf blijft breekbaar (scenario 14, plan 3b).
     assert not re.search(r"\.dir-block \{[^}]*break-inside: avoid", css)
+
+
+def test_werkvragen_uitleg_krijgt_geen_break_after():
+    """.dir-intro staat ook in het werkvragenblok; daar mag break-after niet
+    gelden (de uitleg zou aan de onbreekbare .wq-grid vastzitten en het anker
+    sec-werkvragen een vel kunnen verschuiven). Elke regel met break-after die
+    .dir-intro of .dir-totals noemt, moet hem binnen .dir-block noemen."""
+    css = re.sub(r"/\*.*?\*/", "", re.sub(r"\s+", " ", build_css("retention")))
+    gezien = 0
+    for selectors, body in re.findall(r"([^{}]+)\{([^}]*)\}", css):
+        if "break-after" not in body:
+            continue
+        for sel in selectors.split(","):
+            sel = sel.strip()
+            if ".dir-intro" in sel or ".dir-totals" in sel:
+                gezien += 1
+                assert sel.startswith(".dir-block "), sel
+    assert gezien == 2
+
+
+def test_weegregel_twee_groepen_met_meerdere_namen():
+    t = direction_option_texts("retention", "workload")
+    s = direction_state(_agg({"wld_peaks": 3, "wld_scope": 3, "wld_planning": 2,
+                              "wld_recovery": 2}), "workload", 6.2)
+    assert s["state"] == "divided"
+    assert _richtingen_weging(s, "retention", "workload") == (
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn "
+        f"‘{t['wld_peaks']}’ en ‘{t['wld_scope']}’ (elk 3); ‘{t['wld_planning']}’ en "
+        f"‘{t['wld_recovery']}’ (elk 2).")
 
 
 def test_geen_streepjes_in_de_nieuwe_regels():

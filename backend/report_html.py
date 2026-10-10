@@ -3877,7 +3877,9 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
     # R22 (polijstronde): de richtingen bij naam, gegroepeerd per aantal, voor
-    # de twee hoogste aantallen. Met alleen de aantallen ("die met 3 en 2
+    # de twee hoogste aantallen. Tussen de twee groepen een puntkomma (akkoord
+    # coordinator, afwijking van de plantekst): met " en " stond er twee keer
+    # "en" achter elkaar zodra een groep uit meer namen bestond. Met alleen de aantallen ("die met 3 en 2
     # stemmen") omvatte "2" aan tafel ook de niets-rij op de kaart. Kost dit
     # het agendaslot een vel, dan is de terugvaloptie in Taak 11 (polijstronde)
     # de namen weer weglaten; de niets-rij staat sindsdien apart op de kaart.
@@ -3888,7 +3890,7 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
         groepen.append(namen[0] + " (" + str(aantal) + ")" if len(namen) == 1
                        else _opsomming(namen) + " (elk " + str(aantal) + ")")
     zin = ("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn "
-           + " en ".join(groepen) + ".")
+           + "; ".join(groepen) + ".")
     # Anders alleen noemen als zijn telling tussen of naast de genoemde staat;
     # de kaart toont hem als "Anders, namelijk…" (content-guard in de tests).
     anders_telt = anders is not None and anders[1] >= min(hoogste)
