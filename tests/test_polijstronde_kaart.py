@@ -17,10 +17,14 @@ import pytest
 from backend.products.shared.deepening import direction_option_texts, direction_state
 from backend.report_css import build_css
 from backend.report_html import (
+    _andere_telling_html,
     _direction_card_cell,
+    _direction_table_html,
     _drempeltabel,
+    _pref,
     _richtingen_weging,
     _verdieping_anker,
+    _wat_moet_gebeuren_block,
 )
 from scripts import stresstest_report as st
 
@@ -178,6 +182,34 @@ def test_geen_voorbehoud_bij_verdeeld_boven_vier_antwoorden():
     assert "Beperkte basis" not in html
 
 
+def _tabel(counts, scan_type="retention"):
+    st_ = direction_state(_agg(counts), FK, 6.2)
+    teksten = direction_option_texts(scan_type, FK)
+    return st_, _direction_table_html(st_, teksten, st_["n"], _agg(counts), teksten.__getitem__)
+
+
+@pytest.mark.parametrize("counts,staat,voorbehoud", [
+    # clear op 5 veranderkeuzes (n = 8): wel
+    ({"grd_visibility": 4, "grd_time": 1, "grd_none": 3}, "clear", True),
+    # clear op 9 veranderkeuzes: wel; op 10: niet (grens MIN_AGGREGATE_N)
+    ({"grd_visibility": 7, "grd_time": 2}, "clear", True),
+    ({"grd_visibility": 8, "grd_time": 2}, "clear", False),
+    # plurality op 7 veranderkeuzes: wel; op 20: niet
+    ({"grd_visibility": 3, "grd_time": 1, "grd_conversation": 1, "grd_criteria": 1,
+      "grd_followthrough": 1}, "plurality", True),
+    ({"grd_visibility": 8, "grd_conversation": 5, "grd_time": 4, "grd_criteria": 3},
+     "plurality", False),
+    # verdeeld met 6 antwoorden: niet (V10 geldt alleen voor een richting)
+    ({"grd_visibility": 2, "grd_time": 2, "grd_none": 2}, "divided", False),
+    # vier antwoorden: altijd (DIRECTION_CAVEAT_MAX_N), ook verdeeld
+    ({"grd_visibility": 2, "grd_time": 1, "grd_none": 1}, "divided", True),
+])
+def test_tabelhelper_voorbehoudregel(counts, staat, voorbehoud):
+    st_, html = _tabel(counts)
+    assert st_["state"] == staat
+    assert ('<p class="dir-caveat">Beperkte basis' in html) is voorbehoud
+
+
 def test_drempeltabel_noemt_de_nieuwe_voorbehoudregel():
     tekst = _plain(_drempeltabel("retention", direction_active=True,
                                  direction_degraded=False, deepening_active=True,
@@ -188,17 +220,19 @@ def test_drempeltabel_noemt_de_nieuwe_voorbehoudregel():
 
 # ── R7/V7: twee tellingen ────────────────────────────────────────────────────
 
-ANDERE_TELLING = ("Dit is een andere telling dan de 16 bij de toelichting op pagina : daar "
-                  "gaat het om wie op dit onderwerp duidelijk laag antwoordde, hier om wie "
-                  "dit als eigen laagste onderwerp had.")
+# Ruwe HTML met de paginaverwijzing op haar plek: de link staat buiten de
+# geëscapete tekst.
+ANDERE_TELLING = ('<div class="dir-chain dir-telling">Dit is een andere telling dan de 16 '
+                  "bij de toelichting op pagina " + _pref(_verdieping_anker(FK))
+                  + ": daar gaat het om wie op dit onderwerp duidelijk laag antwoordde, hier "
+                  "om wie dit als eigen laagste onderwerp had.</div>")
 
 
 def test_andere_telling_onder_de_keten_met_verwijzing():
     _n, (a, b, *_r) = _keys("retention")
-    html = _kaart({a: 11, b: 4}, "retention", deep_answered=16, verdieping_page=True)
-    assert ANDERE_TELLING in _plain(html)
-    # De verwijzing is een echte link, buiten de geëscapete tekst.
-    assert f'<a class="pref" href="#{_verdieping_anker(FK)}"></a>' in html
+    html = _kaart({a: 11, b: 4}, "retention", toelichting_n=16)
+    assert ANDERE_TELLING in html
+    assert html.endswith(ANDERE_TELLING + "</td>")
     assert "&lt;a" not in html
     # Onder de keten.
     assert html.index('class="dir-chain"') < html.index("Dit is een andere telling")
@@ -206,19 +240,50 @@ def test_andere_telling_onder_de_keten_met_verwijzing():
 
 def test_andere_telling_enkelvoud():
     _n, (a, b, *_r) = _keys("retention")
-    html = _kaart({a: 11, b: 4}, "retention", deep_answered=1, verdieping_page=True)
+    html = _kaart({a: 11, b: 4}, "retention", toelichting_n=1)
     assert "Dit is een andere telling dan die ene bij de toelichting op pagina" in _plain(html)
 
 
-@pytest.mark.parametrize("kw", [
-    {},
-    {"deep_answered": 16, "verdieping_page": False},
-    {"deep_answered": 0, "verdieping_page": True},
-    {"deep_answered": None, "verdieping_page": True},
-])
+@pytest.mark.parametrize("kw", [{}, {"toelichting_n": 0}, {"toelichting_n": None}])
 def test_geen_andere_telling_zonder_toelichting(kw):
     _n, (a, b, *_r) = _keys("retention")
     html = _kaart({a: 11, b: 4}, "retention", **kw)
+    assert "andere telling" not in html
+    assert "sec-verdieping-" not in html
+
+
+@pytest.mark.parametrize("n", [None, 0])
+def test_andere_telling_helper_leeg_zonder_toelichting(n):
+    assert _andere_telling_html(FK, n) == ""
+
+
+def _block_agg(counts):
+    a = _agg(counts)
+    return {**a, "lowest_n": a["answered"]}
+
+
+RANKED = [{"key": "growth", "label": "Groeiperspectief", "agenda_role": "startpunt",
+           "score": 4.7},
+          {"key": "workload", "label": "Werkdruk en herstelruimte", "agenda_role": "tweede",
+           "score": 5.4}]
+DIR_AGG = {"growth": _block_agg({"grd_visibility": 11, "grd_conversation": 4}),
+           "workload": _block_agg({"wld_peaks": 6, "wld_scope": 1})}
+
+
+def test_blok_verwijst_alleen_naar_gerenderde_toelichtingen():
+    # Alleen growth heeft een gerenderd toelichtingsblok; workload staat niet
+    # in toelichting_n (onderwerp zonder verdiepingspagina of zonder blok).
+    html = _wat_moet_gebeuren_block(RANKED, DIR_AGG, "retention", 22,
+                                    toelichting_n={"growth": 9})
+    assert html.count("Dit is een andere telling") == 1
+    assert 'href="#sec-verdieping-growth"' in html
+    assert "sec-verdieping-workload" not in html
+
+
+@pytest.mark.parametrize("toelichting_n", [None, {}, {"growth": 0, "workload": 0}])
+def test_blok_zonder_toelichting_geen_zin_en_geen_link(toelichting_n):
+    html = _wat_moet_gebeuren_block(RANKED, DIR_AGG, "retention", 22,
+                                    toelichting_n=toelichting_n)
     assert "andere telling" not in html
     assert "sec-verdieping-" not in html
 
@@ -267,6 +332,7 @@ def test_start_heeft_geen_richtingkaart_en_geen_verwijzing():
 def test_kop_blijft_bij_de_kaarten():
     css = re.sub(r"\s+", " ", build_css("retention"))
     assert re.search(r"\.dir-block \.dir-intro, \.dir-block \.dir-totals \{[^}]*break-after: avoid", css)
+    assert re.search(r"\.dir-block \.dir-intro \{[^}]*break-before: avoid", css)
     assert re.search(r"\.dir-tbl tr\.dir-niets td \{[^}]*border-top", css)
     assert re.search(r"\.dir-unchosen \{[^}]*font-size: 10px", css)
     # .dir-block zelf blijft breekbaar (scenario 14, plan 3b).
@@ -304,5 +370,5 @@ def test_weegregel_twee_groepen_met_meerdere_namen():
 
 def test_geen_streepjes_in_de_nieuwe_regels():
     none_key, (a, b, *_r) = _keys("exit")
-    html = _kaart({a: 4, b: 1, none_key: 3}, "exit", deep_answered=6, verdieping_page=True)
+    html = _kaart({a: 4, b: 1, none_key: 3}, "exit", toelichting_n=6)
     assert "—" not in html and "–" not in html

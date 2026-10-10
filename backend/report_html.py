@@ -2788,7 +2788,10 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     omdat de methodiekpagina moet weten of het blok daadwerkelijk gerenderd
     is (_trust_page's direction_active). Meegegeven blok wint; zonder dat
     argument bouwt deze functie het blok alsnog uit direction_agg, zodat
-    directe aanroepers (tests) niets hoeven te weten van die volgorde.
+    directe aanroepers (tests) niets hoeven te weten van die volgorde. Dat
+    terugvalpad kent het verdiepingsaggregaat niet en geeft geen
+    toelichting_n mee, dus de kaarten krijgen daar geen zin "Dit is een andere
+    telling" (R7/V7); in de rapporten bouwen de renderers het blok altijd zelf.
 
     werkvragen_html (plan 3b): het blok "Zo maak je er een besluit van", door de
     renderers gebouwd met _werkvragen_block. Leeg voor directe aanroepers. Het
@@ -3501,11 +3504,95 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     return zin
 
 
+def _direction_table_html(st: dict, texts: dict[str, str], n: int, agg: dict,
+                          opt) -> str:
+    """De verdelingstabel van een richtingkaart met wat eronder hoort: de
+    veranderopties, de niets-rij (R22), de niet gekozen richtingen (R19), de
+    beperkte-basis-regel (V10) en het Anders-blok (B13). Niet voor too_few:
+    daar toont de kaart geen enkele telling.
+
+    `opt` is de optietekst-opzoeker van de kaart (_opt in
+    _direction_card_cell), zodat een onbekende sleutel hier dezelfde nette
+    fout geeft als in de koppen."""
+    # R22 (polijstronde): eerst de veranderopties op aantal (*_other
+    # meegerekend, want dat is ook een vraag om verandering), dan de
+    # niets-optie in een eigen rij onder een streep, ook bij 0 stemmen.
+    # Gesorteerd tussen de richtingen las "Niets" aan tafel als een van de
+    # richtingen, terwijl de methodiekpagina belooft dat het apart staat.
+    # De sleutel komt uit de optieset, niet uit st["none_key"]: die is
+    # None als niemand niets koos.
+    none_key = next((k for k in texts if k.endswith("_none")), None)
+    counts = dict(st["ranked"])
+    row_htmls = []
+    for k, c in st["ranked"]:
+        if k == none_key:
+            continue
+        # Vaste tellingsvorm (B14): dezelfde "X van de Y (P%)" als de
+        # bronregel erboven en de verdiepingstabel, in plaats van "70% (7)"
+        # naast een kaal aantal onder de staffel.
+        row_htmls.append(f'<tr><td class="iq">{_h(opt(k))}</td>'
+                         f'<td class="is">{_telling(c, n)}</td></tr>')
+    if none_key is not None:
+        row_htmls.append(f'<tr class="dir-niets"><td class="iq">{_h(opt(none_key))}</td>'
+                         f'<td class="is">{_telling(counts.get(none_key, 0), n)}</td></tr>')
+    rows = "".join(row_htmls)
+    table = f'<table class="item-tbl dir-tbl">{rows}</table>'
+    # R19 (polijstronde): de richtingen die niemand koos, in één regel, zodat
+    # de lezer ziet waaruit gekozen kon worden. Zonder de niets-optie (die
+    # heeft haar eigen rij) en zonder Anders (geen richting). Eén
+    # optieversie per scan in de opgeslagen antwoorden (de server weigert
+    # elke andere question_set_version), dus de huidige optieset is ook de
+    # set waaruit deze mensen kozen.
+    niet_gekozen = [k for k in texts
+                    if not k.endswith(("_none", "_other")) and counts.get(k, 0) == 0]
+    if niet_gekozen:
+        namen = _opsomming(["‘" + texts[k] + "’" for k in niet_gekozen])
+        table += '<div class="dir-unchosen">' + _h("Niet gekozen: " + namen + ".") + "</div>"
+    # V10 (polijstronde): het voorbehoud hangt aan de basis waar de
+    # richting echt op rust. Een richting (clear, plurality) rust op de
+    # veranderkeuzes; onder de tien is dat dezelfde beperkte basis als
+    # bij een verdieping onder de tien antwoorden op dezelfde pagina.
+    # DIRECTION_CAVEAT_MAX_N blijft de regel voor kaarten met drie of vier
+    # antwoorden.
+    weinig_veranderkeuzes = (st["state"] in ("clear", "plurality")
+                             and st["change_n"] < MIN_AGGREGATE_N)
+    if n <= DIRECTION_CAVEAT_MAX_N or weinig_veranderkeuzes:
+        table += _beperkte_basis_note()
+    # B13, zelfde blok als onder de verdiepingsverdeling, en net als daar na
+    # de beperkte-basis-regel (die hoort bij de verdeling). Bewust in deze
+    # helper, die niet voor too_few draait: daar toont de kaart geen enkele
+    # telling, en dan hoort er ook geen aantal "Anders" bij te komen.
+    table += _anders_block(
+        other_n=sum(c for k, c in st["ranked"] if k.endswith("_other")),
+        answered=n, texts=agg.get("other_texts") or [])
+    return table
+
+
+def _andere_telling_html(factor_key: str, toelichting_n: int | None) -> str:
+    """R7/V7 (polijstronde): de zin onder de keten van een richtingkaart.
+
+    Op dezelfde pagina staan twee tellingen die vaak hetzelfde getal dragen
+    (bijv. twee keer 16): wie dit als eigen laagste onderwerp had (de keten)
+    en wie hier duidelijk laag antwoordde (de toelichting). "Telling", niet
+    "groep": de twee groepen kunnen overlappen. Leeg zonder toelichtingsblok
+    (None) of als niemand de verdiepingsvraag beantwoordde (0). De
+    paginaverwijzing staat buiten _h(), anders wordt het anker tekst.
+    """
+    if not toelichting_n:
+        return ""
+    wie = "die ene" if toelichting_n == 1 else "de " + str(toelichting_n)
+    return ('<div class="dir-chain dir-telling">'
+            + _h("Dit is een andere telling dan " + wie + " bij de toelichting op pagina ")
+            + _pref(_verdieping_anker(factor_key))
+            + _h(": daar gaat het om wie op dit onderwerp duidelijk laag "
+                 "antwoordde, hier om wie dit als eigen laagste onderwerp had.")
+            + "</div>")
+
+
 def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                          factor_key: str, n_total: int,
                          factor_score: float | None,
-                         deep_answered: int | None = None,
-                         verdieping_page: bool = False) -> str:
+                         toelichting_n: int | None = None) -> str:
     """Eén tabelcel (<td>) voor het startpunt of tweede punt, in de zes
     staten van spec par. 6.1 + ronde 2 par. 4. Keyword-only na role:
     scan_type/factor_key en label zijn anders aangrenzende gelijksoortige
@@ -3518,11 +3605,11 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
     de kaart "op een onderwerp dat laag scoort (5.0/10)" naast een legenda die
     kwetsbaar definieert als onder de 5,0.
 
-    deep_answered en verdieping_page (R7/V7, polijstronde taak 5): het aantal
-    beantwoorde verdiepingsvragen over dit onderwerp, en of het
-    toelichtingsblok daarvan in dit rapport staat. Zijn beide er (en is het
-    aantal groter dan nul), dan legt een zin onder de keten uit dat dit een
-    andere telling is dan die bij de toelichting, met een paginaverwijzing."""
+    toelichting_n (R7/V7, polijstronde taak 5): het aantal beantwoorde
+    verdiepingsvragen in het toelichtingsblok van dit onderwerp, of None als
+    dat blok niet in dit rapport staat. Is het groter dan nul, dan legt een
+    zin onder de keten uit dat dit een andere telling is
+    (_andere_telling_html)."""
     st = direction_state(agg, factor_key, _shown(factor_score))
     texts = direction_option_texts(scan_type, factor_key)
     n = st["n"]
@@ -3627,78 +3714,13 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         head = DIRECTION_HEAD_DIVIDED
         src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend.{_zonder_keuze_zin(st)}"
 
-    table = ""
-    if st["state"] != "too_few":
-        # R22 (polijstronde): eerst de veranderopties op aantal (*_other
-        # meegerekend, want dat is ook een vraag om verandering), dan de
-        # niets-optie in een eigen rij onder een streep, ook bij 0 stemmen.
-        # Gesorteerd tussen de richtingen las "Niets" aan tafel als een van de
-        # richtingen, terwijl de methodiekpagina belooft dat het apart staat.
-        # De sleutel komt uit de optieset, niet uit st["none_key"]: die is
-        # None als niemand niets koos.
-        none_key = next((k for k in texts if k.endswith("_none")), None)
-        counts = dict(st["ranked"])
-        row_htmls = []
-        for k, c in st["ranked"]:
-            if k == none_key:
-                continue
-            # Vaste tellingsvorm (B14): dezelfde "X van de Y (P%)" als de
-            # bronregel erboven en de verdiepingstabel, in plaats van "70% (7)"
-            # naast een kaal aantal onder de staffel.
-            row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td>'
-                             f'<td class="is">{_telling(c, n)}</td></tr>')
-        if none_key is not None:
-            row_htmls.append(f'<tr class="dir-niets"><td class="iq">{_h(_opt(none_key))}</td>'
-                             f'<td class="is">{_telling(counts.get(none_key, 0), n)}</td></tr>')
-        rows = "".join(row_htmls)
-        table = f'<table class="item-tbl dir-tbl">{rows}</table>'
-        # R19 (polijstronde): de richtingen die niemand koos, in één regel, zodat
-        # de lezer ziet waaruit gekozen kon worden. Zonder de niets-optie (die
-        # heeft haar eigen rij) en zonder Anders (geen richting). Eén
-        # optieversie per scan in de opgeslagen antwoorden (de server weigert
-        # elke andere question_set_version), dus de huidige optieset is ook de
-        # set waaruit deze mensen kozen.
-        niet_gekozen = [k for k in texts
-                        if not k.endswith(("_none", "_other")) and counts.get(k, 0) == 0]
-        if niet_gekozen:
-            namen = _opsomming(["‘" + texts[k] + "’" for k in niet_gekozen])
-            table += '<div class="dir-unchosen">' + _h("Niet gekozen: " + namen + ".") + "</div>"
-        # V10 (polijstronde): het voorbehoud hangt aan de basis waar de
-        # richting echt op rust. Een richting (clear, plurality) rust op de
-        # veranderkeuzes; onder de tien is dat dezelfde beperkte basis als
-        # bij een verdieping onder de tien antwoorden op dezelfde pagina.
-        # DIRECTION_CAVEAT_MAX_N blijft de regel voor kaarten met drie of vier
-        # antwoorden.
-        weinig_veranderkeuzes = (st["state"] in ("clear", "plurality")
-                                 and st["change_n"] < MIN_AGGREGATE_N)
-        if n <= DIRECTION_CAVEAT_MAX_N or weinig_veranderkeuzes:
-            table += _beperkte_basis_note()
-        # B13, zelfde blok als onder de verdiepingsverdeling, en net als daar na
-        # de beperkte-basis-regel (die hoort bij de verdeling). Bewust binnen
-        # deze tak: in de staat too_few toont de kaart geen enkele telling, en
-        # daar hoort ook geen aantal "Anders" bij te komen.
-        table += _anders_block(
-            other_n=sum(c for k, c in st["ranked"] if k.endswith("_other")),
-            answered=n, texts=agg.get("other_texts") or [])
+    table = ("" if st["state"] == "too_few"
+             else _direction_table_html(st, texts, n, agg, _opt))
     # head en src worden hier eenmalig samen door _h() gehaald: beide zijn
     # hierboven bewust rauw (ongeescaped) opgebouwd, dus geen asymmetrie meer
     # tussen een vooraf geescapete head en een deels geescapete src.
     src_html = f'<div class="dir-src">{_h(src)}</div>' if src else ""
-    # R7/V7 (polijstronde): op dezelfde pagina staan twee tellingen die vaak
-    # hetzelfde getal dragen (bijv. twee keer 16): wie dit als eigen laagste
-    # onderwerp had (deze keten) en wie hier duidelijk laag antwoordde (de
-    # toelichting). "Telling", niet "groep": de twee groepen kunnen overlappen.
-    # De paginaverwijzing staat buiten _h(), anders wordt het anker tekst.
-    telling_html = ""
-    if verdieping_page and deep_answered:
-        wie = "die ene" if deep_answered == 1 else "de " + str(deep_answered)
-        telling_html = ('<div class="dir-chain dir-telling">'
-                        + _h("Dit is een andere telling dan " + wie
-                             + " bij de toelichting op pagina ")
-                        + _pref(_verdieping_anker(factor_key))
-                        + _h(": daar gaat het om wie op dit onderwerp duidelijk laag "
-                             "antwoordde, hier om wie dit als eigen laagste onderwerp had.")
-                        + "</div>")
+    telling_html = _andere_telling_html(factor_key, toelichting_n)
     return (f'<td class="dir-card dir-{st["state"]}">'
             f'<div class="dir-role">{role_lbl}: {_h(label)}</div>'
             f'<div class="dir-head">{_h(head)}</div>{src_html}{table}'
@@ -3708,8 +3730,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
 
 def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
                              scan_type: str, n_total: int, *,
-                             deep_agg: dict | None = None,
-                             verdieping_fkeys: tuple[str, ...] | list[str] = ()) -> str:
+                             toelichting_n: dict[str, int] | None = None) -> str:
     """Twee kaarten (startpunt + tweede punt) onder het raster. Leeg zonder
     richtingdata (campagne-gate zit in build_report_data).
 
@@ -3722,29 +3743,23 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
     direct geïndexeerd: die score bepaalt of de kaart de split_none-staat mag
     tonen (ronde 2 par. 4.3), en een rasterrij zonder score bestaat niet.
 
-    deep_agg en verdieping_fkeys (R7/V7, polijstronde taak 5): het
-    verdiepingsaggregaat en de onderwerpen met een verdiepingspagina in dit
-    rapport. Een kaart verwijst naar de toelichting van haar onderwerp alleen
-    als dat toelichtingsblok er echt staat: het onderwerp heeft een
-    verdiepingspagina en _deepening_block rendert (triggered).
+    toelichting_n (R7/V7, polijstronde taak 5): per onderwerp het aantal
+    beantwoorde verdiepingsvragen in het toelichtingsblok, alleen voor de
+    onderwerpen waarvan dat blok in dit rapport is gerenderd. De renderers
+    vullen het op de plek waar het blok ontstaat, zodat er één bron is voor
+    "deze toelichting staat er". Een onderwerp dat er niet in staat, krijgt
+    geen verwijzing.
     """
     if not direction_agg:
         return ""
-    deep_agg = deep_agg or {}
-
-    def _toelichting(fk: str) -> tuple[int | None, bool]:
-        d = deep_agg.get(fk)
-        if not d:
-            return None, False
-        return d.get("answered"), fk in verdieping_fkeys and bool(d.get("triggered"))
+    toelichting_n = toelichting_n or {}
 
     cards = "".join(
         _direction_card_cell(r["agenda_role"], label=r["label"],
                              agg=direction_agg[r["key"]], scan_type=scan_type,
                              factor_key=r["key"], n_total=n_total,
                              factor_score=r["score"],
-                             deep_answered=_toelichting(r["key"])[0],
-                             verdieping_page=_toelichting(r["key"])[1])
+                             toelichting_n=toelichting_n.get(r["key"]))
         for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
     if not cards:
         # Geen rasterrijen, dus geen startpunt om een richting aan te hangen
@@ -3845,9 +3860,10 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen. Deze regel
     noemt de meest gekozen richtingen bij naam met hun aantal, voor de hoogste
     en op één na hoogste telling (R22, polijstronde), en weegt de niets-optie
-    apart: die is geen richting (op de kaart staat zij in een eigen rij). Anders telt ook niet mee (geen opdrachtvorm); de regel zegt
-    dat erbij zodra Anders even vaak of vaker gekozen is dan de laagste
-    genoemde telling, anders blijft een even hoge rij op de kaart onverklaard.
+    apart: die is geen richting (op de kaart staat zij in een eigen rij).
+    Anders telt ook niet mee (geen opdrachtvorm); de regel zegt dat erbij
+    zodra Anders even vaak of vaker gekozen is dan de laagste genoemde
+    telling, anders blijft een even hoge rij op de kaart onverklaard.
 
     De noemer is dezelfde als op de richtingkaart (alle beantwoorders, de
     niets-stemmen inbegrepen), zodat elk getal in deze regel letterlijk op de
@@ -3877,12 +3893,12 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
     # R22 (polijstronde): de richtingen bij naam, gegroepeerd per aantal, voor
-    # de twee hoogste aantallen. Tussen de twee groepen een puntkomma (akkoord
-    # coordinator, afwijking van de plantekst): met " en " stond er twee keer
-    # "en" achter elkaar zodra een groep uit meer namen bestond. Met alleen de aantallen ("die met 3 en 2
-    # stemmen") omvatte "2" aan tafel ook de niets-rij op de kaart. Kost dit
-    # het agendaslot een vel, dan is de terugvaloptie in Taak 11 (polijstronde)
-    # de namen weer weglaten; de niets-rij staat sindsdien apart op de kaart.
+    # de twee hoogste aantallen. Alleen de aantallen noemen ("die met 3 en 2
+    # stemmen") liet "2" aan tafel ook de niets-rij op de kaart omvatten.
+    # Tussen de groepen een puntkomma: met " en " stond er twee keer "en"
+    # achter elkaar zodra een groep uit meer namen bestaat. Kost dit het
+    # agendaslot een vel, dan is de terugvaloptie in Taak 11 de namen weer
+    # weglaten.
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
     groepen = []
     for aantal in hoogste:
@@ -7051,6 +7067,9 @@ def render_exit_report_html(data: dict) -> str:
                       if fk in deep_agg else "")
         if deep_block:
             _regel_nog[0] = False
+            # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
+            # richtingkaart ernaar (_wat_moet_gebeuren_block).
+            _toelichting_n[fk] = deep_agg[fk]["answered"]
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
         # verdiepingen stromen door onder hun voorganger en verhuizen als geheel
@@ -7079,6 +7098,9 @@ def render_exit_report_html(data: dict) -> str:
     # De triggerregel staat alleen achter de eerste verdiepingsketen die
     # rendert (_deepening_chain, met_regel); de closure zet hem daarna uit.
     _regel_nog = [True]
+    # Per onderwerp met een gerenderd toelichtingsblok: het aantal
+    # beantwoorde verdiepingsvragen (de closure vult het, R7/V7).
+    _toelichting_n: dict[str, int] = {}
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, "exit")
@@ -7133,7 +7155,7 @@ def render_exit_report_html(data: dict) -> str:
     # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
     # daadwerkelijk bevat in plaats van wat er aan data bestaat.
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n,
-                                          deep_agg=deep_agg, verdieping_fkeys=priority_fkeys)
+                                          toelichting_n=_toelichting_n)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -7486,6 +7508,9 @@ def render_retention_report_html(data: dict) -> str:
                       if fk in deep_agg else "")
         if deep_block:
             _regel_nog[0] = False
+            # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
+            # richtingkaart ernaar (_wat_moet_gebeuren_block).
+            _toelichting_n[fk] = deep_agg[fk]["answered"]
         spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
@@ -7509,8 +7534,10 @@ def render_retention_report_html(data: dict) -> str:
   {deep_block}
 </div>"""
 
-    # Zie de Vertrek-renderer: triggerregel alleen achter de eerste keten.
+    # Zie de Vertrek-renderer: triggerregel alleen achter de eerste keten,
+    # en _toelichting_n voor de verwijzing vanaf de richtingkaart.
     _regel_nog = [True]
+    _toelichting_n: dict[str, int] = {}
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
@@ -7561,7 +7588,7 @@ def render_retention_report_html(data: dict) -> str:
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n,
-                                          deep_agg=deep_agg, verdieping_fkeys=priority_fkeys)
+                                          toelichting_n=_toelichting_n)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,

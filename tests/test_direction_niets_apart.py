@@ -109,7 +109,7 @@ TOEVOEGINGEN = {
 def _zonder_toevoegingen(html):
     html = re.sub(r'<tr class="dir-niets">.*?</tr>', "", html, count=1)
     html = re.sub(r'<div class="dir-unchosen">.*?</div>', "", html, count=1)
-    return re.sub(r'<p class="dir-caveat">.*?</p>', "", html, count=1)
+    return re.sub(r'<p class="dir-caveat">Beperkte basis.*?</p>', "", html, count=1)
 
 
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
