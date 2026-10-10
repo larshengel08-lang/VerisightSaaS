@@ -78,8 +78,21 @@ def test_r27_staat_op_pagina_twee():
 # ── R21: afdelingsafspraak en terugkoppeling, ook bij parkeren ───────────────
 
 def test_r21_besluitpagina_ook_bij_parkeren():
-    assert BESLUIT_AFDELING_SAMEN == ("Dit onderwerp is ook het tweede punt. Ook als jullie dat "
-                                      "parkeren: spreek hier af wie de afdeling vraagt, en wanneer.")
+    assert BESLUIT_AFDELING_SAMEN == ("Dit onderwerp is ook het tweede punt. Maak deze afspraak "
+                                      "ook als jullie het tweede punt parkeren.")
+
+
+def test_r21_wie_en_wanneer_staan_een_keer_in_beide_hintvarianten():
+    from tests.test_report_leesronde_fixes import _besluit
+    afd = {"department": "Operations", "topic": "Werkdruk en herstelruimte",
+           "zwaar": True, "samen_met_tweede": True}
+    for toelichtingen in (True, False):
+        t = _plain(_besluit(afdeling=afd, afdeling_toelichtingen=toelichtingen))
+        i = t.index(BESLUIT_AFDELING_SAMEN)
+        hint = t[i:t.index("Terugkoppeling aan medewerkers", i)]
+        assert hint.count("wie doet dat") == 1
+        assert hint.count("wanneer") == 1
+        assert hint.strip().endswith("Wat vragen jullie deze afdeling zelf, wie doet dat, en wanneer?")
 
 
 VUL_TERUG = ("Vul op de besluitpagina ook de terugkoppeling in, ook als je het tweede punt "

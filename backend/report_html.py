@@ -3942,8 +3942,10 @@ BESLUIT_AFDELING_HINT = ("Het rapport toont de toelichtingen alleen voor de hele
                          + BESLUIT_AFDELING_VRAAG)
 # R21 (polijstronde): de afdeling hing aan het tweede punt, en dat mag je
 # parkeren. De afspraak per afdeling blijft daarom staan, ook bij parkeren.
-BESLUIT_AFDELING_SAMEN = ("Dit onderwerp is ook het tweede punt. Ook als jullie dat parkeren: "
-                          "spreek hier af wie de afdeling vraagt, en wanneer.")
+# Wie en wanneer staan in de hint die volgt (BESLUIT_AFDELING_VRAAG), dus
+# hier niet nog een keer.
+BESLUIT_AFDELING_SAMEN = ("Dit onderwerp is ook het tweede punt. Maak deze afspraak ook als "
+                          "jullie het tweede punt parkeren.")
 # R4 (koude leesronde 24-9): het tweede punt had geen eigenaar en geen datum.
 # Geen eigen kolommen (zie plan, "Besluit over de migratie"), wel een regel die
 # het punt een eigenaar en een datum geeft: die van het startpunt.
