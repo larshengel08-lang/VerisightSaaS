@@ -504,7 +504,7 @@ def test_ook_een_rapport_zonder_factorprofiel_draagt_zijn_responsbasis():
     data["factor_items_map"] = {}
     tekst = _tekst(render_exit_report_html(data))
     assert ("Indicatief beeld. De frictiescore van 5.5/10 wijst op een "
-            "gemengd vertrekbeeld (op basis van 45 van de 180 genodigden).") in tekst
+            "gemengd frictiebeeld (op basis van 45 van de 180 genodigden).") in tekst
 
 
 def test_verwijzende_terugval_krijgt_geen_haakje():
