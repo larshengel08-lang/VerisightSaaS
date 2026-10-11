@@ -7,6 +7,15 @@ import pytest
 from backend.report_html import _band, _behoudscontext, _p02_signal_cell
 from scripts import stresstest_report as st
 
+
+@pytest.fixture(scope="module", autouse=True)
+def _stresstest_naar_tmp(tmp_path_factory):
+    """Scenario's renderen naar een tijdelijke map, niet naar docs/stresstest."""
+    out = tmp_path_factory.mktemp("stresstest")
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(st, "OUT_DIR", out)
+        yield
+
 _CACHE: dict[str, str] = {}
 
 

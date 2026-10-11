@@ -7383,7 +7383,7 @@ def render_exit_report_html(data: dict) -> str:
         tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint=BESLUIT_REVIEW_HINT["exit"],
         heeft_werkvragen=bool(_wq_block),
-        heeft_afdelingen=bool(data.get("segment_rows")),
+        heeft_afdelingen=bool(_seg_rows),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
         afdeling=_bl_afdeling,
@@ -7818,7 +7818,7 @@ def render_retention_report_html(data: dict) -> str:
         tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=bool(_wq_block),
-        heeft_afdelingen=bool(data.get("segment_rows")),
+        heeft_afdelingen=bool(_seg_rows),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
         afdeling=_bl_afdeling,
@@ -8341,7 +8341,7 @@ def render_onboarding_report_html(data: dict) -> str:
         tweede_label=_fl(_ob_second_fk, ST) if _ob_second_fk and not _geen_profiel else None,
         review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=False,
-        heeft_afdelingen=bool(data.get("segment_rows")),
+        heeft_afdelingen=bool(_seg_rows),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")))
 

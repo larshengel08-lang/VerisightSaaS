@@ -7,6 +7,8 @@ bevatten (gecontroleerd op de segmenttabel en de kernzin van de render).
 import html as htmllib
 import re
 
+import pytest
+
 from backend.report_html import (
     BESLUIT_AFDELING_SAMEN,
     INTENTIE_DUIDING_KERN,
@@ -22,6 +24,15 @@ from backend.report_html import (
 from backend.scoring_config import ORG_FACTOR_KEYS
 from scripts import stresstest_report as st
 from tests.test_report_degraded_page_two import _RENDERERS, _body, _fixture
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _stresstest_naar_tmp(tmp_path_factory):
+    """Scenario's renderen naar een tijdelijke map, niet naar docs/stresstest."""
+    out = tmp_path_factory.mktemp("stresstest")
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(st, "OUT_DIR", out)
+        yield
 
 _CACHE: dict[str, str] = {}
 
