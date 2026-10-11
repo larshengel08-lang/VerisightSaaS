@@ -202,8 +202,9 @@ def test_kleine_laagste_afdeling_met_groot_verschil_wordt_niet_aangewezen():
     a = _anchor(html)
     assert "heeft de laagste score" not in html
     assert "dicht bij elkaar" not in a
+    # S9 (polijstronde): geen cijfer van een afdeling met 8 antwoorden.
     assert ("Operations scoort het laagst van de afdelingen die apart getoond "
-            "worden (4.5/10), maar heeft 8 antwoorden. Loep wijst een afdeling pas "
+            "worden, maar heeft 8 antwoorden. Loep wijst een afdeling pas "
             "aan vanaf 10 antwoorden, zodat de conclusie niet op een handvol "
             "antwoorden rust. Kijk voor de eerste prioriteit naar het "
             "organisatiebeeld.") in a
@@ -251,7 +252,7 @@ def test_zin_noemt_de_werkelijk_laagste_afdeling_ook_bij_ongesorteerde_rijen():
 
 _POOLED_ZIN = ('De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; '
                '6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig '
-               'vastgelegd) scoort lager (4.0/10), '
+               'vastgelegd) scoort lager, '
                'maar is samengesteld uit kleine afdelingen en wordt daarom niet als '
                'startpunt genoemd.')
 
@@ -315,9 +316,10 @@ def test_aanwijzende_zin_wordt_niet_weersproken_door_de_restgroep():
     a = _anchor(_segment_block(rows, scan_type="retention"))
     assert ("Sales heeft de laagste score van de afdelingen die apart getoond "
             "worden (5.0/10") in a
+    # S9 (polijstronde): de restgroep heeft er 6, dus geen cijfer.
     assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
             "6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
-            "vastgelegd) scoort lager (4.0/10)") in a
+            "vastgelegd) scoort lager, maar") in a
 
 
 def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
@@ -325,11 +327,12 @@ def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
         _rows(("Sales", 8, 5.0), ("Finance", 12, 7.0),
               ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
     a = _anchor(_segment_block(rows, scan_type="retention"))
-    assert ("Sales scoort het laagst van de afdelingen die apart getoond worden "
-            "(5.0/10), maar heeft 8 antwoorden.") in a
+    assert ("Sales scoort het laagst van de afdelingen die apart getoond worden, "
+            "maar heeft 8 antwoorden.") in a
+    # S9 (polijstronde): de restgroep heeft er 6, dus geen cijfer.
     assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
             "6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
-            "vastgelegd) scoort lager (4.0/10)") in a
+            "vastgelegd) scoort lager, maar") in a
 
 
 # ─── 4b. Responses die buiten de tabel vallen (Fail Loud) ────────────────────

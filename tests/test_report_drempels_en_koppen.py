@@ -246,8 +246,10 @@ def test_ranglijst_en_afdelingen_verwijzen_naar_de_drempeltabel():
 
 def test_afdelingstabel_heeft_kolomkoppen():
     html = _segment_block(ROWS, FACTOR_ROWS, scan_type="retention")
-    kop = html.split("<thead>")[1].split("</thead>")[0]
-    for h in ("Afdeling", "Ingevuld", "Score", "Laagste onderwerp", "Spreiding"):
+    # R14 (polijstronde): bij Loep Behoud heet de scorekolom Werkbeeld; in de
+    # kop staat een zacht afbreekstreepje (Werk&shy;beeld).
+    kop = html.split("<thead>")[1].split("</thead>")[0].replace("&shy;", "")
+    for h in ("Afdeling", "Ingevuld", "Werkbeeld", "Laagste onderwerp", "Spreiding"):
         assert h in kop
 
 
