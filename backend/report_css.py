@@ -444,7 +444,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .mq-brug-sec { margin-top: 10px; }
 
 /* ── Trust / methodiek ── */
-.tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
+/* R16 (polijstronde): een rij methodiekkaarten breekt niet midden in een zin
+   over twee pagina's; zelfde patroon als .dir-grid. */
+.tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; break-inside: avoid; page-break-inside: avoid; }
 .tc { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 33%; }
 .tc-full { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 100%; }
 .tt { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 11px; color: """ + INK + r"""; margin-bottom: 4px; }

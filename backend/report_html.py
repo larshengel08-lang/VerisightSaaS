@@ -4093,7 +4093,7 @@ BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
 BESLUIT_REVIEW_HINT = {
     "retention": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
     "exit": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
-    "onboarding": "Richtlijn: rond het volgende checkpoint.",
+    "onboarding": "Richtlijn: rond het volgende checkpoint, ongeveer 30 dagen na dit gesprek.",
 }
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
                       "vul het hieronder in.")
@@ -4145,16 +4145,31 @@ BESLUIT_PARKEERREGEL = ("Spreken jullie hier vandaag iets over af, schrijf dan b
                         "startpunt zet het op de agenda van het vervolgmoment.")
 # R8/V4 (koude leesronde 24-9): wat mag je terugkoppelen, en bij Loep Vertrek:
 # aan wie? De grens van de afdelingen is die van een afdeling met een score in
-# het rapport (MIN_DISTRIBUTION_N). Loep Start valt buiten deze ronde.
-BESLUIT_TERUGKOPPELING = {
+# het rapport (MIN_DISTRIBUTION_N).
+# S10 (polijstronde): Loep Start krijgt dezelfde grens; de afdelingen daar zijn
+# klein. V14 (polijstronde): het afdelingsdeel staat er alleen als het rapport
+# afdelingen toont (besluit_terugkoppeling). Het dashboard toont per scan de
+# volledige regel (DECISION_FEEDBACK_HINTS in
+# frontend/lib/dashboard/campaign-decision.ts, gelijk aan
+# besluit_terugkoppeling(scan, True)); tests/test_report_leesronde_fixes.py
+# houdt ze gelijk.
+BESLUIT_TERUGKOPPELING_BASIS = {
     "retention": ("Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. "
-                  "Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan "
-                  + str(MIN_DISTRIBUTION_N) + " antwoorden."),
+                  "Deel geen open antwoorden"),
     "exit": ("Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met "
-             "de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van "
-             "afdelingen met minder dan " + str(MIN_DISTRIBUTION_N) + " antwoorden."),
-    "onboarding": "Je mensen vulden in; ze horen wat het MT ermee doet.",
+             "de vertrekredenen doet. Deel geen open antwoorden"),
+    "onboarding": ("Je mensen vulden in; ze horen wat het MT ermee doet. Deel het startpunt, het "
+                   "beeld van de hele groep en wat het MT besluit. Deel geen open antwoorden"),
 }
+
+
+def besluit_terugkoppeling(scan_type: str, heeft_afdelingen: bool) -> str:
+    """Terugkoppelingsregel op de besluitpagina. Het afdelingsdeel staat er alleen
+    als het rapport afdelingen toont (V14); het dashboard weet dat niet en toont
+    altijd de volledige regel."""
+    staart = (" en geen uitkomsten van afdelingen met minder dan "
+              + str(MIN_DISTRIBUTION_N) + " antwoorden.") if heeft_afdelingen else "."
+    return BESLUIT_TERUGKOPPELING_BASIS[scan_type] + staart
 
 
 def _besluit_afdeling(seg: dict | None, scan_type: str, tweede_key: str | None) -> dict | None:
@@ -4225,8 +4240,8 @@ def _bl_waarde(tekst: str | None, lijnen: int) -> str:
 def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
                   startpunt_label: str | None, tweede_label: str | None,
                   review_hint: str, heeft_werkvragen: bool, decision: dict | None = None,
-                  decision_unavailable: bool = False, afdeling: dict | None = None,
-                  afdeling_toelichtingen: bool = True) -> str:
+                  heeft_afdelingen: bool, decision_unavailable: bool = False,
+                  afdeling: dict | None = None, afdeling_toelichtingen: bool = True) -> str:
     """Eén A4, los te printen. Voorgedrukt is alleen wat het rapport weet: de
     meting, het startpunt en het tweede punt. Al het andere is een lijn.
 
@@ -4247,6 +4262,9 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     in het dashboard een ander tweede punt vast, dan geldt dat onderwerp.
     afdeling_toelichtingen volgt _toont_toelichtingen: zonder
     toelichtingverdeling in het rapport belooft de hint er geen.
+    heeft_afdelingen (polijstronde V14) volgt de afdelingstabel: de renderers
+    geven bool(segment_rows) mee, dezelfde voorwaarde waaronder _segment_block
+    de tabel toont. Zonder afdelingen noemt de terugkoppelingsregel ze niet.
     """
     agenda = _pref(LEIDRAAD_ANKERS["agenda"])
     if heeft_werkvragen:
@@ -4389,7 +4407,7 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
   <div class="bl-blok">
     <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
     {terugkoppeling}
-    <div class="bl-hint">{_h(BESLUIT_TERUGKOPPELING[scan_type])}</div>
+    <div class="bl-hint">{_h(besluit_terugkoppeling(scan_type, heeft_afdelingen))}</div>
   </div>
   <div class="bl-blok">
     {_bl_veld(BESLUIT_SLOTLABEL, succes)}
@@ -7365,6 +7383,7 @@ def render_exit_report_html(data: dict) -> str:
         tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint=BESLUIT_REVIEW_HINT["exit"],
         heeft_werkvragen=bool(_wq_block),
+        heeft_afdelingen=bool(data.get("segment_rows")),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
         afdeling=_bl_afdeling,
@@ -7799,6 +7818,7 @@ def render_retention_report_html(data: dict) -> str:
         tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=bool(_wq_block),
+        heeft_afdelingen=bool(data.get("segment_rows")),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
         afdeling=_bl_afdeling,
@@ -8321,6 +8341,7 @@ def render_onboarding_report_html(data: dict) -> str:
         tweede_label=_fl(_ob_second_fk, ST) if _ob_second_fk and not _geen_profiel else None,
         review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=False,
+        heeft_afdelingen=bool(data.get("segment_rows")),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")))
 

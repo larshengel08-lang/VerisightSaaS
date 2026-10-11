@@ -160,7 +160,7 @@ def test_besluitpagina_verwijst_naar_het_werkvragenblok():
     html = _besluit_page(opener_html="<h2>kop</h2>", scan_type="retention", campaign_name="Wave 1",
                          startpunt_label="Groeiperspectief", tweede_label=None,
                          review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
-                         heeft_werkvragen=True)
+                         heeft_werkvragen=True, heeft_afdelingen=True)
     assert _href("werkvragen") in html
     assert _href("agenda") not in html
 
@@ -731,7 +731,8 @@ def test_besluit_afdeling():
 def _besluit(**kw) -> str:
     basis = dict(opener_html="<h2>kop</h2>", scan_type="retention", campaign_name="Wave 1",
                  startpunt_label="Groeiperspectief", tweede_label="Werkdruk en herstelruimte",
-                 review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.", heeft_werkvragen=True)
+                 review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.", heeft_werkvragen=True,
+                 heeft_afdelingen=True)
     basis.update(kw)
     return _besluit_page(**basis)
 
@@ -900,8 +901,9 @@ from backend.report_html import (  # noqa: E402
     BESLUIT_PARKEERREGEL,
     BESLUIT_REVIEW_HINT,
     BESLUIT_SLOTLABEL,
-    BESLUIT_TERUGKOPPELING,
+    BESLUIT_TERUGKOPPELING_BASIS,
     BESLUITVRAAG,
+    besluit_terugkoppeling,
 )
 
 
@@ -920,16 +922,23 @@ def test_succes_hoort_bij_het_startpunt():
 
 
 def test_terugkoppeling_per_scan():
-    assert BESLUIT_TERUGKOPPELING["retention"] == (
+    assert besluit_terugkoppeling("retention", True) == (
         "Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen "
         "open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.")
-    assert BESLUIT_TERUGKOPPELING["exit"] == (
+    assert besluit_terugkoppeling("exit", True) == (
         "Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de "
         "vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met "
         "minder dan 10 antwoorden.")
-    assert BESLUIT_TERUGKOPPELING["onboarding"] == "Je mensen vulden in; ze horen wat het MT ermee doet."
-    for scan_type, hint in BESLUIT_TERUGKOPPELING.items():
-        assert hint in _plain(_besluit(scan_type=scan_type, heeft_werkvragen=scan_type != "onboarding"))
+    # S10 (polijstronde): Loep Start krijgt dezelfde grens als Behoud en Vertrek.
+    assert besluit_terugkoppeling("onboarding", True) == (
+        "Je mensen vulden in; ze horen wat het MT ermee doet. Deel het startpunt, het beeld van "
+        "de hele groep en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van "
+        "afdelingen met minder dan 10 antwoorden.")
+    for scan_type in ("retention", "exit", "onboarding"):
+        for afdelingen in (True, False):
+            hint = besluit_terugkoppeling(scan_type, afdelingen)
+            assert hint in _plain(_besluit(scan_type=scan_type, heeft_afdelingen=afdelingen,
+                                           heeft_werkvragen=scan_type != "onboarding"))
 
 
 def test_besluitvraag_noemt_het_vervolgmoment_niet_negentig_dagen():
@@ -979,13 +988,14 @@ def test_richtlijn_per_scan():
     assert BESLUIT_REVIEW_HINT == {
         "retention": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
         "exit": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
-        "onboarding": "Richtlijn: rond het volgende checkpoint.",
+        "onboarding": "Richtlijn: rond het volgende checkpoint, ongeveer 30 dagen na dit gesprek.",
     }
 
 
 def test_nieuwe_besluitcopy_zonder_streepjes():
     for tekst in (BESLUIT_PARKEERREGEL, BESLUIT_SLOTLABEL, BESLUITVRAAG,
-                  *BESLUIT_TERUGKOPPELING.values()):
+                  *(besluit_terugkoppeling(s, a) for s in ("retention", "exit", "onboarding")
+                    for a in (True, False))):
         assert not any(s in tekst for s in STREEPJES), tekst
 
 
@@ -1005,8 +1015,11 @@ def test_dashboard_gebruikt_dezelfde_labels_en_hints_als_de_besluitpagina():
             / "campaign-decision.ts").read_text(encoding="utf-8")
     for tekst in (BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL, BESLUIT_DATUM_HINT):
         assert "'" + tekst + "'" in bron, tekst
-    assert set(BESLUIT_TERUGKOPPELING) == set(BESLUIT_REVIEW_HINT) == {"retention", "exit", "onboarding"}
-    assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == BESLUIT_TERUGKOPPELING
+    scans = {"retention", "exit", "onboarding"}
+    assert set(BESLUIT_TERUGKOPPELING_BASIS) == set(BESLUIT_REVIEW_HINT) == scans
+    # Het dashboard weet niet of het rapport afdelingen toont en toont altijd
+    # de volledige regel (polijstronde V14).
+    assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == {s: besluit_terugkoppeling(s, True) for s in scans}
     assert _ts_map(bron, "DECISION_REVIEW_HINTS") == BESLUIT_REVIEW_HINT
 
 

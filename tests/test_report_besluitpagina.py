@@ -9,7 +9,7 @@ import re
 import pytest
 
 from backend.report_html import (
-    BESLUIT_TERUGKOPPELING,
+    besluit_terugkoppeling,
     BESLUIT_TITEL,
     BESLUIT_VOETREGEL,
     LEIDRAAD_ANKERS,
@@ -32,7 +32,8 @@ def _plain(html: str) -> str:
 def _pagina(**kw) -> str:
     basis = dict(opener_html="<h2>kop</h2>", scan_type="retention", campaign_name="Wave 1",
                  startpunt_label="Groeiperspectief", tweede_label="Werkdruk en herstelruimte",
-                 review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.", heeft_werkvragen=True)
+                 review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.", heeft_werkvragen=True,
+                 heeft_afdelingen=True)
     basis.update(kw)
     return _besluit_page(**basis)
 
@@ -226,7 +227,7 @@ def test_ingevuld_terugkoppelingsplan_vervangt_de_tabel_door_tekst():
     t = _plain(html)
     assert 'class="bl-drie"' not in html
     assert "We delen de uitkomst in het eerstvolgende teamoverleg." in t
-    assert BESLUIT_TERUGKOPPELING["retention"] in t
+    assert besluit_terugkoppeling("retention", True) in t
 
 
 def test_ingevuld_terugkoppelingsplan_wordt_geescaped():
