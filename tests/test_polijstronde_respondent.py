@@ -292,3 +292,37 @@ def test_respondentmeldingen_zonder_streepjes_en_technische_woorden():
         assert EM not in melding and EN not in melding
         for woord in ("survey", "versie", "scantype", "optie", "item"):
             assert woord not in melding.lower()
+
+
+# ── Log-injectie: clientwaarden begrensd en zonder ruwe newline in de log ──────
+
+def test_reden_in_log_is_begrensd_en_een_regel(caplog):
+    from backend.survey_messages import LOG_REASON_MAX, reject_stale_answers
+
+    waarde = "x" * 500 + "\nINFO nep-logregel"
+    with caplog.at_level("WARNING", logger="loep.survey"):
+        reject_stale_answers("Onbekende gespreksrichting-optie (" + waarde + ").", campaign_id="c-1")
+    regels = [r.getMessage() for r in caplog.records if r.name == "loep.survey"]
+    assert len(regels) == 1
+    regel = regels[0]
+    assert "\n" not in regel and "\r" not in regel
+    assert "nep-logregel" not in regel
+    assert "...[afgekapt]" in regel
+    assert len(regel) < LOG_REASON_MAX + 80
+
+
+def test_submit_met_lange_waarde_en_newline_logt_begrensd(client, db_session, caplog):
+    """Via het echte endpoint: een richtingkeuze met een lange waarde en een newline."""
+    from tests.test_direction_submit import _dr, _org_raw, _retention_payload, _setup
+
+    r = _setup(db_session)
+    with caplog.at_level("WARNING", logger="loep.survey"):
+        resp = client.post("/survey/submit", json=_retention_payload(
+            r.token, org_raw=_org_raw({"workload": 2}),
+            direction=_dr(choice="wld_" + "y" * 400 + "\nERROR nep")))
+    assert resp.status_code == 422
+    regels = [rec.getMessage() for rec in caplog.records if rec.name == "loep.survey"]
+    assert len(regels) == 1
+    assert "\n" not in regels[0] and "ERROR nep" not in regels[0]
+    assert "...[afgekapt]" in regels[0]
+    assert str(r.campaign_id) in regels[0]

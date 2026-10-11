@@ -31,13 +31,30 @@ SURVEY_INCOMPLETE_MESSAGE = (
 )
 
 
+# De redenen bevatten waarden die de client zelf meestuurt (factor_key,
+# optiesleutels, question_set_version; geen lengtegrens in het schema). Die
+# gaan nooit onbewerkt de log of de Sentry-breadcrumbs in: controletekens
+# worden ge-escaped (geen nep-logregels via een newline) en de reden wordt
+# begrensd. Langste vaste reden is ~70 tekens, dus 160 laat ruimte voor een
+# normale sleutel en kapt alleen misbruik af.
+LOG_REASON_MAX = 160
+
+
+def _log_veilig(reason: str) -> str:
+    """Eén regel, begrensd: repr() escapet newlines en andere controletekens."""
+    veilig = repr(str(reason))[1:-1]
+    if len(veilig) > LOG_REASON_MAX:
+        veilig = veilig[:LOG_REASON_MAX] + "...[afgekapt]"
+    return veilig
+
+
 def reject_stale_answers(reason: str, *, campaign_id: object = None) -> HTTPException:
     """422 met SURVEY_RELOAD_MESSAGE; de precieze reden staat in de log."""
-    logger.warning("Inzending geweigerd (campagne %s): %s", campaign_id, reason)
+    logger.warning("Inzending geweigerd (campagne %s): %s", campaign_id, _log_veilig(reason))
     return HTTPException(status_code=422, detail=SURVEY_RELOAD_MESSAGE)
 
 
 def reject_incomplete(reason: str) -> HTTPException:
     """422 met SURVEY_INCOMPLETE_MESSAGE; de precieze reden staat in de log."""
-    logger.warning("Onvolledige inzending geweigerd: %s", reason)
+    logger.warning("Onvolledige inzending geweigerd: %s", _log_veilig(reason))
     return HTTPException(status_code=422, detail=SURVEY_INCOMPLETE_MESSAGE)
