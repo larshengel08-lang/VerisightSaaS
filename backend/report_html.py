@@ -1901,8 +1901,9 @@ OVERZICHTSPROFIEL_RANGORDE: dict[str, str] = {
 OVERZICHTSPROFIEL_RANGORDE["retention"] = OVERZICHTSPROFIEL_RANGORDE["exit"]
 
 
-def _intro(key: str) -> str:
-    return f'<p class="sec-intro">{SECTION_INTROS[key]}</p>'
+def _intro(key: str, extra: str = "") -> str:
+    """De sectie-intro. extra (al geëscapet) sluit dezelfde alinea af."""
+    return f'<p class="sec-intro">{SECTION_INTROS[key]}{extra}</p>'
 
 
 class _ChapterCounter:
@@ -5442,17 +5443,14 @@ def _segment_factor_subblocks(segment_rows: list[dict],
             omline = (f'<div style="{_SEG_MONO}margin-top:4px;">'
                       f'{_tel(info["omitted"], "onderwerp", "onderwerpen")} niet beoordeelbaar: '
                       f'te weinig antwoorden</div>')
-        subs.append(f'<div class="no-break" style="margin-top:6px;">'
+        subs.append(f'<div class="no-break seg-sub">'
                  f'<div style="font-family:\'Inter Tight\', sans-serif;font-weight:700;'
                  f'font-size:11px;margin-bottom:4px;">{_h(row["department"])} (n={row["n"]})</div>'
                  f'<table class="item-tbl seg-tbl">{frows}</table>{omline}</div>')
     if not subs:
         return ""
-    # margin-top 6px voor deze regel en voor elk subblok (was 10px, Taak 11
-    # polijstronde): de langere sectie-intro (R14) duwde in stresstest 04 het
-    # enige subblok net over de pagina en daarmee naar een eigen vel van 21%
-    # (gemeten in het productie-image).
-    intro = ('<p style="font-size:10px;color:#64748B;margin:6px 0 0;">'
+    # Maten in .seg-sub-intro en .seg-sub (report_css.py, naast .seg-card).
+    intro = ('<p class="seg-sub-intro">'
              'Alle onderwerpen per afdeling: dezelfde vaste drempels als in het '
              'overzichtsprofiel (kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, '
              'relatief sterk vanaf 6,5).</p>')
@@ -6939,7 +6937,7 @@ def _enps_block(enps_score: int | None, enps_detail: dict | None, scan_type: str
     # Verdieping" van de contextpagina naar een eigen vel van 12%; in de
     # alinea kost hij alleen de regel (gemeten in het productie-image).
     vertrek = (" " + _h(ENPS_VERTREK_ZIN)) if scan_type == "exit" else ""
-    intro = (f'<p class="sec-intro">{SECTION_INTROS["werkgeversaanbeveling"]}{vertrek}</p>')
+    intro = _intro("werkgeversaanbeveling", extra=vertrek)
     ecol = _rag_color(10.0 if enps_score >= 20 else 6.0 if enps_score >= 0 else 4.0)
     n, p, d = enps_detail["n"], enps_detail["promoters"], enps_detail["detractors"]
     return (f'<div class="enps-inline no-break"><span class="eyebrow">Werkgeversaanbeveling</span>'
@@ -7048,8 +7046,10 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
         # sectie 21pt omlaag, en daarmee "Per afdeling" (Loep Vertrek zonder
         # afdelingen) naar een eigen vel van 11% (gemeten in het
         # productie-image). In leesvolgorde sluit de zin de drie kaarten af.
-        if duiding:
-            kaarten = kaarten + [f'<p class="wb-duiding">{_h(duiding)}</p>']
+        # Dat de rechterkolom korter is, geldt bij een oneven aantal kaarten
+        # (nu altijd drie: links twee, rechts een); bij een even aantal staat
+        # de zin onder een even lange kolom en kost hij wel een regel.
+        slot = f'<p class="wb-duiding">{_h(duiding)}</p>' if duiding else ""
         # De overzichtskaart staat over de volle breedte boven de kolommen, niet
         # in de linkerkolom. Daar was de balkenkaart (naam, balk, score en
         # bandlabel op een regel) breder dan een halve kolom: de linkercel
@@ -7059,10 +7059,10 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
         # kaarten, en `table-layout: fixed` op .wb-cols houdt ze elk op de helft.
         # De eerste kolom krijgt de grootste helft: de kaarten zijn ongeveer
         # even hoog, dus zo lopen de kolommen het gelijkst af.
-        helft = (len(kaarten) - (1 if duiding else 0) + 1) // 2
+        helft = (len(kaarten) + 1) // 2
         inhoud = (f'{overzichtskaart}<div class="tcol wb-cols">'
                   f'<div class="tc-l">{"".join(kaarten[:helft])}</div>'
-                  f'<div class="tc-r">{"".join(kaarten[helft:])}</div></div>')
+                  f'<div class="tc-r">{"".join(kaarten[helft:])}{slot}</div></div>')
     return f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}{inhoud}</div>'
 
 

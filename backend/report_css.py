@@ -231,6 +231,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
    (report_html.py): de langere sectie-intro (R14) duwde in stresstest 04 het
    enige subblok naar een eigen vel van 21% (gemeten in het productie-image). */
 .card.seg-card { padding-bottom: 6px; }
+/* De uitleg boven de uitsplitsing per afdeling en elk subblok: 6px boven (was
+   10px inline), om dezelfde reden als .seg-card hierboven. */
+.seg-sub-intro { font-size: 10px; color: #64748B; margin: 6px 0 0; }
+.seg-sub { margin-top: 6px; }
 /* De melding zonder afdelingstabel volgt direct op de werkbeleving (geen eigen
    vel). De negatieve marge verkleint de samengevallen witruimte tussen beide
    van 44px naar 20px, zodat kop en melding samen nog onder een volle
@@ -393,7 +397,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
    een kaart: leesbare 10px in de gewone letter, zoals .dir-intro erboven. De
    maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
 .dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
-  color: #374151; max-width: 70ch; margin: 0 0 10px;
+  color: #374151; margin: 0 0 10px;
   /* Niet splitsen over een paginagrens: in stresstest 06 liepen twee regels van
      deze noemerzin als wees boven de gespreksagenda door (hoofdsessie 22-9). */
   break-inside: avoid; page-break-inside: avoid; }
@@ -404,15 +408,16 @@ p  { margin-bottom: 6px; font-size: 11px; }
    Alleen binnen .dir-block: .dir-intro staat ook in het werkvragenblok, waar
    break-after de uitleg aan de onbreekbare .wq-grid zou lijmen, de eyebrow
    alleen kon laten staan en het anker sec-werkvragen een vel kon verschuiven. */
-.dir-block .dir-intro, .dir-block .dir-totals { break-after: avoid; page-break-after: avoid; }
-.dir-block .dir-intro { break-before: avoid; page-break-before: avoid; }
 /* Taak 11 (polijstronde): uitleg en totaalregel boven de kaarten over de volle
-   breedte. Sinds R23 reizen ze met de kaarten mee naar het volgende vel; op
-   70ch kostten ze daar 33pt extra, en dan paste het agendaslot (no-break) er
-   niet meer onder en stond het alleen op een vel (stresstest 19, gemeten in
-   het productie-image). Alleen binnen .dir-block: in het werkvragenblok houdt
-   .dir-intro zijn 70ch. */
-.dir-block .dir-intro, .dir-block .dir-totals { max-width: none; }
+   breedte (max-width: none). Sinds R23 reizen ze met de kaarten mee naar het
+   volgende vel; op 70ch kostten ze daar 33pt extra, en dan paste het
+   agendaslot (no-break) er niet meer onder en stond het alleen op een vel
+   (stresstest 19, gemeten in het productie-image). Alleen binnen .dir-block:
+   in het werkvragenblok houdt .dir-intro zijn 70ch. .dir-chain.dir-totals
+   draagt zelf geen max-width, zodat de uitkomst niet van de bronvolgorde
+   afhangt. */
+.dir-block .dir-intro, .dir-block .dir-totals { break-after: avoid; page-break-after: avoid; max-width: none; }
+.dir-block .dir-intro { break-before: avoid; page-break-before: avoid; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
 /* Hefboom E (fixronde leesronde, Taak 10): de weging onder de verdeeld-zin maakte

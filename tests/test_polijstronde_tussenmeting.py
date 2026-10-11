@@ -114,14 +114,17 @@ def test_vertrek_07_zonder_lege_kaart():
 # ── Afdelingen: krappere kaart en uitsplitsing ───────────────────────────────
 
 def test_afdelingskaart_krappere_onderpadding():
-    assert re.search(r"\.card\.seg-card \{ padding-bottom: 6px; \}", _css())
+    css = _css()
+    assert re.search(r"\.card\.seg-card \{ padding-bottom: 6px; \}", css)
+    assert re.search(r"\.seg-sub-intro \{[^}]*margin: 6px 0 0;", css)
+    assert ".seg-sub { margin-top: 6px; }" in css
 
 
 def test_scenario_04_uitsplitsing_krapper():
     html = _html("04_alles_hoog")
     assert '<div class="card seg-card">' in html
-    assert '<p style="font-size:10px;color:#64748B;margin:6px 0 0;">Alle onderwerpen per afdeling:' in html
-    assert '<div class="no-break" style="margin-top:6px;">' in html
+    assert '<p class="seg-sub-intro">Alle onderwerpen per afdeling:' in html
+    assert '<div class="no-break seg-sub">' in html
 
 
 # ── Eerste verdiepingsblok ───────────────────────────────────────────────────
@@ -134,7 +137,13 @@ def test_eerste_verdiepingsblok_dichter_onder_het_profiel():
 
 def test_richtingblok_uitleg_en_totaalregel_volle_breedte():
     css = _css()
-    assert ".dir-block .dir-intro, .dir-block .dir-totals { max-width: none; }" in css
+    assert re.search(r"\.dir-block \.dir-intro, \.dir-block \.dir-totals \{[^}]*max-width: none", css)
+    # Eén regel voor deze selectorlijst (geen tweede die stil wint) ...
+    assert len(re.findall(r"\.dir-block \.dir-intro, \.dir-block \.dir-totals \{", css)) == 1
+    # ... en de uitkomst hangt niet van de bronvolgorde af: de basisregel van
+    # de totaalregel draagt zelf geen max-width.
+    totals = re.search(r"\.dir-chain\.dir-totals \{([^}]*)\}", re.sub(r"/\*.*?\*/", "", css)).group(1)
+    assert "max-width" not in totals
     # Alleen binnen .dir-block: de algemene .dir-intro (ook in het
     # werkvragenblok) houdt zijn 70ch.
     assert re.search(r"(?<![\w-])\.dir-intro \{[^}]*max-width: 70ch", css)

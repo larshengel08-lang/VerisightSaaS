@@ -125,7 +125,9 @@ def test_zonder_niets_byte_gelijk(scan_type, name):
     assert (f'<tr class="dir-niets"><td class="iq">{NIETS[scan_type]}</td>'
             f'<td class="is">{telling}</td></tr></table>') in html
     # Taak 11 terugvaloptie 1: de korte vorm, alleen het aantal.
-    assert all(teksten[k] for k in niet_gekozen)
+    unchosen = html.split('class="dir-unchosen"')[1].split("</div>")[0]
+    for k in niet_gekozen:
+        assert teksten[k] not in unchosen
     aantal = (f"{len(niet_gekozen)} andere richting" if len(niet_gekozen) == 1
               else f"{len(niet_gekozen)} andere richtingen")
     assert f'<div class="dir-unchosen">Niet gekozen: {aantal}.</div>' in html
