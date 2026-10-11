@@ -1790,15 +1790,17 @@ SECTION_INTROS: dict[str, str] = {
     ),
     "segmentanalyse": (
         "Deze tabel splitst het beeld uit per afdeling: het aantal ingevulde vragenlijsten "
-        "tegenover het aantal uitgenodigden, de gemiddelde score en, bij voldoende "
+        "tegenover het aantal uitgenodigden, een score en, bij voldoende "
         "antwoorden, de spreiding. Afdelingen met minder dan vijf antwoorden worden "
         "gebundeld onder &ldquo;Overige afdelingen&rdquo;, zodat antwoorden nooit herleidbaar "
         "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
         "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;. "
-        "De kolom met het laagste onderwerp toont per afdeling het onderwerp dat daar het laagst "
-        "scoort. In die kolom staat bij kleine afdelingen (5 tot 9 antwoorden) bewust alleen een "
-        "label zoals &lsquo;aandachtspunt&rsquo;, geen cijfer achter de komma; alle onderwerpen per afdeling met hun "
-        "scores staan er vanaf 10 antwoorden."
+        "De kolom met het laagste onderwerp noemt per afdeling het laagst scorende onderwerp; "
+        "bij kleine afdelingen (5 tot 9 antwoorden) staat daar alleen een label zoals "
+        "&lsquo;aandachtspunt&rsquo;, geen cijfer achter de komma. Vanaf 10 antwoorden staan "
+        "alle onderwerpen met hun scores onder de tabel, bij "
+        "&lsquo;Alle onderwerpen per afdeling&rsquo;."
+        # Die naam is de openingsregel van _segment_factor_subblocks.
         # De zin over de scorekolom verschilt per product en komt uit
         # SEGMENT_SCOREKOLOM; _segment_intro zet hem hierachter (R14).
     ),
@@ -5181,12 +5183,22 @@ SEGMENT_START_MIN_DELTA = 0.3
 def _segment_cijfer_mag(row: dict) -> bool:
     """Mag de score van deze afdeling (of restgroep) als cijfer in een zin? (S9)
 
-    Dezelfde staffel als de themakolom (_segment_theme_cell): bij 5 tot 9
-    antwoorden alleen een label, vanaf MIN_DISTRIBUTION_N ook het cijfer. De
-    kolom Score in de tabel valt hierbuiten; deze regel gaat over de conclusie
-    in het navy blok, die anders de intro tegenspreekt.
+    De conclusie in het navy blok leunt niet op een precieze score van een
+    afdeling die te klein is om die te dragen. Dezelfde staffel als de kolom
+    met het laagste onderwerp (_segment_theme_cell): bij 5 tot 9 antwoorden
+    geen cijfer, vanaf MIN_DISTRIBUTION_N wel.
     """
     return row["n"] >= MIN_DISTRIBUTION_N
+
+
+def _naam_cijfer(row: dict, sc: float, met: bool) -> str:
+    """Afdelingsnaam, met haar score erachter als `met` (S9, zie _segment_cijfer_mag)."""
+    return _h(row["department"]) + (" " + _score_str(sc) if met else "")
+
+
+def _cijfer_tussen_haakjes(row: dict, sc: float) -> str:
+    """De score tussen haakjes, ' (x.x/10)', als die in een zin mag; anders leeg (S9)."""
+    return " (" + _score_str(sc) + ")" if _segment_cijfer_mag(row) else ""
 
 
 def _segment_theme_cell(row: dict, factor_rows: dict[str, dict] | None,
@@ -5482,11 +5494,9 @@ def _segment_start_note(segment_rows: list[dict],
                       else f"; {pooled['n']} ingevuld, hoeveel mensen hier zijn "
                            f"uitgenodigd is niet volledig vastgelegd")
             samenstelling = f' ({_h(", ".join(leden))}{noemer})'
-        rest_score = (f' ({_shown(pooled["avg"]):.1f}/10)' if _segment_cijfer_mag(pooled)
-                      else "")
         rest_sentence = (
             f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} scoort lager'
-            f'{rest_score}, maar is samengesteld uit kleine '
+            f'{_cijfer_tussen_haakjes(pooled, _shown(pooled["avg"]))}, maar is samengesteld uit kleine '
             f'afdelingen en wordt daarom niet als startpunt genoemd.')
 
     # Eén gate voor staat 3, gedeeld met de brugzin (_segment_startpunt).
@@ -5501,20 +5511,16 @@ def _segment_start_note(segment_rows: list[dict],
         # cijfer alsnog verraden.
         met_cijfers = _segment_cijfer_mag(lowest) and _segment_cijfer_mag(runner_up)
         if low_sc == run_sc:
-            beide = f', beide {low_sc:.1f}/10' if met_cijfers else ""
+            beide = ", beide " + _score_str(low_sc) if met_cijfers else ""
             vergelijking = (
                 f'De twee laagste afdelingen komen op dezelfde score uit '
                 f'({_h(lowest["department"])} en {_h(runner_up["department"])}'
                 f'{beide}).')
-        elif met_cijfers:
-            vergelijking = (
-                f'De twee laagste afdelingen liggen dicht bij elkaar '
-                f'({_h(lowest["department"])} {low_sc:.1f}/10 en '
-                f'{_h(runner_up["department"])} {run_sc:.1f}/10).')
         else:
             vergelijking = (
                 f'De twee laagste afdelingen liggen dicht bij elkaar '
-                f'({_h(lowest["department"])} en {_h(runner_up["department"])}).')
+                f'({_naam_cijfer(lowest, low_sc, met_cijfers)} en '
+                f'{_naam_cijfer(runner_up, run_sc, met_cijfers)}).')
         # "Geen eerste afdeling aan te wijzen", niet "geen afdeling vraagt
         # aandacht": vastgesteld is alleen dat de twee laagste niet van elkaar
         # te onderscheiden zijn. Bij 5,0 / 5,1 / 9,0 vragen die twee ten
@@ -5533,9 +5539,8 @@ def _segment_start_note(segment_rows: list[dict],
         # MIN_DISTRIBUTION_N, dus hier staat nooit een cijfer (S9). De
         # controle blijft expliciet: zo hangt het cijfer aan dezelfde regel als
         # elders in dit blok, ook als de gate van staat 2 ooit verandert.
-        low_score = f' ({low_sc:.1f}/10)' if _segment_cijfer_mag(lowest) else ""
         body = (f'{_h(lowest["department"])} scoort het laagst van de afdelingen die '
-                f'apart getoond worden{low_score}, maar '
+                f'apart getoond worden{_cijfer_tussen_haakjes(lowest, low_sc)}, maar '
                 f'heeft {lowest["n"]} antwoorden. Loep wijst een afdeling pas aan vanaf '
                 f'{MIN_DISTRIBUTION_N} antwoorden, zodat de conclusie niet op een handvol '
                 f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
@@ -5595,20 +5600,26 @@ def _segment_start_note(segment_rows: list[dict],
 # loopt over twee of drie regels ("WERK-/BEELD"), de rijen blijven gelijk.
 # Exit: de segmentrijen staan op de gezondheidsschaal (_signal_health, zie
 # _segment_input in build_report_data), dus per afdeling 11 min de frictiescore.
+# Alleen geldig voor exit, retention en onboarding: de drie renderers die
+# _segment_block aanroepen. Een ander scan_type geeft bewust een KeyError.
+_P02 = "pagina " + _pref("p02")
 SEGMENT_SCOREKOLOM = {
     "retention": {"kop": "Werk&shy;beeld",
-                  "zin": "De kolom Werkbeeld is het werkbeeld van pagina 2, per afdeling."},
+                  "zin": "De kolom Werkbeeld is het werkbeeld van " + _P02 + ", per afdeling."},
     "onboarding": {"kop": "Check&shy;point&shy;score",
-                   "zin": "De kolom Checkpointscore is de checkpointscore van pagina 2, "
-                          "per afdeling."},
+                   "zin": "De kolom Checkpointscore is de checkpointscore van " + _P02
+                          + ", per afdeling."},
     "exit": {"kop": "Score",
-             "zin": "De kolom Score is per afdeling de frictiescore van pagina 2, maar "
-                    "omgedraaid: hier is hoger beter."},
+             "zin": "De kolom Score is per afdeling de frictiescore van " + _P02
+                    + ", maar omgedraaid: hier is hoger beter."},
 }
 
 
 def _segment_intro(scan_type: str) -> str:
-    """De sectie-intro van de afdelingstabel plus de scorekolomzin van dit product."""
+    """De sectie-intro van de afdelingstabel plus de scorekolomzin van dit product.
+
+    Alleen voor exit, retention en onboarding (zie SEGMENT_SCOREKOLOM).
+    """
     return (f'<p class="sec-intro">{SECTION_INTROS["segmentanalyse"]} '
             f'{SEGMENT_SCOREKOLOM[scan_type]["zin"]}</p>')
 

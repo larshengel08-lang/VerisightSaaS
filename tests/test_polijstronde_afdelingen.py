@@ -13,6 +13,7 @@ import pytest
 from backend.report_distribution import MIN_DISTRIBUTION_N
 from backend.report_html import (
     SEGMENT_SCOREKOLOM,
+    _pref,
     _department_segment_rows,
     _segment_block,
 )
@@ -63,6 +64,28 @@ def test_s9_dezelfde_score_zonder_cijfer_bij_kleine_afdelingen():
     assert "/10" not in a
 
 
+def test_s9_precies_op_de_grens_blijven_de_cijfers_staan():
+    n = MIN_DISTRIBUTION_N
+    a = _anchor(_block(("Sales", n, 6.0), ("Operations", n, 6.2)))
+    assert "(Sales 6.0/10 en Operations 6.2/10)." in a
+    a = _anchor(_block(("Sales", n, 6.0), ("Finance", n, 6.0)))
+    assert "(Sales en Finance, beide 6.0/10)." in a or "(Finance en Sales, beide 6.0/10)." in a
+
+
+def test_s9_net_onder_de_grens_aan_een_kant_geen_cijfers():
+    n = MIN_DISTRIBUTION_N
+    a = _anchor(_block(("Sales", n, 6.0), ("Operations", n - 1, 6.2)))
+    assert "(Sales en Operations)." in a and "/10" not in a
+    a = _anchor(_block(("Sales", n - 1, 6.0), ("Operations", n, 6.2)))
+    assert "(Sales en Operations)." in a and "/10" not in a
+
+
+def test_s9_dezelfde_score_groot_en_klein_zonder_cijfer():
+    a = _anchor(_block(("Sales", 12, 6.0), ("Finance", 6, 6.0)))
+    assert "De twee laagste afdelingen komen op dezelfde score uit (Sales en Finance)." in a
+    assert "/10" not in a
+
+
 def test_s9_dezelfde_score_houdt_cijfer_bij_grote_afdelingen():
     a = _anchor(_block(("Sales", 12, 6.0), ("Finance", 12, 6.0)))
     assert "komen op dezelfde score uit (Finance en Sales, beide 6.0/10)." in a
@@ -101,16 +124,17 @@ def _kop(html):
 
 
 _GROOT = (("Operations", 12, 5.0), ("Sales", 12, 7.0))
+_P02 = "pagina " + _pref("p02")
 
 
 @pytest.mark.parametrize("scan_type, kop, zin", [
     ("retention", "Werkbeeld",
-     "De kolom Werkbeeld is het werkbeeld van pagina 2, per afdeling."),
+     "De kolom Werkbeeld is het werkbeeld van " + _P02 + ", per afdeling."),
     ("onboarding", "Checkpointscore",
-     "De kolom Checkpointscore is de checkpointscore van pagina 2, per afdeling."),
+     "De kolom Checkpointscore is de checkpointscore van " + _P02 + ", per afdeling."),
     ("exit", "Score",
-     "De kolom Score is per afdeling de frictiescore van pagina 2, maar omgedraaid: "
-     "hier is hoger beter."),
+     "De kolom Score is per afdeling de frictiescore van " + _P02
+     + ", maar omgedraaid: hier is hoger beter."),
 ])
 def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
     html = _block(*_GROOT, scan_type=scan_type)
@@ -118,9 +142,22 @@ def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
     intro = re.search(r'<p class="sec-intro">(.*?)</p>', html, re.S).group(1)
     assert intro.endswith(zin)
     # De staffelzin gaat expliciet over de kolom met het laagste onderwerp.
-    assert ("In die kolom staat bij kleine afdelingen (5 tot 9 antwoorden) bewust "
-            "alleen een label") in intro
+    assert ("De kolom met het laagste onderwerp noemt per afdeling het laagst scorende "
+            "onderwerp; bij kleine afdelingen (5 tot 9 antwoorden) staat daar alleen een "
+            "label") in intro
     assert "tonen we" not in intro
+    # De uitsplitsing met alle onderwerpen staat onder de tabel, onder de naam
+    # waarmee _segment_factor_subblocks haar opent.
+    assert ("Vanaf 10 antwoorden staan alle onderwerpen met hun scores onder de tabel, "
+            "bij &lsquo;Alle onderwerpen per afdeling&rsquo;.") in intro
+    assert "onder de tabel" in intro
+    # Dezelfde naam opent de echte uitsplitsing (n >= 10 met onderwerpdata).
+    met_uitsplitsing = _segment_block(
+        _department_segment_rows(_rows(*_GROOT)),
+        factor_rows={d: {"factors": [("growth", 5.0, 12)], "omitted": 0}
+                     for d in ("Operations", "Sales")},
+        scan_type=scan_type)
+    assert "<p style=\"font-size:10px;color:#64748B;margin:10px 0 0;\">Alle onderwerpen per afdeling:" in met_uitsplitsing
     # Eén zin per scan, niet die van een ander product erbij.
     for ander, info in SEGMENT_SCOREKOLOM.items():
         if ander != scan_type:

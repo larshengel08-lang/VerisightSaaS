@@ -368,7 +368,7 @@ def test_segmentconclusie_staat_direct_onder_de_tabel_voor_de_uitsplitsing():
     from backend.report_html import _segment_block
     html = _segment_block(_seg_rows(), factor_rows=_seg_factor_rows(), scan_type="retention")
     assert html.index("</table>") < html.index("Waar het per afdeling begint")
-    assert html.index("Waar het per afdeling begint") < html.index("Alle onderwerpen per afdeling")
+    assert html.index("Waar het per afdeling begint") < html.index("Alle onderwerpen per afdeling:")
     assert '<table class="item-tbl seg-tbl">' in html
 
 
