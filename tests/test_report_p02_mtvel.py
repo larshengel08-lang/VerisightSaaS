@@ -909,7 +909,7 @@ def test_css_houdt_pagina_twee_compact():
                   "#p02 .leidraad { margin-top: 10px;",
                   "#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38;",
                   "#p02 .leidraad td.lw { width: 22%;",
-                  "#p02 .meet-blok { margin-top: 8px;",
+                  "#p02 .meet-blok { margin-top: 4px;",
                   "#p02 .meet-blok .slabel { margin-bottom: 6px;",
                   "#p02 .meet-blok .sg { margin-bottom: 4px;"):
         assert regel in css, regel

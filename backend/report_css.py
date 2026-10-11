@@ -225,6 +225,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sub-cols td[colspan] { padding: 0; }
 .sub-cols tbody.sub-grp { break-inside: avoid; }
 .empty-state.seg-leeg { padding: 8px 14px; }
+/* Taak 11 (polijstronde): de afdelingskaart eindigt op een tabelrij of een
+   subblok, dus de onderpadding verlengt alleen de linkerlijn. 6px in plaats van
+   14px, samen met de krappere marges rond 'Alle onderwerpen per afdeling'
+   (report_html.py): de langere sectie-intro (R14) duwde in stresstest 04 het
+   enige subblok naar een eigen vel van 21% (gemeten in het productie-image). */
+.card.seg-card { padding-bottom: 6px; }
 /* De melding zonder afdelingstabel volgt direct op de werkbeleving (geen eigen
    vel). De negatieve marge verkleint de samengevallen witruimte tussen beide
    van 44px naar 20px, zodat kop en melding samen nog onder een volle
@@ -400,6 +406,13 @@ p  { margin-bottom: 6px; font-size: 11px; }
    alleen kon laten staan en het anker sec-werkvragen een vel kon verschuiven. */
 .dir-block .dir-intro, .dir-block .dir-totals { break-after: avoid; page-break-after: avoid; }
 .dir-block .dir-intro { break-before: avoid; page-break-before: avoid; }
+/* Taak 11 (polijstronde): uitleg en totaalregel boven de kaarten over de volle
+   breedte. Sinds R23 reizen ze met de kaarten mee naar het volgende vel; op
+   70ch kostten ze daar 33pt extra, en dan paste het agendaslot (no-break) er
+   niet meer onder en stond het alleen op een vel (stresstest 19, gemeten in
+   het productie-image). Alleen binnen .dir-block: in het werkvragenblok houdt
+   .dir-intro zijn 70ch. */
+.dir-block .dir-intro, .dir-block .dir-totals { max-width: none; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
 /* Hefboom E (fixronde leesronde, Taak 10): de weging onder de verdeeld-zin maakte
@@ -493,9 +506,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sec.verd { margin-bottom: 24px; }
 .sec.flow.verd { margin-top: 0; }
 /* Het eerste onderwerp volgt op het overzichtsprofiel (margin-bottom 44px);
-   de negatieve marge brengt de samengevallen witruimte naar 24px, dezelfde
-   ruimte als tussen twee onderwerpen. */
-.sec.flow.verd.verd-eerste { margin-top: -20px; }
+   de negatieve marge brengt de samengevallen witruimte naar 18px (polijstronde
+   Taak 11; was 24px, dezelfde ruimte als tussen twee onderwerpen). De langere
+   uitleg bij "duidelijk laag" (R25) duwde in stresstest 18 het eerste blok
+   2pt van het profielvel, waarna het derde blok alleen op een vel van 36%
+   stond (gemeten in het productie-image). */
+.sec.flow.verd.verd-eerste { margin-top: -26px; }
 /* Dun verdiepingsblok en zijn voorganger (plan 3b): mogen over een paginagrens
    lopen, zodat het dunne blok niet alleen op een vel belandt. De binnendelen
    blijven heel: een kop staat nooit los onderaan, een kaart en een tabelrij
@@ -515,6 +531,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .tcol.wb-cols .tc-l { width: 50%; padding-right: 10px; }
 .tcol.wb-cols .tc-r { width: 50%; padding-left: 10px; }
 .wb-cols .card { padding: 8px 0 8px 12px; margin-bottom: 8px; }
+/* R10-zin in twee kolommen (Taak 11 polijstronde): onder de laatste kaart van
+   de rechterkolom, waar de kolom een kaart minder draagt en dus ruimte over
+   heeft; ingesprongen tot de kaarttekst. */
+.wb-cols .wb-duiding { font-size: 11px; color: #374151; line-height: 1.5; margin: 6px 0 0 14px; }
 .wb-cols .item-tbl td { padding: 3px 6px; }
 .wb-cols .item-tbl .iq { width: 70%; }
 .wb-cols .item-tbl .is { width: 12%; }
@@ -655,7 +675,11 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
    Het echte bewijs is de regel p02-op-een-a4 in het productie-image; de test
    op deze maten bewaakt alleen tegen per ongeluk wijzigen. Elke selector
    staat hier één keer: bij gelijke specificiteit wint de latere regel, dus een
-   tweede regel voor dezelfde selector maakt de eerste stil dood. */
+   tweede regel voor dezelfde selector maakt de eerste stil dood.
+   Polijstronde Taak 11: .meet-blok margin-top 8px naar 4px, samen met een
+   kortere R21-zin in de leidraad; de V13- en R21-zin maakten p.02 van Loep
+   Vertrek twee regels langer. Krapst is daarna scenario 22 (eind op 784pt van
+   785pt). */
 #p02 .br-kernzin { font-size: 20px; max-width: none; margin-bottom: 14px; }
 #p02 .kz-lang .br-kernzin { font-size: 18px; }
 #p02 .why { padding: 10px 14px 8px; margin-bottom: 8px; }
@@ -673,7 +697,7 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
 #p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38; }
 #p02 .leidraad td.lt { width: 11%; }
 #p02 .leidraad td.lw { width: 22%; }
-#p02 .meet-blok { margin-top: 8px; }
+#p02 .meet-blok { margin-top: 4px; }
 #p02 .meet-blok .slabel { margin-bottom: 6px; }
 #p02 .meet-blok .sg { margin-bottom: 4px; }
 #p02 .meet-blok .sc-b { line-height: 1.3; }

@@ -130,12 +130,12 @@ def test_niet_gekozen_opties_in_een_regel(scan_type):
     m = re.search(r'<div class="dir-unchosen">(.*?)</div>', html)
     assert m and m.group(1).startswith("Niet gekozen: ")
     teksten = direction_option_texts(scan_type, FK)
-    for k in rest:
-        assert teksten[k] in m.group(1)
-    assert teksten[a] not in m.group(1) and teksten[b] not in m.group(1)
-    assert "Niets" not in m.group(1) and "Anders" not in m.group(1)
-    namen = [f"‘{teksten[k]}’" for k in rest]
-    assert m.group(1) == "Niet gekozen: " + ", ".join(namen[:-1]) + " en " + namen[-1] + "."
+    # Taak 11 terugvaloptie 1 (plan stap 3.1): de korte vorm telt de niet
+    # gekozen richtingen in plaats van ze te noemen. Niets en Anders tellen
+    # niet mee (geen richting, of een eigen rij).
+    for k in (a, b, *rest):
+        assert teksten[k] not in m.group(1)
+    assert m.group(1) == f"Niet gekozen: {len(rest)} andere richtingen."
 
 
 def test_geen_niet_gekozen_regel_als_alles_gekozen_is():
@@ -149,7 +149,8 @@ def test_een_niet_gekozen_optie_zonder_opsomming():
     counts = {k: 3 for k in routes[:-1]}
     html = _kaart(counts, "retention")
     tekst = direction_option_texts("retention", FK)[routes[-1]]
-    assert f'<div class="dir-unchosen">Niet gekozen: ‘{tekst}’.</div>' in html
+    assert tekst not in html.split('class="dir-unchosen"')[1]
+    assert '<div class="dir-unchosen">Niet gekozen: 1 andere richting.</div>' in html
 
 
 # ── V10: voorbehoud op de echte basis ────────────────────────────────────────

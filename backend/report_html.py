@@ -2065,12 +2065,17 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         # bij het startpunt vaak alleen nog Besluiten.
         # R21 (polijstronde): wie het tweede punt parkeert, vult de
         # terugkoppeling (en de afdelingsafspraak) toch in; anders kregen die
-        # velden in de leidraad geen tijd.
+        # velden in de leidraad geen tijd. Korte vorm sinds Taak 11: "Vul op
+        # de besluitpagina ... ook in als je het tweede punt parkeert" maakte
+        # rij 5 een regel langer en liet p.02 van Loep Vertrek overlopen
+        # (08, 21, 22, voorbeeld; gemeten in het productie-image). De vaste
+        # terugvaloptie uit het plan ("Vul op de besluitpagina ook ... in.")
+        # spaarde geen regel. "dan" verwijst naar het parkeren in de zin
+        # ervoor; de besluitpagina staat in de zin erna.
         vul = ("de afdelingsafspraak en de terugkoppeling" if has_afdeling_afspraak
                else "de terugkoppeling")
         tweede = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
-                  "vervolgmoment. Vul op de besluitpagina " + vul + " ook in als je het "
-                  "tweede punt parkeert. " if has_tweede_punt else "")
+                  "vervolgmoment. Vul " + vul + " dan toch in. " if has_tweede_punt else "")
         slot = (f"De werkvragen (pagina {p(A['werkvragen'])}). Bij het startpunt sla je "
                 "Herkennen over, dat deden jullie al; neem wat eronder staat. "
                 + tweede + besluit)
@@ -3705,7 +3710,10 @@ def _direction_table_html(st: dict, texts: dict[str, str], n: int, agg: dict,
     rows = "".join(row_htmls)
     table = f'<table class="item-tbl dir-tbl">{rows}</table>'
     # R19 (polijstronde): de richtingen die niemand koos, in één regel, zodat
-    # de lezer ziet waaruit gekozen kon worden. Zonder de niets-optie (die
+    # de lezer ziet dat er meer te kiezen viel. Korte vorm (alleen het aantal)
+    # sinds Taak 11, terugvaloptie 1 van het plan: met de namen erbij paste het
+    # agendaslot in stresstest 19 niet meer onder de kaarten (R23 houdt de kop
+    # bij de kaarten) en stond het alleen op een vel. Zonder de niets-optie (die
     # heeft haar eigen rij) en zonder Anders (geen richting). Eén
     # optieversie per scan in de opgeslagen antwoorden (de server weigert
     # elke andere question_set_version), dus de huidige optieset is ook de
@@ -3713,8 +3721,9 @@ def _direction_table_html(st: dict, texts: dict[str, str], n: int, agg: dict,
     niet_gekozen = [k for k in texts
                     if not k.endswith(("_none", "_other")) and counts.get(k, 0) == 0]
     if niet_gekozen:
-        namen = _opsomming(["‘" + texts[k] + "’" for k in niet_gekozen])
-        table += '<div class="dir-unchosen">' + _h("Niet gekozen: " + namen + ".") + "</div>"
+        table += ('<div class="dir-unchosen">'
+                  + _h("Niet gekozen: " + _tel(len(niet_gekozen), "andere richting", "andere richtingen") + ".")
+                  + "</div>")
     # V10 (polijstronde): het voorbehoud hangt aan de basis waar de
     # richting echt op rust. Een richting (clear, plurality) rust op de
     # veranderkeuzes; onder de tien is dat dezelfde beperkte basis als
@@ -5431,13 +5440,17 @@ def _segment_factor_subblocks(segment_rows: list[dict],
             omline = (f'<div style="{_SEG_MONO}margin-top:4px;">'
                       f'{_tel(info["omitted"], "onderwerp", "onderwerpen")} niet beoordeelbaar: '
                       f'te weinig antwoorden</div>')
-        subs.append(f'<div class="no-break" style="margin-top:10px;">'
+        subs.append(f'<div class="no-break" style="margin-top:6px;">'
                  f'<div style="font-family:\'Inter Tight\', sans-serif;font-weight:700;'
                  f'font-size:11px;margin-bottom:4px;">{_h(row["department"])} (n={row["n"]})</div>'
                  f'<table class="item-tbl seg-tbl">{frows}</table>{omline}</div>')
     if not subs:
         return ""
-    intro = ('<p style="font-size:10px;color:#64748B;margin:10px 0 0;">'
+    # margin-top 6px voor deze regel en voor elk subblok (was 10px, Taak 11
+    # polijstronde): de langere sectie-intro (R14) duwde in stresstest 04 het
+    # enige subblok net over de pagina en daarmee naar een eigen vel van 21%
+    # (gemeten in het productie-image).
+    intro = ('<p style="font-size:10px;color:#64748B;margin:6px 0 0;">'
              'Alle onderwerpen per afdeling: dezelfde vaste drempels als in het '
              'overzichtsprofiel (kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, '
              'relatief sterk vanaf 6,5).</p>')
@@ -5914,7 +5927,7 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
   {opener_html or '<span class="slabel">Per afdeling</span>'}
   {_segment_intro(scan_type)}
   {drempelregel}
-  <div class="card">
+  <div class="card seg-card">
     <table class="item-tbl seg-tbl">{kop}{rows_html}</table>
     {hidden_note}
     {low_note}
@@ -6610,11 +6623,16 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
         # daar is dit hoofdstuk 02 en volgt het direct op pagina twee, die op
         # één vel moet blijven en hoofdstuk 02 op pagina drie laat beginnen (H16).
         sec_cls = "sec flow" if stroom_zonder_profiel else "pb sec"
+    # Zonder balken geen kaart (Taak 11 polijstronde): een lege .card tekende
+    # alleen een losse verticale lijn en kostte 33pt, genoeg om bij Loep
+    # Vertrek met n < 10 het blok "04 Verdieping" naar een eigen vel van 12%
+    # te duwen (gemeten in het productie-image).
+    kaart = f'<div class="card">{rows}{legend}</div>' if rows else ""
     return f"""<div class="{sec_cls}">
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
   {intro_html}
   {summary_html}
-  <div class="card">{rows}{legend}</div>
+  {kaart}
 </div>"""
 
 
@@ -6913,12 +6931,17 @@ def _enps_block(enps_score: int | None, enps_detail: dict | None, scan_type: str
     las aan tafel als het oordeel van wie er nu werkt."""
     if enps_score is None or not enps_detail:
         return ""
-    vertrek = (f'<p class="sec-intro">{_h(ENPS_VERTREK_ZIN)}</p>'
-               if scan_type == "exit" else "")
+    # Taak 11 (polijstronde): de V16-zin sluit de intro-alinea af in plaats van
+    # een eigen alinea te openen. Een eigen alinea kostte 24pt (regel plus
+    # alineamarge) en duwde bij Loep Vertrek met n < 10 het korte blok "04
+    # Verdieping" van de contextpagina naar een eigen vel van 12%; in de
+    # alinea kost hij alleen de regel (gemeten in het productie-image).
+    vertrek = (" " + _h(ENPS_VERTREK_ZIN)) if scan_type == "exit" else ""
+    intro = (f'<p class="sec-intro">{SECTION_INTROS["werkgeversaanbeveling"]}{vertrek}</p>')
     ecol = _rag_color(10.0 if enps_score >= 20 else 6.0 if enps_score >= 0 else 4.0)
     n, p, d = enps_detail["n"], enps_detail["promoters"], enps_detail["detractors"]
     return (f'<div class="enps-inline no-break"><span class="eyebrow">Werkgeversaanbeveling</span>'
-            f'{_intro("werkgeversaanbeveling")}{vertrek}'
+            f'{intro}'
             f'<table class="sg"><tr><td><div class="sc-l">Aanbevelingsscore</div>'
             f'<div class="sc-v" style="color:{ecol};">{_enps_str(enps_score)}</div>'
             f'<div class="sc-b">{p} aanraders, {d} critici van {n} (eNPS, &minus;100 tot +100)</div></td>'
@@ -7010,12 +7033,21 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
                        f"{telw} scoort relatief sterk.")
         elif all(niv == 2 for niv in niveaus):
             duiding = f"Hier scoort de werkbeleving op alle {telw} relatief sterk."
-    if duiding:
-        overzichtskaart += (f'<p style="font-size:11px;color:#374151;max-width:66ch;'
-                            f'margin:-4px 0 14px;">{_h(duiding)}</p>')
     if not twee_kolommen:
+        if duiding:
+            overzichtskaart += (f'<p style="font-size:11px;color:#374151;max-width:66ch;'
+                                f'margin:-4px 0 14px;">{_h(duiding)}</p>')
         inhoud = overzichtskaart + "".join(kaarten)
     else:
+        # Taak 11 (polijstronde): in twee kolommen staat de R10-zin onder de
+        # laatste kaart van de rechterkolom, niet tussen de balken en de
+        # kolommen. De rechterkolom draagt een kaart minder en eindigt dus
+        # hoger; daar kost de zin geen hoogte. Boven de kolommen duwde hij de
+        # sectie 21pt omlaag, en daarmee "Per afdeling" (Loep Vertrek zonder
+        # afdelingen) naar een eigen vel van 11% (gemeten in het
+        # productie-image). In leesvolgorde sluit de zin de drie kaarten af.
+        if duiding:
+            kaarten = kaarten + [f'<p class="wb-duiding">{_h(duiding)}</p>']
         # De overzichtskaart staat over de volle breedte boven de kolommen, niet
         # in de linkerkolom. Daar was de balkenkaart (naam, balk, score en
         # bandlabel op een regel) breder dan een halve kolom: de linkercel
@@ -7025,7 +7057,7 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
         # kaarten, en `table-layout: fixed` op .wb-cols houdt ze elk op de helft.
         # De eerste kolom krijgt de grootste helft: de kaarten zijn ongeveer
         # even hoog, dus zo lopen de kolommen het gelijkst af.
-        helft = (len(kaarten) + 1) // 2
+        helft = (len(kaarten) - (1 if duiding else 0) + 1) // 2
         inhoud = (f'{overzichtskaart}<div class="tcol wb-cols">'
                   f'<div class="tc-l">{"".join(kaarten[:helft])}</div>'
                   f'<div class="tc-r">{"".join(kaarten[helft:])}</div></div>')

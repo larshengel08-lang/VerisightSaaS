@@ -124,9 +124,11 @@ def test_zonder_niets_byte_gelijk(scan_type, name):
     teksten = direction_option_texts(scan_type, "growth")
     assert (f'<tr class="dir-niets"><td class="iq">{NIETS[scan_type]}</td>'
             f'<td class="is">{telling}</td></tr></table>') in html
-    namen = [f"‘{teksten[k]}’" for k in niet_gekozen]
-    lijst = namen[0] if len(namen) == 1 else ", ".join(namen[:-1]) + " en " + namen[-1]
-    assert f'<div class="dir-unchosen">Niet gekozen: {lijst}.</div>' in html
+    # Taak 11 terugvaloptie 1: de korte vorm, alleen het aantal.
+    assert all(teksten[k] for k in niet_gekozen)
+    aantal = (f"{len(niet_gekozen)} andere richting" if len(niet_gekozen) == 1
+              else f"{len(niet_gekozen)} andere richtingen")
+    assert f'<div class="dir-unchosen">Niet gekozen: {aantal}.</div>' in html
     assert ('<p class="dir-caveat">Beperkte basis' in html) is voorbehoud
     assert _zonder_toevoegingen(html) == BASELINE[f"{scan_type}/{name}/card"]
     assert p02(a, scan_type) == BASELINE[f"{scan_type}/{name}/p02"]

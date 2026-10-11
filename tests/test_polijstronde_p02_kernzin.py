@@ -101,9 +101,12 @@ def test_r21_wie_en_wanneer_staan_een_keer_in_beide_hintvarianten():
         assert hint.strip().endswith("Wat vragen jullie deze afdeling zelf, wie doet dat, en wanneer?")
 
 
-VUL_TERUG = "Vul op de besluitpagina de terugkoppeling ook in als je het tweede punt parkeert."
-VUL_AFDELING = ("Vul op de besluitpagina de afdelingsafspraak en de terugkoppeling ook in als je "
-                "het tweede punt parkeert.")
+# Taak 11 (polijstronde): korte vorm. Met "op de besluitpagina ... als je het
+# tweede punt parkeert" liep de leidraad bij Loep Vertrek een regel langer en
+# p.02 over (gemeten in het productie-image); "dan" verwijst naar het parkeren
+# in de zin ervoor, de besluitpagina staat in de zin erna.
+VUL_TERUG = "Vul de terugkoppeling dan toch in."
+VUL_AFDELING = "Vul de afdelingsafspraak en de terugkoppeling dan toch in."
 PARKEERZIN = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
               "vervolgmoment.")
 

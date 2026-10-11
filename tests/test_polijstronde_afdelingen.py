@@ -157,7 +157,7 @@ def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
         factor_rows={d: {"factors": [("growth", 5.0, 12)], "omitted": 0}
                      for d in ("Operations", "Sales")},
         scan_type=scan_type)
-    assert "<p style=\"font-size:10px;color:#64748B;margin:10px 0 0;\">Alle onderwerpen per afdeling:" in met_uitsplitsing
+    assert "<p style=\"font-size:10px;color:#64748B;margin:6px 0 0;\">Alle onderwerpen per afdeling:" in met_uitsplitsing
     # Eén zin per scan, niet die van een ander product erbij.
     for ander, info in SEGMENT_SCOREKOLOM.items():
         if ander != scan_type:

@@ -414,11 +414,15 @@ def test_v16_vertrek_enps_zegt_van_wie_het_oordeel_is():
     t = htmllib.unescape(_enps_block(-40, ENPS, scan_type="exit"))
     assert ("Bij Loep Vertrek is dit het oordeel van mensen die vertrokken, niet van wie er "
             "nu werkt.") in t
-    # Direct na de intro, met dezelfde klasse.
+    # Direct na de intro, als slotzin van dezelfde alinea (Taak 11: een eigen
+    # alinea kostte de contextpagina van Loep Vertrek n=8 een vel van 12%).
     i = t.index("Lees dit als aanvullende context")
     j = t.index("Bij Loep Vertrek is dit het oordeel")
     assert i < j < t.index("Aanbevelingsscore")
-    assert '<p class="sec-intro">Bij Loep Vertrek' in t
+    alinea = t[t.rindex('<p class="sec-intro">', 0, i):t.index("</p>", j)]
+    assert "Lees dit als aanvullende context" in alinea
+    assert alinea.endswith("vandaan komt. Bij Loep Vertrek is dit het oordeel van mensen die "
+                           "vertrokken, niet van wie er nu werkt.")
 
 
 def test_v16_behoud_en_start_zonder_die_zin():
