@@ -1094,9 +1094,10 @@ def _frictie_duiding(avg_risk: float | None, *, met_onderwerpen: bool = True) ->
     # ladder van de onderwerpen. Alleen als het rapport onderwerpen toont: op
     # een degraded pagina twee is er geen ladder om mee te vergelijken.
     if met_onderwerpen:
+        onder_laag = f"{ZONE_LOW:.1f}".replace(".", ",")
+        onder_hoog = f"{ZONE_HIGH:.1f}".replace(".", ",")
         zin += (" Deze grenzen horen bij de frictiescore en zijn niet dezelfde als de "
-                "grenzen " + f"{ZONE_LOW:.1f}".replace(".", ",") + " en "
-                + f"{ZONE_HIGH:.1f}".replace(".", ",") + " bij de onderwerpen.")
+                "grenzen " + onder_laag + " en " + onder_hoog + " bij de onderwerpen.")
     return '<p class="p02-duiding">' + _h(zin) + "</p>"
 
 
@@ -3283,6 +3284,17 @@ def _niets_tekst(scan_type: str) -> str:
     return teksten.pop()
 
 
+def _richting_optie_tekst(texts: dict[str, str], key: str, factor_key: str,
+                          scan_type: str) -> str:
+    """De respondenttekst van een richtingoptie, met een nette fout in plaats
+    van een rauwe sleutel in een klant-PDF. Eén plek voor de kaart (_opt), de
+    niets-stemmen (_niets_apart) en de appendix (_bijlage_richting_block)."""
+    if key not in texts:
+        raise KeyError(
+            f"direction: onbekende optiesleutel {key!r} voor {factor_key!r} ({scan_type})")
+    return texts[key]
+
+
 def _niets_apart(st: dict, scan_type: str, factor_key: str) -> str:
     """"; 3 kozen ‘Niets, dit zit hier goed’": de niets-stemmen naast een
     richting die op de veranderkeuzes rust (spec 2026-10-07, taak 7). Leeg
@@ -3290,11 +3302,9 @@ def _niets_apart(st: dict, scan_type: str, factor_key: str) -> str:
     _opt in _direction_card_cell bij een onbekende sleutel."""
     if not st["none_n"]:
         return ""
-    texts = direction_option_texts(scan_type, factor_key)
-    if st["none_key"] not in texts:
-        raise KeyError(f"direction: onbekende optiesleutel {st['none_key']!r} voor "
-                       f"{factor_key!r} ({scan_type})")
-    return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{texts[st['none_key']]}’"
+    tekst = _richting_optie_tekst(direction_option_texts(scan_type, factor_key),
+                                  st["none_key"], factor_key, scan_type)
+    return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{tekst}’"
 
 
 def _op_veranderkeuzes(st: dict) -> bool:
@@ -3520,7 +3530,8 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     _should_show_appendix-waarde die de appendix rendert, van buiten
     meegegeven). Dan staan de keuzes bij de onderwerpen buiten de agenda
     daar (_bijlage_richting_block, voor precies de onderwerpen in `rest`
-    hieronder), en verwijst de zin "niet uitgewerkt" ernaar. De verwijzing
+    hieronder), en verwijst de zin "niet uitgewerkt" ernaar, mits het blok
+    bij minstens één onderwerp keuzes toont (_richting_overig). De verwijzing
     staat als RICHTING_OVERIG_PAGINA in de tekst; de aanroeper vult het anker
     in.
     """
@@ -3590,7 +3601,11 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
         if rest_antwoorden:
             zin += (" Die antwoorden gaan over onderwerpen die niet op de agenda staan "
                     "en zijn daarom niet uitgewerkt.")
-            if bijlage:
+            # Alleen als het blok in de appendix staat (bijlage) én daar bij
+            # minstens één onderwerp keuzes toont: met alleen "te weinig
+            # antwoorden"-regels valt er niets na te lezen.
+            if bijlage and any(toont for _k, toont in _richting_overig(direction_agg,
+                                                                         agenda_keys)):
                 zin += BIJLAGE_RICHTING_ZIN
     elif delen2:
         zin += "."
@@ -3744,10 +3759,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         klant-PDF. Alle takken lopen hierlangs, ook de koppen die vóór de
         verdelingstabel worden opgebouwd: een onbekende sleutel gaf daar anders
         een kale KeyError in plaats van deze melding."""
-        if key not in texts:
-            raise KeyError(
-                f"direction: onbekende optiesleutel {key!r} voor {factor_key!r} ({scan_type})")
-        return texts[key]
+        return _richting_optie_tekst(texts, key, factor_key, scan_type)
     if role == "startpunt":
         role_lbl, which = "Startpunt", "het startpunt"
     elif role == "tweede":
@@ -3858,6 +3870,20 @@ def _agenda_sleutels(ranked: list[dict]) -> list[str]:
     Eén definitie voor de totaalregel en de bijlage (V12), zodat "buiten de
     agenda" op beide plekken dezelfde onderwerpen zijn."""
     return [r["key"] for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
+
+
+def _richting_overig(direction_agg: dict, agenda_keys: list[str]) -> list[tuple[str, bool]]:
+    """(onderwerp, toont keuzes) voor elk onderwerp buiten de agenda dat iemand
+    als laagste had (lowest_n > 0), op aantal laagste-onderwerpen en dan op
+    sleutel. "Toont keuzes" = minstens DIRECTION_MIN_N beantwoorders, dezelfde
+    vloer als de richtingkaart.
+
+    Eén predicaat voor de totaalregel en het appendixblok (V12): de totaalregel
+    verwijst alleen naar het blok als het blok bij minstens één onderwerp echt
+    keuzes toont, en het blok toont precies deze onderwerpen."""
+    rest = [k for k, a in direction_agg.items() if k not in agenda_keys and a["lowest_n"] > 0]
+    return [(k, direction_agg[k]["answered"] >= DIRECTION_MIN_N)
+            for k in sorted(rest, key=lambda fk: (-direction_agg[fk]["lowest_n"], fk))]
 
 
 def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
@@ -4070,7 +4096,9 @@ def _werkvraag_tijdsanker(tekst: str, uitstroom: tuple[str, str] | None) -> str:
     if not uitstroom:
         return tekst
     eerste, laatste = uitstroom
-    periode = eerste if eerste == laatste else eerste + " tot " + laatste
+    # Dezelfde woorden als de regel op pagina twee ("vertrek in X" /
+    # "vertrek tussen X en Y", _uitstroomperiode).
+    periode = eerste if eerste == laatste else "tussen " + eerste + " en " + laatste
     return tekst.replace(WERKVRAGEN_TIJDSANKER, "in de uitstroomperiode (" + periode + ")")
 
 
@@ -4091,7 +4119,7 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
 
     uitstroom (V11, polijstronde): het bereik uit _uitstroom_bereik, alleen bij
     Loep Vertrek. Met een bereik leest het tijdsanker "in de uitstroomperiode
-    (december 2025 tot maart 2026)", het woord van pagina twee; zonder bereik
+    (tussen december 2025 en maart 2026)", de woorden van pagina twee; zonder bereik
     blijft "in de periode waar deze meting over gaat" staan.
     """
     if scan_type not in DIRECTION_SCAN_TYPES:
@@ -6581,10 +6609,14 @@ def _redenen_tegen_scores(factor_avgs: dict[str, float | None] | None,
 
     Een reden telt als zijn code via FACTOR_EXIT_CODE bij een onderwerp hoort,
     hij minstens MIN_SEGMENT_N keer genoemd is (hoofdreden en "speelde ook
-    mee" opgeteld; vermeldingen, geen personen, en zo staat het er ook) en dat
+    mee" opgeteld) en dat
     onderwerp op de getoonde score relatief sterk is (_factor_level 2, op
     _shown, B15). Beschrijvend: geen verband, geen oorzaak, geen advies.
     Volledige tellingen, niet de top 5 van de tabellen op de pagina.
+
+    Let op: de drempel telt vermeldingen, geen personen. Iemand die dezelfde
+    reden als hoofdreden én als meespelend opgaf, telt twee keer; daarom
+    zegt de zin "{n} keer genoemd" en nooit "{n} mensen".
     """
     factor_avgs = factor_avgs or {}
     reason_counts = reason_counts or {}
@@ -6597,9 +6629,13 @@ def _redenen_tegen_scores(factor_avgs: dict[str, float | None] | None,
         h, m = reason_counts.get(code, 0), cont_counts.get(code, 0)
         if h + m < MIN_SEGMENT_N:
             continue
-        kandidaten.append((-(h + m), code, h, m, score, fk))
+        kandidaten.append({"code": code, "fk": fk, "h": h, "m": m, "score": score})
+    # Meeste vermeldingen eerst; bij gelijkstand op redencode, zodat de
+    # volgorde vastligt.
+    kandidaten.sort(key=lambda c: (-(c["h"] + c["m"]), c["code"]))
     zinnen = []
-    for _neg, code, h, m, score, fk in sorted(kandidaten)[:REDEN_SCORE_MAX]:
+    for c in kandidaten[:REDEN_SCORE_MAX]:
+        code, fk, h, m, score = c["code"], c["fk"], c["h"], c["m"], c["score"]
         label = EXIT_REASON_LABELS_NL.get(code, code)
         if h and m:
             wat = (f"{h + m} keer genoemd als reden ({h} keer als hoofdreden, "
@@ -6995,15 +7031,14 @@ def _bijlage_richting_block(direction_agg: dict | None, agenda_keys: list[str],
     """
     if not direction_agg or scan_type not in DIRECTION_SCAN_TYPES:
         return ""
-    rest = [k for k, a in direction_agg.items()
-            if k not in agenda_keys and a["lowest_n"] > 0]
+    rest = _richting_overig(direction_agg, agenda_keys)
     if not rest:
         return ""
     regels = []
-    for k in sorted(rest, key=lambda fk: (-direction_agg[fk]["lowest_n"], fk)):
+    for k, toont_keuzes in rest:
         a = direction_agg[k]
         label = _fl(k, scan_type)
-        if a["answered"] < DIRECTION_MIN_N:
+        if not toont_keuzes:
             regels.append(f"{label}: {a['lowest_n']} "
                           + _werkwoord(a["lowest_n"], "had", "hadden")
                           + " dit als laagste onderwerp; te weinig antwoorden om iets "
@@ -7012,13 +7047,8 @@ def _bijlage_richting_block(direction_agg: dict | None, agenda_keys: list[str],
         texts = direction_option_texts(scan_type, k)
 
         def _naam(key: str, texts: dict[str, str] = texts, k: str = k) -> str:
-            # Een onbekende sleutel valt luid om, net als _opt op de kaart:
-            # nooit een rauwe sleutel in een klant-PDF.
-            if key.endswith("_other"):
-                return "Anders"
-            if key not in texts:
-                raise KeyError(f"direction: onbekende optiesleutel {key!r} voor {k!r} ({scan_type})")
-            return texts[key]
+            return ("Anders" if key.endswith("_other")
+                    else _richting_optie_tekst(texts, key, k, scan_type))
         counts = {key: c for key, c in a["counts"].items() if c > 0}
         verander = sorted(((key, c) for key, c in counts.items() if not key.endswith("_none")),
                           key=lambda kc: (-kc[1], kc[0]))
@@ -7029,7 +7059,7 @@ def _bijlage_richting_block(direction_agg: dict | None, agenda_keys: list[str],
             delen = delen + "; " + niets_deel if delen else niets_deel
         regel = f"{label} ({a['answered']} antwoorden)"
         regels.append(regel + (": " + delen + "." if delen else ": geen keuze vastgelegd."))
-    lijst = "".join(f'<p style="font-size:9.5px;color:#243247;margin:0 0 5px;">{_h(r)}</p>'
+    lijst = "".join(f'<p style="font-size:10px;color:#243247;margin:0 0 5px;">{_h(r)}</p>'
                     for r in regels)
     # Het anker op het blok zelf: de totaalregel op de gespreksagenda verwijst
     # hierheen, en het nummer moet de pagina van dit blok zijn.

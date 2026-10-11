@@ -27,6 +27,7 @@ from backend.report_html import (
     _uitstroom_bereik,
     _uitstroomperiode,
     _vertrekcontext,
+    _wat_moet_gebeuren_block,
     _werkvragen_block,
 )
 from scripts import stresstest_report as st
@@ -34,13 +35,8 @@ from scripts import stresstest_report as st
 _CACHE: dict[str, str] = {}
 
 
-@pytest.fixture(scope="module", autouse=True)
-def _stresstest_naar_tmp(tmp_path_factory):
-    """Scenario's renderen naar een tijdelijke map, niet naar docs/stresstest."""
-    out = tmp_path_factory.mktemp("stresstest")
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(st, "OUT_DIR", out)
-        yield
+# Scenario's renderen naar een tijdelijke map (gedeelde fixture in conftest.py).
+pytestmark = pytest.mark.usefixtures("stresstest_naar_tmp")
 
 
 # Een Vertrek-scenario met een bijlage (n > 20, alle zes onderwerpen gescoord)
@@ -207,7 +203,7 @@ def _werkvragen(html: str) -> str:
 def test_v11_met_periode_noemt_de_uitstroomperiode():
     html = _html_22_met_periode()
     wq = _werkvragen(html)
-    assert ("En in de uitstroomperiode (december 2025 tot maart 2026)?") in wq
+    assert "En in de uitstroomperiode (tussen december 2025 en maart 2026)?" in wq
     assert "in de periode waar deze meting over gaat" not in _plain(html)
     assert "een jaar geleden" not in _plain(html)
     # Hetzelfde woord als pagina twee.
@@ -258,6 +254,13 @@ def _dir_agg(**per_factor):
     return agg
 
 
+def test_v12_regels_op_minstens_10px():
+    agg = _dir_agg(leadership=_agg(10, 10, {}), workload=_agg(4, 4, {"wld_none": 4}))
+    blok = _bijlage_richting_block(agg, ["leadership"], "exit")
+    assert "font-size:9.5px;color:#243247;margin:0 0 5px" not in blok
+    assert "font-size:10px" in blok
+
+
 def test_v12_blok_toont_keuzes_niets_apart_achteraan_nul_weg():
     texts = direction_option_texts("exit", "workload")
     routes = [k for k in texts if not k.endswith(("_none", "_other"))]
@@ -282,6 +285,29 @@ def test_v12_onder_de_vloer_geen_keuzes():
     assert ("Cultuur en veiligheid: 1 had dit als laagste onderwerp; te weinig antwoorden "
             "om iets over te zeggen.") in t
     assert "Niets" not in t
+    assert DIRECTION_MIN_N == 3
+
+
+def test_v12_geen_verwijzing_als_het_blok_geen_keuzes_toont():
+    # Buiten de agenda alleen onderwerpen onder de vloer: het blok toont alleen
+    # "te weinig antwoorden", dus de totaalregel verwijst er niet naar.
+    agg = _dir_agg(leadership=_agg(10, 10, {"ldd_none": 10}), growth=_agg(8, 8, {"grd_none": 8}),
+                   workload=_agg(2, 2, {"wld_none": 2}), culture=_agg(1, 1, {"cud_none": 1}))
+    zin = _direction_totals_line(agg, ["leadership", "growth"], "exit", 21, bijlage=True)
+    assert "niet uitgewerkt." in zin
+    assert "Wat zij kozen" not in zin
+    blok = _bijlage_richting_block(agg, ["leadership", "growth"], "exit")
+    assert "te weinig antwoorden" in blok
+    ranked = [{"key": "leadership", "label": "Leiderschap en feedback", "score": 4.0,
+               "agenda_role": "startpunt"},
+              {"key": "growth", "label": "Groeiperspectief", "score": 4.5,
+               "agenda_role": "tweede"}]
+    html = _wat_moet_gebeuren_block(ranked, agg, "exit", 21, bijlage=True)
+    assert "href=\"#" + LEIDRAAD_ANKERS["richting_overig"] not in html
+    # Precies op de vloer wel.
+    agg["workload"] = _agg(3, 3, {"wld_none": 3})
+    assert "Wat zij kozen" in _direction_totals_line(agg, ["leadership", "growth"], "exit",
+                                                      22, bijlage=True)
     assert DIRECTION_MIN_N == 3
 
 

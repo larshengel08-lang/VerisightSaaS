@@ -21,13 +21,8 @@ from backend.report_html import (
 from scripts import stresstest_report as st
 
 
-@pytest.fixture(scope="module", autouse=True)
-def _stresstest_naar_tmp(tmp_path_factory):
-    """Scenario's renderen naar een tijdelijke map, niet naar docs/stresstest."""
-    out = tmp_path_factory.mktemp("stresstest")
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(st, "OUT_DIR", out)
-        yield
+# Scenario's renderen naar een tijdelijke map (gedeelde fixture in conftest.py).
+pytestmark = pytest.mark.usefixtures("stresstest_naar_tmp")
 
 STREEPJES = ("—", "–")
 AFDELINGSDEEL = "geen uitkomsten van afdelingen"
