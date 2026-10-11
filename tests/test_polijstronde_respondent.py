@@ -291,12 +291,33 @@ def test_scoringsfout_noemt_vervolgstap():
 NEUTRAAL_CONTACT = "contact op met wie je de link heeft gestuurd"
 
 
+RESPONDENTMAILS = [ROOT / "templates" / "emails" / n for n in ("uitnodiging.html", "herinnering.html")]
+
+
 @pytest.mark.parametrize("pad", [ROOT / "backend" / "main.py", ROOT / "backend" / "survey_window.py"]
-                         + RESPONDENT, ids=lambda p: p.name)
+                         + RESPONDENT + RESPONDENTMAILS, ids=lambda p: p.name)
 def test_respondentteksten_noemen_geen_hr_afdeling(pad):
-    # Eindreview polijstronde: ook vertrekkers lezen deze pagina's; zij hebben
-    # geen HR-afdeling meer. De afmeldregel in de mails (HR-kant) valt erbuiten.
-    assert "HR-afdeling van je organisatie" not in pad.read_text(encoding="utf-8")
+    # Eindreview polijstronde: ook vertrekkers lezen deze pagina's en de
+    # uitnodigings- en herinneringsmail (die gaan naar respondenten, ook de
+    # afmeldregel); zij hebben geen HR-afdeling meer. Witruimte genormaliseerd:
+    # in de mails liep de zin over twee regels.
+    tekst = " ".join(pad.read_text(encoding="utf-8").split())
+    assert "HR-afdeling van je organisatie" not in tekst
+
+
+@pytest.mark.parametrize("naam,soort", [("uitnodiging.html", "uitnodigingen"),
+                                        ("herinnering.html", "herinneringen")])
+def test_respondentmail_afmeldregel_neutraal_en_rendert(naam, soort):
+    from backend.email import _render_email_template
+
+    html = _render_email_template(naam, campaign_name="Test", intro="Intro",
+                                  duration="ongeveer 8 minuten",
+                                  survey_url="https://example.test/s/abc")
+    tekst = _zichtbare_tekst(html)
+    assert ("Wil je geen " + soort + " meer ontvangen? Neem " + NEUTRAAL_CONTACT
+            + " of stuur een e-mail naar privacy@getloep.nl") in tekst
+    # str.format_map heeft alles ingevuld: geen losse accolades over.
+    assert "{" not in html and "}" not in html
 
 
 def test_respondenthints_in_neutrale_vorm():
