@@ -229,8 +229,9 @@ def test_drempeltabel_noemt_de_nieuwe_voorbehoudregel():
 # geëscapete tekst.
 ANDERE_TELLING = ('<div class="dir-chain dir-telling">Dit is een andere telling dan de 16 '
                   "bij de toelichting op pagina " + _pref(_verdieping_anker(FK))
-                  + ": daar gaat het om wie op dit onderwerp duidelijk laag antwoordde, hier "
-                  "om wie dit als eigen laagste onderwerp had.</div>")
+                  + ": daar gaat het om wie op dit onderwerp duidelijk laag antwoordde en de "
+                  "verdiepende vraag beantwoordde, hier om wie dit als eigen laagste "
+                  "onderwerp had.</div>")
 
 
 def test_andere_telling_onder_de_keten_met_verwijzing():
@@ -246,7 +247,10 @@ def test_andere_telling_onder_de_keten_met_verwijzing():
 def test_andere_telling_enkelvoud():
     _n, (a, b, *_r) = _keys("retention")
     html = _kaart({a: 11, b: 4}, "retention", toelichting_n=1)
-    assert "Dit is een andere telling dan die ene bij de toelichting op pagina" in _plain(html)
+    tekst = _plain(html)
+    assert "Dit is een andere telling dan die ene bij de toelichting op pagina" in tekst
+    # Ook in het enkelvoud: het getal is het aantal beantwoorders (eindreview).
+    assert "duidelijk laag antwoordde en de verdiepende vraag beantwoordde, hier" in tekst
 
 
 @pytest.mark.parametrize("kw", [{}, {"toelichting_n": 0}, {"toelichting_n": None}])

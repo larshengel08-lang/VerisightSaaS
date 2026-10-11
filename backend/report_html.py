@@ -970,14 +970,15 @@ def _blijfintentie_zones(stay_scores: list[float]) -> tuple[int, int, int, int]:
 def _blijfintentie_cell(avg_si: float | None, stay_scores: list[float]) -> str:
     """Blijfintentie met dezelfde band als de onderwerpen en de zone-verdeling (B1).
 
-    "Blijfintentie 3.9/10: kwetsbaar. 25 van de 39 zitten onder de 5." De band
-    komt uit _factor_label (dus op de getoonde score, B15), de zones uit
+    "Blijfintentie 3.9/10 / Kwetsbaar punt: 25 van de 39 zitten onder de 5." De
+    band komt uit _factor_label (dus op de getoonde score, B15), met hoofdletter
+    zoals de cel Werkbeeld ernaast (eindreview polijstronde); de zones uit
     score_distribution: dezelfde grenzen als de spreidingsstrook verderop.
     """
     if avg_si is None:
         return ""
     low, _mid, _high, n = _blijfintentie_zones(stay_scores)
-    band = _factor_label(avg_si).lower()
+    band = _factor_label(avg_si)
     zones = _onder_de_vijf(low, n) if n else "geen losse scores beschikbaar"
     return (f'<td><div class="sc-l">Blijfintentie</div>'
             f'<div class="sc-v" style="color:{_factor_color(avg_si)};">{_score_str(avg_si)}</div>'
@@ -3752,7 +3753,9 @@ def _andere_telling_html(factor_key: str, toelichting_n: int | None) -> str:
 
     Op dezelfde pagina staan twee tellingen die vaak hetzelfde getal dragen
     (bijv. twee keer 16): wie dit als eigen laagste onderwerp had (de keten)
-    en wie hier duidelijk laag antwoordde (de toelichting). "Telling", niet
+    en wie hier duidelijk laag antwoordde en de verdiepende vraag beantwoordde
+    (de toelichting; toelichting_n telt de beantwoorders, niet iedereen die
+    de vraag kreeg, eindreview polijstronde). "Telling", niet
     "groep": de twee groepen kunnen overlappen. Leeg zonder toelichtingsblok
     (None) of als niemand de verdiepingsvraag beantwoordde (0). De
     paginaverwijzing staat buiten _h(), anders wordt het anker tekst.
@@ -3764,7 +3767,8 @@ def _andere_telling_html(factor_key: str, toelichting_n: int | None) -> str:
             + _h("Dit is een andere telling dan " + wie + " bij de toelichting op pagina ")
             + _pref(_verdieping_anker(factor_key))
             + _h(": daar gaat het om wie op dit onderwerp duidelijk laag "
-                 "antwoordde, hier om wie dit als eigen laagste onderwerp had.")
+                 "antwoordde en de verdiepende vraag beantwoordde, hier om wie "
+                 "dit als eigen laagste onderwerp had.")
             + "</div>")
 
 

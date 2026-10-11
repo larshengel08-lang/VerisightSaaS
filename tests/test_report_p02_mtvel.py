@@ -34,14 +34,14 @@ def _tekst(html: str) -> str:
 def test_blijfintentie_cel_toont_band_en_zones():
     cel = _tekst(_blijfintentie_cell(3.9, STAY_KWETSBAAR))
     assert "Blijfintentie 3.9/10" in cel
-    assert "kwetsbaar" in cel
-    assert "25 van de 39 zitten onder de 5" in cel
+    # Met hoofdletter, uit _factor_label, zoals de cel Werkbeeld ernaast (eindreview).
+    assert "Kwetsbaar punt: 25 van de 39 zitten onder de 5" in cel
+    assert "kwetsbaar punt:" not in cel
 
 
 def test_blijfintentie_cel_relatief_sterk():
     cel = _tekst(_blijfintentie_cell(7.5, STAY_STERK))
-    assert "relatief sterk" in cel
-    assert "0 van de 39 zitten onder de 5" in cel
+    assert "Relatief sterk: 0 van de 39 zitten onder de 5" in cel
 
 
 def test_blijfintentie_cel_leeg_zonder_score():
