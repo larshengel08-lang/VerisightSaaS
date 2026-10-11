@@ -10,7 +10,13 @@ from backend.report_css import RAG_HIGH, RAG_LOW, RAG_MID
 ZONE_LOW = 5.0   # < ZONE_LOW  -> kwetsbaar punt (laagste zone)
 ZONE_HIGH = 6.5  # < ZONE_HIGH -> aandachtspunt; >= ZONE_HIGH -> relatief sterk
 
-# Polarisatie: beide buitenzones >= 25% en samen >= 60% van de respondenten.
+# Breedte van een spreidingsstrook over de volle tekstbreedte (A4 min 2 x 16 mm
+# kantlijn is ongeveer 673 px). Eén bron voor de behoudscontext en de
+# onderwerppagina's (polijstronde R24); de compacte 440 blijft de default.
+STROOK_BREEDTE_VOL = 660
+
+# Polarisatie: beide buitenzones >= 25% en samen >= 60% van de respondenten,
+# en de middengroep kleiner dan elk van beide buitengroepen (polijstronde R17).
 _POL_EACH = 0.25
 _POL_COMBINED = 0.60
 
@@ -24,8 +30,13 @@ def score_distribution(values: list[float]) -> dict:
     high = sum(1 for v in vals if v >= ZONE_HIGH)
     mid = len(vals) - low - high
     n = len(vals)
+    # De laatste voorwaarde (polijstronde R17): "twee verschillende ervaringen"
+    # is alleen waar als het midden dun is. Bij 15 / 14 / 10 is de middengroep
+    # bijna even groot als de laagste en groter dan de hoogste; dan beschrijft
+    # het gemiddelde drie groepen, niet twee. 4 / 2 / 4 blijft verdeeld.
     polarized = (low / n >= _POL_EACH and high / n >= _POL_EACH
-                 and (low + high) / n >= _POL_COMBINED)
+                 and (low + high) / n >= _POL_COMBINED
+                 and mid < low and mid < high)
     return {
         "zones": (low, mid, high),
         "dots": sorted(vals),
@@ -86,8 +97,24 @@ def shown(score: float | None) -> float | None:
     return float(f"{score:.1f}")
 
 
+def _zone_index(v: float) -> int:
+    """0 = laagste zone, 1 = midden, 2 = hoogste zone, op de exacte waarde.
+
+    De vergelijking met ZONE_LOW en ZONE_HIGH voor kleur (_zone_color) en via
+    zone_index ook voor de labelniveaus in report_html (_factor_level, en
+    daarmee _factor_label en _band_key voor retention/onboarding).
+    score_distribution telt de stippen met dezelfde constanten. De strikt
+    kleiner-dan-grenzen: 5,0 zelf hoort in het midden, 6,5 zelf bovenin.
+    """
+    if v < ZONE_LOW:
+        return 0
+    if v < ZONE_HIGH:
+        return 1
+    return 2
+
+
 def _zone_color(v: float, invert_scale: bool) -> str:
-    """De ladder: de enige plek in de codebase met deze drempels.
+    """De kleur bij een zone; de indeling zelf doet _zone_index.
 
     Alles wat een score of een stip een RAG-kleur geeft, loopt hier langs:
     zone_color (naast een getoonde score), dot_color (een stip in de strook) en
@@ -97,11 +124,7 @@ def _zone_color(v: float, invert_scale: bool) -> str:
     4.0 een amber rij boven een teal stip stond (spec ronde 2 par. 7b).
     """
     low, high = _zone_ends(invert_scale)
-    if v < ZONE_LOW:
-        return low
-    if v < ZONE_HIGH:
-        return _C_MID
-    return high
+    return (low, _C_MID, high)[_zone_index(v)]
 
 
 def zone_color(score: float, invert_scale: bool = False) -> str:
@@ -112,6 +135,14 @@ def zone_color(score: float, invert_scale: bool = False) -> str:
     dot_color, die op de exacte waarde kleurt.
     """
     return _zone_color(shown(score), invert_scale)
+
+
+def zone_index(score: float) -> int:
+    """Zone van een getoonde score: 0 laag, 1 midden, 2 hoog. Rondt af zoals
+    zone_color (B15), zodat een label naast een getal dezelfde zone noemt als
+    de kleur ervan. Op de getallenas, dus los van invert_scale: bij een
+    omgekeerde as (vertrekintentie) is zone 2 de slechte kant."""
+    return _zone_index(shown(score))
 
 
 def dot_color(value: float, invert_scale: bool = False) -> str:
@@ -217,8 +248,11 @@ def distribution_block(values: list[float], width: int = 440, height: int = 34,
     low, mid, high = dist["zones"]
     labels = _ZONE_LABELS_INVERT if invert_scale else _ZONE_LABELS
     c_low, c_high = _zone_ends(invert_scale)
+    # De tellingen zijn even breed als de strook (polijstronde R24): over de
+    # volle tekstbreedte stond "STERK 4" rechts naast een strook die op twee
+    # derde ophield, tegen de kantlijn.
     counts = (
-        f'<div style="display:flex;justify-content:space-between;margin-top:3px;'
+        f'<div style="display:flex;justify-content:space-between;width:{width}px;margin-top:3px;'
         f"font-family:'JetBrains Mono', monospace;font-size:8px;letter-spacing:0.08em;"
         f'text-transform:uppercase;">'
         f'<span style="color:{c_low};">{labels[0]} {low}</span>'

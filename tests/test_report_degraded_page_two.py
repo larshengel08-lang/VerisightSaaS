@@ -182,7 +182,7 @@ def test_eerlijke_zin_noemt_aantal_en_drempel(scan_type):
 
 @pytest.mark.parametrize("scan_type,belofte", [
     ("exit", "de opgegeven vertrekredenen"),
-    ("retention", "de behoudscontext"),
+    ("retention", "de cijfers over blijven en vertrekken"),
     ("onboarding", "het checkpointoverzicht"),
 ])
 def test_eerlijke_zin_is_per_product_toegesneden(scan_type, belofte):
@@ -292,7 +292,9 @@ def test_met_profiel_is_pagina_twee_niet_degraded(scan_type):
 
 _DEGRADED_SIGNAAL = {
     "exit": "De frictiescore van 5.5/10 wijst op een",
-    "retention": "(behoudssignaal 5.5/10).",
+    # Polijstronde: het label heet Werkbeeld en de band heeft geen onderwerp
+    # meer, dus een hele zin in plaats van "{band} (behoudssignaal 5.5/10).".
+    "retention": "Het werkbeeld is 5.5/10: een aandachtspunt.",
     "onboarding": "(checkpointscore 5.5/10).",
 }
 

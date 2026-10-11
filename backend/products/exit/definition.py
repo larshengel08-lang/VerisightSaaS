@@ -5,6 +5,11 @@ from typing import Any
 from backend.products.shared.definitions import build_org_sections
 
 
+# Invultijd in minuten: een bron voor survey_intro, invite_duration en de
+# startpagina (spec 2026-10-09 par. 4). frontend/lib/campaign-setup.ts
+# SURVEY_MINUTES moet gelijk blijven (tests/test_polijstronde_respondent.py).
+SURVEY_MINUTES = 8
+
 SCAN_DEFINITION: dict[str, Any] = {
     "product_name": "Loep Vertrek",
     "signal_label": "Frictiescore",
@@ -32,7 +37,8 @@ SCAN_DEFINITION: dict[str, Any] = {
             "latere kalibratie dragen."
         ),
     },
-    "survey_intro": "Bedankt voor je tijd. Je antwoorden helpen de organisatie beter te worden. Dit duurt circa 8 minuten.",
+    "survey_minutes": SURVEY_MINUTES,
+    "survey_intro": "Bedankt voor je tijd. Je antwoorden helpen de organisatie beter te worden. Invullen kost ongeveer " + str(SURVEY_MINUTES) + " minuten.",
     "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op gegroepeerd niveau gerapporteerd. De uitkomsten zijn bedoeld als groepsinzichten en gespreksinput, niet als individueel oordeel of harde voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk ervoer. Geef aan in welke mate elke stelling voor jou van toepassing was (1 = helemaal niet mee eens, 5 = helemaal mee eens).",
     "org_intro": "Geef aan in welke mate de volgende uitspraken van toepassing waren op jouw werksituatie.",
@@ -43,8 +49,8 @@ SCAN_DEFINITION: dict[str, Any] = {
     "open_text_label": "Wat had de organisatie volgens jou eerder moeten begrijpen, bespreken of zien rond je vertrek?",
     "open_text_placeholder": "Beschrijf wat voor management of HR eerder zichtbaar of bespreekbaar had mogen worden.",
     "open_text_help": "Je antwoord wordt geanonimiseerd opgeslagen. Noem bij voorkeur geen namen of direct herleidbare details.",
-    "invite_intro": "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen over jouw ervaringen binnen de organisatie. Dit helpt de organisatie concreet te verbeteren.",
-    "invite_duration": "8-12 minuten",
+    "invite_intro": "De organisatie waar je werkt of werkte, nodigt je uit om een korte vragenlijst in te vullen over jouw ervaringen binnen die organisatie. Dit helpt de organisatie concreet te verbeteren.",
+    "invite_duration": "ongeveer " + str(SURVEY_MINUTES) + " minuten",
     "contact_subject": "Kennismakingsaanvraag Loep Vertrek",
     "dashboard_signal_help": "Frictieschaal 1-10: hogere score = sterker signaal van ervaren werkfrictie rondom vertrek. Gebruik deze score als managementsamenvatting, niet als causale verklaring, en lees hem samen met signalen van werkfrictie.",
     "report_repeat_title": "Herhaal Loep Vertrek, elk kwartaal of halfjaar",

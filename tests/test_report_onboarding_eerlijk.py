@@ -100,7 +100,9 @@ def test_de_note_zegt_wat_er_ontbreekt_en_wat_er_wel_is():
     assert "geen verdiepingsvragen" in note
     assert "geen richtingvraag" in note
     assert "waar het wringt bij nieuwe medewerkers" in note
-    assert "volgende versie" in note
+    # Leesronde 4, S2: geen productplanning meer, wel wat de lezer zelf doet.
+    assert "vraag je in het gesprek met hen" in note
+    assert "volgende versie" not in note
     assert "—" not in note and "&#x2014;" not in note
     assert " ik " not in note.lower()
 
@@ -125,7 +127,7 @@ def test_de_note_belooft_zonder_profiel_niet_dat_dit_rapport_laat_zien_waar_het_
     assert ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED in pagina
     assert "laat zien waar het wringt bij nieuwe medewerkers" not in pagina
     # De helft die over het product gaat en dus waar blijft, staat er nog.
-    assert "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag." in pagina
+    assert "Deze scan bevat geen verdiepingsvragen en geen richtingvraag." in pagina
 
 
 def test_de_degraded_note_is_vrij_van_em_dashes_en_spreekt_niet_in_de_ik_vorm():
@@ -222,8 +224,8 @@ def test_de_agenda_constateert_niet_twee_keer_hetzelfde():
 def test_de_zin_dekt_alle_vier_de_uitkomsten(laagste_van_alles, uniek, verwacht):
     zin = _laagste_stelling_zin("Rolhelderheid", "Ik weet wat er van mij wordt verwacht",
                                 5.1, laagste_van_alles=laagste_van_alles, uniek=uniek)
-    assert zin == ("Bespreek eerst ‘Ik weet wat er van mij wordt verwacht’ "
-                   "binnen rolhelderheid (5.1/10). " + verwacht)
+    assert zin == ("Bespreek eerst de stelling ‘Ik weet wat er van mij wordt verwacht’ "
+                   "(5.1/10), binnen rolhelderheid. " + verwacht)
 
 
 @pytest.mark.parametrize("score,alle,verwacht", [

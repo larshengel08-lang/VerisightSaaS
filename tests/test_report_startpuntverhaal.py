@@ -87,8 +87,9 @@ def test_restgroep_heeft_samenstelling_en_noemer():
     tekst = _tekst(html)
     assert "Overige afdelingen Facilitair, Staf" in tekst
     assert "9/19" in tekst and "47%" in tekst
+    # S9 (polijstronde): de restgroep heeft er 9, dus geen cijfer in de zin.
     assert ("De restgroep “Overige afdelingen” (Facilitair, Staf; samen 19 uitgenodigd, 9 ingevuld) "
-            "scoort lager (5.9/10)") in tekst.replace("&ldquo;", "“").replace("&rdquo;", "”")
+            "scoort lager, maar") in tekst.replace("&ldquo;", "“").replace("&rdquo;", "”")
 
 
 def test_restgroep_zonder_noemer_meldt_alleen_het_aantal():

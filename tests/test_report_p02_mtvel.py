@@ -34,14 +34,23 @@ def _tekst(html: str) -> str:
 def test_blijfintentie_cel_toont_band_en_zones():
     cel = _tekst(_blijfintentie_cell(3.9, STAY_KWETSBAAR))
     assert "Blijfintentie 3.9/10" in cel
-    assert "kwetsbaar" in cel
-    assert "25 van de 39 zitten onder de 5" in cel
+    # Met hoofdletter, uit _factor_label, zoals de cel Werkbeeld ernaast (eindreview).
+    assert "Kwetsbaar punt: 25 van de 39 zitten onder de 5" in cel
+    assert "kwetsbaar punt:" not in cel
+
+
+def test_blijfintentie_cel_breekt_niet_voor_het_getal():
+    # Eindreview polijstronde: in het voorbeeld (en de hero op de homepage) viel
+    # de "5" alleen op een nieuwe regel. "onder de 5" blijft bij elkaar.
+    nbsp = chr(0xA0)
+    cel = _blijfintentie_cell(3.9, STAY_KWETSBAAR)
+    assert "zitten onder" + nbsp + "de" + nbsp + "5" in cel
+    assert "onder de 5" not in cel
 
 
 def test_blijfintentie_cel_relatief_sterk():
     cel = _tekst(_blijfintentie_cell(7.5, STAY_STERK))
-    assert "relatief sterk" in cel
-    assert "0 van de 39 zitten onder de 5" in cel
+    assert "Relatief sterk: 0 van de 39 zitten onder de 5" in cel
 
 
 def test_blijfintentie_cel_leeg_zonder_score():
@@ -909,7 +918,7 @@ def test_css_houdt_pagina_twee_compact():
                   "#p02 .leidraad { margin-top: 10px;",
                   "#p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38;",
                   "#p02 .leidraad td.lw { width: 22%;",
-                  "#p02 .meet-blok { margin-top: 8px;",
+                  "#p02 .meet-blok { margin-top: 4px;",
                   "#p02 .meet-blok .slabel { margin-bottom: 6px;",
                   "#p02 .meet-blok .sg { margin-bottom: 4px;"):
         assert regel in css, regel

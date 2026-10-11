@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { faqs } from '@/components/marketing/site-content'
+import { SURVEY_DURATION_LABEL } from '@/lib/campaign-setup'
 import { buildContactHref } from '@/lib/contact-funnel'
 import {
   PRICING_ABOVE_LABEL,
@@ -44,8 +45,9 @@ const scans = [
       'Je wilt een eerste keuze, geen breed onderzoeksproject',
     ],
     output: 'Rapport met waarom mensen weggingen, volgens henzelf, en wat je als eerste aanpakt.',
-    // afgerond vanaf de officiële invite_duration (8-12 min) in backend/products/exit
-    duration: '± 10 minuten',
+    // Uit SURVEY_MINUTES (lib/campaign-setup.ts), gelijk aan survey_minutes in
+    // backend/products/exit: dezelfde invultijd als de vragenlijst zelf noemt.
+    duration: SURVEY_DURATION_LABEL.exit,
     // Eerlijke verwachting (Fail Loud): patroonanalyse in het rapport vraagt
     // minimaal 10 responses (backend/report.py); bij kleinere organisaties
     // betekent dat een langere meetperiode. Behoud/Start meten de hele
@@ -69,8 +71,9 @@ const scans = [
       'Je wilt een eerste keuze, geen breed MTO-project',
     ],
     output: 'Rapport met waar het wringt, wat je mensen erover zeggen, en waar je begint. Per afdeling, nooit per persoon.',
-    // afgerond vanaf de officiële invite_duration (6-10 min) in backend/products/retention
-    duration: '± 8 minuten',
+    // Uit SURVEY_MINUTES (lib/campaign-setup.ts), gelijk aan survey_minutes in
+    // backend/products/retention.
+    duration: SURVEY_DURATION_LABEL.retention,
     note: null,
     samplePdf: '/examples/voorbeeldrapport_retentiescan.pdf',
     contactRoute: 'retentiescan',
@@ -90,8 +93,9 @@ const scans = [
       'Je wilt eerst een kleine borg- of correctiestap bepalen',
     ],
     output: 'Rapport met de vroege landing in rol, leiding en team op groepsniveau. De verdieping (waarom, volgens je mensen) en het blok "wat er moet gebeuren" komen in een volgende versie.',
-    // afgerond vanaf de officiële invite_duration (3-5 min) in backend/products/onboarding
-    duration: '± 5 minuten',
+    // Uit SURVEY_MINUTES (lib/campaign-setup.ts), gelijk aan survey_minutes in
+    // backend/products/onboarding.
+    duration: SURVEY_DURATION_LABEL.onboarding,
     note: null,
     samplePdf: null,
     contactRoute: 'onboarding',

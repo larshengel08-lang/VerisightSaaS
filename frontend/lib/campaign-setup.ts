@@ -60,18 +60,35 @@ export function getAllowedDeliveryModes(scanType: ScanType): DeliveryMode[] {
 }
 
 /**
- * Invultijd zoals de vragenlijst hem zelf noemt in survey_intro
- * (backend/products/{scan}/definition.py). De uitnodigings- en herinneringstekst
- * gebruiken deze waarde, zodat de klant niet iets anders belooft dan de
- * respondent leest. Scans zonder eigen tijdsindicatie krijgen een neutrale
- * formulering in plaats van een verzonnen getal.
+ * Invultijd in minuten, gelijk aan survey_minutes in
+ * backend/products/{scan}/definition.py. Daar bouwen survey_intro, de
+ * uitnodigingsmail en de startpagina van de vragenlijst hun tijdzin uit;
+ * tests/test_polijstronde_respondent.py pint dat deze getallen gelijk blijven.
+ * Alleen de verkochte scans hebben een getal.
+ */
+export const SURVEY_MINUTES: Partial<Record<ScanType, number>> = {
+  exit: 8,
+  retention: 6,
+  onboarding: 3,
+}
+
+function surveyDurationLabel(scanType: ScanType): string {
+  const minutes = SURVEY_MINUTES[scanType]
+  return minutes ? 'ongeveer ' + minutes + ' minuten' : 'een paar minuten'
+}
+
+/**
+ * Invultijd zoals de vragenlijst hem zelf noemt, afgeleid uit SURVEY_MINUTES.
+ * De uitnodigings- en herinneringstekst gebruiken deze waarde, zodat de klant
+ * niet iets anders belooft dan de respondent leest. Scans zonder eigen
+ * tijdsindicatie krijgen een neutrale formulering in plaats van een verzonnen getal.
  */
 export const SURVEY_DURATION_LABEL: Record<ScanType, string> = {
-  exit: 'ongeveer 8 minuten',
-  retention: 'ongeveer 6 minuten',
-  onboarding: 'ongeveer 3 minuten',
-  culture_assessment: 'een paar minuten',
-  pulse: 'een paar minuten',
-  team: 'een paar minuten',
-  leadership: 'een paar minuten',
+  exit: surveyDurationLabel('exit'),
+  retention: surveyDurationLabel('retention'),
+  onboarding: surveyDurationLabel('onboarding'),
+  culture_assessment: surveyDurationLabel('culture_assessment'),
+  pulse: surveyDurationLabel('pulse'),
+  team: surveyDurationLabel('team'),
+  leadership: surveyDurationLabel('leadership'),
 }

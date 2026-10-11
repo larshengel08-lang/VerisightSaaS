@@ -129,8 +129,10 @@ def test_split_none_gaat_voor_clear():
     st = dp.direction_state(_agg({a: 4, none_key: 4}), FK, 4.5)
     assert st["state"] == "split_none"
     assert st["top_key"] == a and st["top_n"] == 4 and st["second_n"] == 0
-    # Zelfde stemmen op een niet-kwetsbare score: dan wel clear.
-    assert dp.direction_state(_agg({a: 4, none_key: 4}), FK, 6.0)["state"] == "clear"
+    # Zelfde stemmen op een niet-kwetsbare score: geen split_none.
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    # Niets 4 tegen a 4: verdeeld.
+    assert dp.direction_state(_agg({a: 4, none_key: 4}), FK, 6.0)["state"] == "divided"
 
 
 def test_vloer_op_inhoudelijke_stemmen():
@@ -145,9 +147,17 @@ def test_vloer_op_inhoudelijke_stemmen():
 
 def test_plurality_op_inhoudelijke_stemmen():
     none_key, _o, (a, b, c, d, *_r) = _opties()
-    # n=12, change_n=8, a 4/8 = 0,5 met voorsprong 2 op b: clear (oud: 4/12 = 0,33 -> divided)
+    # n=11, change_n=8, a 4/8 = 0,5 met voorsprong 2 op b, niets 3 < 4: clear
+    # (oud: 4/11 = 0,36 -> divided). Deze invoer draagt het punt van de test
+    # sinds spec 2026-10-09 par. 3; de oude invoer met niets 4 staat eronder.
+    agg = _agg({a: 4, b: 2, c: 2, none_key: 3})
+    st = dp.direction_state(agg, FK, 6.5)
+    assert st["state"] == "clear" and st["top_key"] == a and st["change_n"] == 8
+    assert _oud(agg, FK, 6.5)["state"] == "divided"
+    # n=12, change_n=8, a 4/8 met voorsprong 2, maar niets 4 tegen a 4.
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
     agg = _agg({a: 4, b: 2, c: 2, none_key: 4})
-    assert dp.direction_state(agg, FK, 6.5)["state"] == "clear"
+    assert dp.direction_state(agg, FK, 6.5)["state"] == "divided"
     assert _oud(agg, FK, 6.5)["state"] == "divided"
     # n=13, change_n=10, a 4/10 = 0,4 (< 0,5, >= 0,35), voorsprong 2: plurality (oud: 4/13 -> divided)
     agg = _agg({a: 4, b: 2, c: 2, d: 2, none_key: 3})
@@ -234,10 +244,12 @@ def test_defecte_rij_verandert_de_staat_alleen_via_n():
                 counts, score, schoon["state"], defect["state"])
             opgeheven.add((schoon["state"], defect["state"]))
     # De none_needed-uitzondering bestaat echt: {niets 4, a 3} is none_needed
-    # (4/7); met 2 defecte rijen niet meer (4/9), en a 3 van change_n 3: clear.
-    assert ("none_needed", "clear") in opgeheven
+    # (4/7); met 2 defecte rijen niet meer (4/9).
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    # Niets 4 tegen a 3: na het opheffen van none_needed dus divided, niet clear.
+    assert ("none_needed", "divided") in opgeheven
     assert dp.direction_state(_agg({none_key: 4, gewoon[0]: 3}), FK, 6.0)["state"] == "none_needed"
-    assert dp.direction_state(_agg({none_key: 4, gewoon[0]: 3}, answered=9), FK, 6.0)["state"] == "clear"
+    assert dp.direction_state(_agg({none_key: 4, gewoon[0]: 3}, answered=9), FK, 6.0)["state"] == "divided"
 
 
 def test_defecte_rijen_kunnen_oud_clear_naar_divided_laten_zakken():

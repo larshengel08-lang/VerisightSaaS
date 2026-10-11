@@ -40,7 +40,9 @@ def test_richtingen_weging_verwijst_naar_het_blok_met_zijn_naam():
     assert st["state"] == "divided"
     zin = _richtingen_weging(st, "retention", "growth")
     assert "hierboven" not in zin
-    assert "op de kaart bij ‘Wat er moet gebeuren’." in zin
+    # R22 (polijstronde taak 5): de regel noemt de richtingen nu bij naam,
+    # achter "op de kaart bij ‘Wat er moet gebeuren’ zijn".
+    assert zin.startswith("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ")
 
 
 def test_drempeltabel_verwijst_niet_meer_met_erboven_of_hierboven():

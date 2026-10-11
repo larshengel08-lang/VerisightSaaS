@@ -160,7 +160,7 @@ def test_besluitpagina_verwijst_naar_het_werkvragenblok():
     html = _besluit_page(opener_html="<h2>kop</h2>", scan_type="retention", campaign_name="Wave 1",
                          startpunt_label="Groeiperspectief", tweede_label=None,
                          review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.",
-                         heeft_werkvragen=True)
+                         heeft_werkvragen=True, heeft_afdelingen=True)
     assert _href("werkvragen") in html
     assert _href("agenda") not in html
 
@@ -181,7 +181,8 @@ def test_loep_start_verandert_niet():
 STAY = [2.0] * 25 + [5.5] * 8 + [8.0] * 6        # n=39
 TO_VEEL = [7.0] * 19 + [3.0] * 20                 # 19 van de 39 vanaf 6,5
 KERN = ("Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling "
-        "het speelt of waarom: dit rapport splitst ze niet per afdeling uit.")
+        "het speelt of waarom, en ook niet wie er vertrekt: dit rapport splitst ze niet per "
+        "afdeling uit.")
 SLOT = ("Daarom begint het gesprek bij Groeiperspectief: daar zie je waar het wringt, en daar "
         "kan het MT zelf iets besluiten.")
 SLOT_STERK = "Daarom begint het gesprek bij Groeiperspectief: daar kan het MT zelf iets besluiten."
@@ -344,7 +345,8 @@ from backend.report_html import _frictie_duiding  # noqa: E402
 FRICTIE = ("Frictiescore: de zes onderwerpen en de werkbeleving van de vertrekkers samen in één "
            "getal. Hier is hoger slechter, anders dan bij de andere scores in dit rapport: vanaf "
            "7,0 is de frictie sterk, onder 4,5 laag. Het getal zegt hoe breed het wringt, niet "
-           "waar; dat laten de onderwerpen zien.")
+           "waar; dat laten de onderwerpen zien. Deze grenzen horen bij de frictiescore en "
+           "zijn niet dezelfde als de grenzen 5,0 en 6,5 bij de onderwerpen.")
 # Zonder factorprofiel (minder dan 10 antwoorden) toont het rapport geen
 # onderwerpen; de slotzin belooft dan niets wat niet rendert.
 FRICTIE_ZONDER_PROFIEL = ("Frictiescore: de zes onderwerpen en de werkbeleving van de "
@@ -730,7 +732,8 @@ def test_besluit_afdeling():
 def _besluit(**kw) -> str:
     basis = dict(opener_html="<h2>kop</h2>", scan_type="retention", campaign_name="Wave 1",
                  startpunt_label="Groeiperspectief", tweede_label="Werkdruk en herstelruimte",
-                 review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.", heeft_werkvragen=True)
+                 review_hint="Richtlijn: 45 tot 90 dagen na dit gesprek.", heeft_werkvragen=True,
+                 heeft_afdelingen=True)
     basis.update(kw)
     return _besluit_page(**basis)
 
@@ -899,8 +902,9 @@ from backend.report_html import (  # noqa: E402
     BESLUIT_PARKEERREGEL,
     BESLUIT_REVIEW_HINT,
     BESLUIT_SLOTLABEL,
-    BESLUIT_TERUGKOPPELING,
+    BESLUIT_TERUGKOPPELING_BASIS,
     BESLUITVRAAG,
+    besluit_terugkoppeling,
 )
 
 
@@ -919,16 +923,23 @@ def test_succes_hoort_bij_het_startpunt():
 
 
 def test_terugkoppeling_per_scan():
-    assert BESLUIT_TERUGKOPPELING["retention"] == (
+    assert besluit_terugkoppeling("retention", True) == (
         "Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen "
         "open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.")
-    assert BESLUIT_TERUGKOPPELING["exit"] == (
+    assert besluit_terugkoppeling("exit", True) == (
         "Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de "
         "vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met "
         "minder dan 10 antwoorden.")
-    assert BESLUIT_TERUGKOPPELING["onboarding"] == "Je mensen vulden in; ze horen wat het MT ermee doet."
-    for scan_type, hint in BESLUIT_TERUGKOPPELING.items():
-        assert hint in _plain(_besluit(scan_type=scan_type, heeft_werkvragen=scan_type != "onboarding"))
+    # S10 (polijstronde): Loep Start krijgt dezelfde grens als Behoud en Vertrek.
+    assert besluit_terugkoppeling("onboarding", True) == (
+        "Je mensen vulden in; ze horen wat het MT ermee doet. Deel het startpunt, het beeld van "
+        "de hele groep en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van "
+        "afdelingen met minder dan 10 antwoorden.")
+    for scan_type in ("retention", "exit", "onboarding"):
+        for afdelingen in (True, False):
+            hint = besluit_terugkoppeling(scan_type, afdelingen)
+            assert hint in _plain(_besluit(scan_type=scan_type, heeft_afdelingen=afdelingen,
+                                           heeft_werkvragen=scan_type != "onboarding"))
 
 
 def test_besluitvraag_noemt_het_vervolgmoment_niet_negentig_dagen():
@@ -978,13 +989,14 @@ def test_richtlijn_per_scan():
     assert BESLUIT_REVIEW_HINT == {
         "retention": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
         "exit": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
-        "onboarding": "Richtlijn: rond het volgende checkpoint.",
+        "onboarding": "Richtlijn: rond het volgende checkpoint, ongeveer 30 dagen na dit gesprek.",
     }
 
 
 def test_nieuwe_besluitcopy_zonder_streepjes():
     for tekst in (BESLUIT_PARKEERREGEL, BESLUIT_SLOTLABEL, BESLUITVRAAG,
-                  *BESLUIT_TERUGKOPPELING.values()):
+                  *(besluit_terugkoppeling(s, a) for s in ("retention", "exit", "onboarding")
+                    for a in (True, False))):
         assert not any(s in tekst for s in STREEPJES), tekst
 
 
@@ -1004,8 +1016,11 @@ def test_dashboard_gebruikt_dezelfde_labels_en_hints_als_de_besluitpagina():
             / "campaign-decision.ts").read_text(encoding="utf-8")
     for tekst in (BESLUIT_SLOTLABEL, BESLUIT_PARKEERREGEL, BESLUIT_DATUM_HINT):
         assert "'" + tekst + "'" in bron, tekst
-    assert set(BESLUIT_TERUGKOPPELING) == set(BESLUIT_REVIEW_HINT) == {"retention", "exit", "onboarding"}
-    assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == BESLUIT_TERUGKOPPELING
+    scans = {"retention", "exit", "onboarding"}
+    assert set(BESLUIT_TERUGKOPPELING_BASIS) == set(BESLUIT_REVIEW_HINT) == scans
+    # Het dashboard weet niet of het rapport afdelingen toont en toont altijd
+    # de volledige regel (polijstronde V14).
+    assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == {s: besluit_terugkoppeling(s, True) for s in scans}
     assert _ts_map(bron, "DECISION_REVIEW_HINTS") == BESLUIT_REVIEW_HINT
 
 
@@ -1024,16 +1039,17 @@ def _agg(**counts):
 
 
 def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
-    """Controllerbesluit taak 10: de routeteksten staan al op de kaart erboven;
-    de regel noemt alleen de tellingen (dezelfde als op de kaart) en weegt de
-    niets-optie apart, met de tellingsvorm van de kaart."""
+    """R22 (polijstronde taak 5, vervangt controllerbesluit taak 10): de regel
+    noemt de richtingen bij naam met hun aantal (dezelfde als op de kaart) en
+    weegt de niets-optie apart, met de tellingsvorm van de kaart."""
     st = direction_state(_agg(wld_recovery=3, wld_peaks=2, wld_scope=2, wld_none=2, wld_other=1),
                          "workload", 5.8)
     assert st["state"] == "divided"
     # Tien beantwoorders: _telling zet vanaf MIN_DISTRIBUTION_N (10) het
     # percentage erachter, net als de kaart.
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn "
+        "‘Meer ruimte om te herstellen en werk goed af te ronden’ (3); ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 2). "
         "‘Niets, dit zit hier goed’, gekozen door 2 van de 10 (20%), is geen richting en "
         "telt hier niet mee.")
 
@@ -1041,19 +1057,20 @@ def test_weging_noemt_de_meest_gekozen_tellingen_en_weegt_niets_apart():
 def test_weging_een_gedeelde_telling_en_enkelvoud():
     gedeeld = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_none=2), "workload", 5.8)
     assert _richtingen_weging(gedeeld, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 3). "
         "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt hier niet mee.")
     een = direction_state(_agg(wld_peaks=1, wld_scope=1, wld_planning=1), "workload", 5.8)
     assert een["state"] == "divided"
     assert _richtingen_weging(een, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 1 stem op de kaart bij ‘Wat er moet gebeuren’.")
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’, ‘Planning en bezetting beter laten aansluiten op het werk dat er ligt’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 1).")
 
 
 def test_weging_zonder_niets_heeft_geen_niets_zin():
     st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_planning=2), "workload", 5.8)
     zin = _richtingen_weging(st, "retention", "workload")
     assert "Niets" not in zin
-    assert zin == "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart bij ‘Wat er moet gebeuren’."
+    assert zin == ("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 3); "
+                   "‘Planning en bezetting beter laten aansluiten op het werk dat er ligt’ (2).")
 
 
 def test_weging_vertrek_citeert_de_verleden_tijd():
@@ -1075,7 +1092,7 @@ def test_weging_telt_anders_niet_als_richting():
     st = direction_state(_agg(wld_peaks=3, wld_scope=1, wld_other=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart bij ‘Wat er moet gebeuren’. "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3); ‘Takenpakket en werkvolume beter afbakenen’ (1). "
         "‘Niets, dit zit hier goed’, gekozen door 1 van de 7, is geen richting en telt hier "
         "niet mee, net als ‘Anders’.")
 
@@ -1086,7 +1103,7 @@ def test_weging_verklaart_anders_naast_een_even_hoge_richting():
     st = direction_state(_agg(wld_peaks=3, wld_other=2, wld_scope=2, wld_none=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 en 2 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3); ‘Takenpakket en werkvolume beter afbakenen’ (2). "
         "‘Niets, dit zit hier goed’, gekozen door 1 van de 8, is geen richting en telt hier "
         "niet mee, net als ‘Anders’.")
 
@@ -1096,7 +1113,7 @@ def test_weging_verklaart_een_overgeslagen_anders_zonder_niets():
                          "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen en 1 stem op de kaart bij ‘Wat er moet gebeuren’. "
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ (3); ‘Planning en bezetting beter laten aansluiten op het werk dat er ligt’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 1). "
         "‘Anders’ is geen richting en telt hier niet mee.")
 
 
@@ -1104,7 +1121,7 @@ def test_weging_zwijgt_over_anders_onder_de_laagste_genoemde_telling():
     st = direction_state(_agg(wld_peaks=3, wld_scope=3, wld_other=1), "workload", 5.8)
     assert st["state"] == "divided"
     assert _richtingen_weging(st, "retention", "workload") == (
-        "De meest gekozen richtingen zijn die met 3 stemmen op de kaart bij ‘Wat er moet gebeuren’.")
+        "De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 3).")
 
 
 def test_anders_heet_op_elke_richtingkaart_anders():
@@ -1141,7 +1158,7 @@ def test_werkvragen_tonen_de_weging_onder_de_verdeeld_zin(gevuld):
     assert VARIANTEN["divided"]["retention"] in kaart
     # DIRECTION: wld_peaks 3, wld_scope 3, wld_none 2 van 8; dezelfde
     # tellingen als op de richtingkaart.
-    assert ("De meest gekozen richtingen zijn die met 3 stemmen op de kaart bij ‘Wat er moet gebeuren’. "
+    assert ("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn ‘Piekmomenten en spoedwerk eerder plannen, verdelen of begrenzen’ en ‘Takenpakket en werkvolume beter afbakenen’ (elk 3). "
             "‘Niets, dit zit hier goed’, gekozen door 2 van de 8, is geen richting en telt "
             "hier niet mee.") in kaart
     # Alleen bij de verdeelde kaart: het startpunt (growth) staat in clear.

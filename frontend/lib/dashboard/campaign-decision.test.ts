@@ -257,17 +257,18 @@ describe('robuustheid tegen onbetrouwbare invoer (codekwaliteitsreview taak 10)'
 })
 
 describe('labels en hints van "Besluit vastleggen" (fixronde 24-9)', () => {
-  // Letterlijk BESLUIT_TERUGKOPPELING en BESLUIT_REVIEW_HINT in backend/report_html.py.
+  // Letterlijk besluit_terugkoppeling(scan, True) en BESLUIT_REVIEW_HINT in backend/report_html.py.
   const FEEDBACK = {
     retention:
       'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
     exit: 'Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
-    onboarding: 'Je mensen vulden in; ze horen wat het MT ermee doet.',
+    onboarding:
+      'Je mensen vulden in; ze horen wat het MT ermee doet. Deel het startpunt, het beeld van de hele groep en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
   } as const
   const REVIEW = {
     retention: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
     exit: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
-    onboarding: 'Richtlijn: rond het volgende checkpoint.',
+    onboarding: 'Richtlijn: rond het volgende checkpoint, ongeveer 30 dagen na dit gesprek.',
   } as const
   const ONBEKEND = ['pulse', 'team', 'leadership', 'culture_assessment', 'onbekend', 'constructor', '', null, undefined]
 

@@ -79,17 +79,19 @@ def test_p02_en_de_kaart_spreken_elkaar_niet_tegen(html_fn):
 
 @pytest.mark.parametrize("html_fn", [_retention_html, _exit_html],
                          ids=["retention", "exit"])
-def test_niet_kwetsbaar_geeft_op_beide_plekken_geen_split_none_maar_de_route(html_fn):
+def test_niet_kwetsbaar_geeft_op_beide_plekken_geen_split_none_maar_verdeeld_met_tellingen(html_fn):
     """Dezelfde verdeling op een factor die niet kwetsbaar scoort: nergens een
-    split_none-zin, zodat deze test ook echt op de score toetst. Op p.02 staat
-    dan de clear-regel met de route (5 van de 7 veranderstemmen)."""
+    split_none-zin, zodat deze test ook echt op de score toetst. Niets 5 en
+    piekmomenten 5: sinds spec 2026-10-09 par. 3 verdeeld, en op p.02 staan
+    beide tellingen."""
     html = html_fn(score=6.0)
     assert "een deel zegt dat hier niets hoeft" not in html
-    # Spec 2026-10-07 par. 3: niets telt niet mee; was divided.
-    # Niets 5 van 12, dus change_n = 7: piekmomenten 5 van 7 met voorsprong 3
-    # op scope is clear. Op p.02 dus de clear-regel, niet de split_none-regel;
-    # de exacte tellingsvorm pint Taak 7, hier alleen welke regel het is.
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld. Niets 5
+    # tegen piekmomenten 5: geen route meer, wel beide tellingen op p.02, en
+    # nog steeds niet de split_none-regel.
     line = _p02_direction_line(html)
     assert "zijn hierover verdeeld" not in line
     assert "Zie de gespreksagenda." not in line
-    assert line.startswith("Wat er moet gebeuren volgens ")
+    assert line.startswith("Over wat hier moet gebeuren zijn de 12 ")
+    assert line.endswith("verdeeld: 5 vinden dat hier niets hoeft, tegen 5 voor de "
+                         "grootste richting.")

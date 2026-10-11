@@ -114,7 +114,9 @@ def test_vragen_spreken_het_mt_aan_en_niet_loep():
 def test_verdeeld_zinnen_zijn_vaste_teksten_zonder_citaat():
     """Amendement plan 3b Taak 13 (concept-sectie 7 punt 1): de vier zinnen zijn
     vast, zonder plaatshouders {a}/{b} en zonder de routeteksten te citeren."""
-    assert set(WORK_QUESTION_VARIANTS) == {"divided", "split_none"}
+    # Spec 2026-10-09 par. 3: derde vaste zin, voor een niets-groep die minstens
+    # zo groot is als de grootste richting.
+    assert set(WORK_QUESTION_VARIANTS) == {"divided", "split_none", "none_at_least_top"}
     for soort, per_scan in WORK_QUESTION_VARIANTS.items():
         assert set(per_scan) == set(SCANS), soort
         for scan, tekst in per_scan.items():
@@ -125,6 +127,7 @@ def test_verdeeld_zinnen_zijn_vaste_teksten_zonder_citaat():
     # Vertrek: de mensen zijn weg, dus niet "zijn verdeeld".
     assert "zijn verdeeld" not in WORK_QUESTION_VARIANTS["divided"]["exit"]
     assert "zijn verdeeld" not in WORK_QUESTION_VARIANTS["split_none"]["exit"]
+    assert "zijn verdeeld" not in WORK_QUESTION_VARIANTS["none_at_least_top"]["exit"]
 
 
 def test_ophaalfunctie_levert_voor_elke_route_en_scan_de_juiste_tekst():
@@ -147,6 +150,9 @@ def test_aansturing_hint_is_een_vaste_niet_lege_regel():
 # Leesronde V1: "toen de vertrekkers er nog werkten" stuurt het MT naar de
 # personen die vertrokken. Veertien Vertrek-vragen kregen een ander slot; de
 # rest van elke vraag en alle Behoud-vragen bleven letterlijk gelijk.
+# Polijstronde V11 (leesronde 8-10): ook grd_visibility kreeg dit anker in
+# plaats van "Stond dat er een jaar geleden ook?", zodat het startpunt en het
+# tweede punt niet elk een ander tijdsanker dragen. Nu vijftien.
 
 import hashlib  # noqa: E402
 import json  # noqa: E402
@@ -171,13 +177,15 @@ A1_SLOTEN = {
     "wld_peaks": "Wie mocht dat zeggen in de periode waar deze meting over gaat?",
     "wld_friction": "Wat ervan bestond al in de periode waar deze meting over gaat?",
     "rcd_expectations": "Stonden ze er al in de periode waar deze meting over gaat?",
+    "grd_visibility": "En in de periode waar deze meting over gaat?",
 }
 # sha256 over json.dumps({"<factor>.<route>": tekst}, sort_keys=True,
 # ensure_ascii=False). RETENTION: de Behoud-teksten op main 37059706 (vóór de
-# fixronde). EXIT: de Vertrek-teksten van 37059706 met precies de veertien
-# vervangingen uit A1_SLOTEN toegepast, en verder niets.
+# fixronde). EXIT: de Vertrek-teksten van 37059706 met precies de vijftien
+# vervangingen uit A1_SLOTEN toegepast (veertien uit A1, grd_visibility uit
+# polijstronde V11), en verder niets.
 RETENTION_SHA_MAIN = "9bec2159e84a2ec73cb6c10b230e169fac17ddc69bc07880eeadb8e11534a341"
-EXIT_SHA_NA_A1 = "a7784fa1da84f3a8b4fab1b78439024301953eced319d6f8e21835c8201c0749"
+EXIT_SHA_NA_A1 = "1eee205e4cafff0b04fd3e9a0d466186350cc2f6a8e9d0a075a1fd7fff14b218"
 
 
 def _sha(scan: str) -> str:
@@ -194,7 +202,7 @@ def test_vertrek_heeft_geen_oud_tijdsanker_meer():
             assert TUSSENVORM_TIJDSANKER not in tekst.lower(), (fk, rk, tekst)
 
 
-def test_precies_de_veertien_vragen_dragen_het_nieuwe_tijdsanker():
+def test_precies_de_vijftien_vragen_dragen_het_nieuwe_tijdsanker():
     met_anker = {rk for _fk, rk, scan, tekst in _alle_vragen()
                  if scan == "exit" and NIEUW_TIJDSANKER in tekst}
     assert met_anker == set(A1_SLOTEN)

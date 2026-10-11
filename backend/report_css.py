@@ -38,7 +38,7 @@ def build_css(scan_type: str = "exit") -> str:
   margin: 18mm 16mm 20mm 16mm;
   background: """ + CHALK + r""";
   @bottom-left {
-    content: "VERTROUWELIJK · LOEP · GROEPSOUTPUT";
+    content: "VERTROUWELIJK · LOEP · ALLEEN GROEPSCIJFERS";
     font-family: 'JetBrains Mono', monospace;
     font-size: 7px; letter-spacing: 0.12em; color: """ + STEEL + r""";
   }
@@ -174,6 +174,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
   text-transform: uppercase; color: """ + STEEL + r"""; margin-bottom: 4px; }
 .sc-v { font-family: 'Inter Tight', sans-serif; font-weight: 800; font-size: 24px; color: """ + INK + r"""; line-height: 1.1; }
 .sc-b { font-size: 9px; color: """ + STEEL + r"""; margin-top: 2px; line-height: 1.4; }
+/* Uitleg onder de totaaltegel op p.02, alleen Loep Behoud (polijstronde R20). 10px is de ondergrens
+   voor uitlegregels (besluit 2026-07-09). */
+.sc-n { font-size: 10px; color: """ + STEEL + r"""; margin-top: 3px; line-height: 1.35; }
 
 /* ── Signaalrijen (behoudscontext e.d.): titel -> uitleg -> score, onder elkaar
    i.p.v. naast elkaar, zodat de uitleg niet wegvalt onder de score ── */
@@ -222,6 +225,16 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sub-cols td[colspan] { padding: 0; }
 .sub-cols tbody.sub-grp { break-inside: avoid; }
 .empty-state.seg-leeg { padding: 8px 14px; }
+/* Taak 11 (polijstronde): de afdelingskaart eindigt op een tabelrij of een
+   subblok, dus de onderpadding verlengt alleen de linkerlijn. 6px in plaats van
+   14px, samen met de krappere marges rond 'Alle onderwerpen per afdeling'
+   (report_html.py): de langere sectie-intro (R14) duwde in stresstest 04 het
+   enige subblok naar een eigen vel van 21% (gemeten in het productie-image). */
+.card.seg-card { padding-bottom: 6px; }
+/* De uitleg boven de uitsplitsing per afdeling en elk subblok: 6px boven (was
+   10px inline), om dezelfde reden als .seg-card hierboven. */
+.seg-sub-intro { font-size: 10px; color: #64748B; margin: 6px 0 0; }
+.seg-sub { margin-top: 6px; }
 /* De melding zonder afdelingstabel volgt direct op de werkbeleving (geen eigen
    vel). De negatieve marge verkleint de samengevallen witruimte tussen beide
    van 44px naar 20px, zodat kop en melding samen nog onder een volle
@@ -364,6 +377,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-head { font-size: 14px; font-weight: 700; line-height: 1.3; color: """ + NAVY + r"""; margin-bottom: 6px; }
 .dir-src { font-size: 10px; color: #374151; margin-bottom: 8px; }
 .dir-tbl td { font-size: 9.5px; padding: 5px 6px; }
+/* R22 (polijstronde): de niets-optie onder een streep, apart van de richtingen. */
+.dir-tbl tr.dir-niets td { border-top: 1px solid #CBD5E1; padding-top: 5px; }
+/* R19 (polijstronde): de richtingen die niemand koos, in één regel onder de tabel. */
+.dir-unchosen { font-size: 10px; color: #64748B; margin-top: 4px; line-height: 1.4; }
 /* De scorekolom draagt sinds B14 de volle tellingsvorm ("27 van de 62 (44%)",
    ongeveer 91px): in een halve kaart geeft auto-layout die kolom ongeveer 59px,
    waardoor de telling over twee regels viel en niet meer als één getal las.
@@ -372,15 +389,35 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .dir-tbl .is { width: 34%; white-space: nowrap; }
 .dir-caveat { font-size: 10px; color: #92400E; margin: 4px 0 0; }
 .dir-chain { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; color: """ + STEEL + r"""; margin-top: 8px; }
+/* R7/V7 (polijstronde): de zin die de keten van de toelichting onderscheidt,
+   direct onder de keten. */
+.dir-chain.dir-telling { margin-top: 3px; }
 /* De sluitende totaalregel boven de kaarten (B14, H19) verantwoordt álle
    richtingantwoorden en is daarmee een eerlijkheidsregel, niet een voetnoot in
    een kaart: leesbare 10px in de gewone letter, zoals .dir-intro erboven. De
    maat staat hier en niet inline, zodat er één plek is (codereview taak 9). */
 .dir-chain.dir-totals { font-family: inherit; font-size: 10px; line-height: 1.5;
-  color: #374151; max-width: 70ch; margin: 0 0 10px;
+  color: #374151; margin: 0 0 10px;
   /* Niet splitsen over een paginagrens: in stresstest 06 liepen twee regels van
      deze noemerzin als wees boven de gespreksagenda door (hoofdsessie 22-9). */
   break-inside: avoid; page-break-inside: avoid; }
+/* R23 (polijstronde): de kop van het blok (eyebrow, uitleg, totaalregel) blijft
+   bij de kaarten, zodat de kaarten nooit zonder kop bovenaan een vel beginnen.
+   Niet via break-inside op .dir-block: zie de toelichting daar (scenario 14).
+   De eyebrow is een inline span; break-before op de uitleg houdt hem erbij.
+   Alleen binnen .dir-block: .dir-intro staat ook in het werkvragenblok, waar
+   break-after de uitleg aan de onbreekbare .wq-grid zou lijmen, de eyebrow
+   alleen kon laten staan en het anker sec-werkvragen een vel kon verschuiven. */
+/* Taak 11 (polijstronde): uitleg en totaalregel boven de kaarten over de volle
+   breedte (max-width: none). Sinds R23 reizen ze met de kaarten mee naar het
+   volgende vel; op 70ch kostten ze daar 33pt extra, en dan paste het
+   agendaslot (no-break) er niet meer onder en stond het alleen op een vel
+   (stresstest 19, gemeten in het productie-image). Alleen binnen .dir-block:
+   in het werkvragenblok houdt .dir-intro zijn 70ch. .dir-chain.dir-totals
+   draagt zelf geen max-width, zodat de uitkomst niet van de bronvolgorde
+   afhangt. */
+.dir-block .dir-intro, .dir-block .dir-totals { break-after: avoid; page-break-after: avoid; max-width: none; }
+.dir-block .dir-intro { break-before: avoid; page-break-before: avoid; }
 
 /* ── Werkvragen "Zo maak je er een besluit van" (plan 3b) ── */
 /* Hefboom E (fixronde leesronde, Taak 10): de weging onder de verdeeld-zin maakte
@@ -425,7 +462,9 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .mq-brug-sec { margin-top: 10px; }
 
 /* ── Trust / methodiek ── */
-.tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; }
+/* R16 (polijstronde): een rij methodiekkaarten breekt niet midden in een zin
+   over twee pagina's; zelfde patroon als .dir-grid. */
+.tg { display: table; width: 100%; border-collapse: separate; border-spacing: 10px 0; break-inside: avoid; page-break-inside: avoid; }
 .tc { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 33%; }
 .tc-full { display: table-cell; background: #fff; border: 1px solid """ + HAIRLINE + r"""; padding: 14px 15px; vertical-align: top; width: 100%; }
 .tt { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 11px; color: """ + INK + r"""; margin-bottom: 4px; }
@@ -472,9 +511,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sec.verd { margin-bottom: 24px; }
 .sec.flow.verd { margin-top: 0; }
 /* Het eerste onderwerp volgt op het overzichtsprofiel (margin-bottom 44px);
-   de negatieve marge brengt de samengevallen witruimte naar 24px, dezelfde
-   ruimte als tussen twee onderwerpen. */
-.sec.flow.verd.verd-eerste { margin-top: -20px; }
+   de negatieve marge brengt de samengevallen witruimte naar 18px (polijstronde
+   Taak 11; was 24px, dezelfde ruimte als tussen twee onderwerpen). De langere
+   uitleg bij "duidelijk laag" (R25) duwde in stresstest 18 het eerste blok
+   2pt van het profielvel, waarna het derde blok alleen op een vel van 36%
+   stond (gemeten in het productie-image). */
+.sec.flow.verd.verd-eerste { margin-top: -26px; }
 /* Dun verdiepingsblok en zijn voorganger (plan 3b): mogen over een paginagrens
    lopen, zodat het dunne blok niet alleen op een vel belandt. De binnendelen
    blijven heel: een kop staat nooit los onderaan, een kaart en een tabelrij
@@ -494,6 +536,10 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .tcol.wb-cols .tc-l { width: 50%; padding-right: 10px; }
 .tcol.wb-cols .tc-r { width: 50%; padding-left: 10px; }
 .wb-cols .card { padding: 8px 0 8px 12px; margin-bottom: 8px; }
+/* R10-zin in twee kolommen (Taak 11 polijstronde): onder de laatste kaart van
+   de rechterkolom, waar de kolom een kaart minder draagt en dus ruimte over
+   heeft; ingesprongen tot de kaarttekst. */
+.wb-cols .wb-duiding { font-size: 11px; color: #374151; line-height: 1.5; margin: 6px 0 0 14px; }
 .wb-cols .item-tbl td { padding: 3px 6px; }
 .wb-cols .item-tbl .iq { width: 70%; }
 .wb-cols .item-tbl .is { width: 12%; }
@@ -634,7 +680,11 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
    Het echte bewijs is de regel p02-op-een-a4 in het productie-image; de test
    op deze maten bewaakt alleen tegen per ongeluk wijzigen. Elke selector
    staat hier één keer: bij gelijke specificiteit wint de latere regel, dus een
-   tweede regel voor dezelfde selector maakt de eerste stil dood. */
+   tweede regel voor dezelfde selector maakt de eerste stil dood.
+   Polijstronde Taak 11: .meet-blok margin-top 8px naar 4px, samen met een
+   kortere R21-zin in de leidraad; de V13- en R21-zin maakten p.02 van Loep
+   Vertrek twee regels langer. Krapst is daarna scenario 22 (eind op 784pt van
+   785pt). */
 #p02 .br-kernzin { font-size: 20px; max-width: none; margin-bottom: 14px; }
 #p02 .kz-lang .br-kernzin { font-size: 18px; }
 #p02 .why { padding: 10px 14px 8px; margin-bottom: 8px; }
@@ -652,7 +702,7 @@ h3 { font-family: 'Inter Tight', sans-serif; font-weight: 700;
 #p02 .leidraad td { padding: 1px 6px 1px 0; line-height: 1.38; }
 #p02 .leidraad td.lt { width: 11%; }
 #p02 .leidraad td.lw { width: 22%; }
-#p02 .meet-blok { margin-top: 8px; }
+#p02 .meet-blok { margin-top: 4px; }
 #p02 .meet-blok .slabel { margin-bottom: 6px; }
 #p02 .meet-blok .sg { margin-bottom: 4px; }
 #p02 .meet-blok .sc-b { line-height: 1.3; }

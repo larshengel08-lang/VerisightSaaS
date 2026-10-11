@@ -3,7 +3,7 @@ Loep — HTML→PDF rapportgenerator (WeasyPrint) v6
 ================================================
 Product-hardened: eigen copy, labels en structuur per scan-type.
   ExitScan    — terugkijkende vertrekduiding
-  RetentieScan — actieve-populatie behoudssignaal / vroegsignalering
+  RetentieScan — actieve populatie: werkbeeld, blijf- en vertrekintentie
   Onboarding  — 30/60/90 onboardingervaring en eerste werkperiode
 Parallel pad naast report.py. report.py blijft onaangeroerd.
 """
@@ -34,9 +34,11 @@ from backend.report_distribution import (
     ZONE_HIGH,
     ZONE_LOW,
     distribution_block,
+    STROOK_BREEDTE_VOL,
     score_distribution,
     shown as _shown,
     zone_color,
+    zone_index,
 )
 from backend.products.shared.deepening import (
     DEEPENING_CAP,
@@ -56,6 +58,7 @@ from backend.products.shared.deepening import (
     aggregate_deepening,
     aggregate_direction,
     direction_imperative,
+    direction_none_at_least_top_shown,
     direction_none_needed_view,
     direction_option_texts,
     direction_state,
@@ -145,13 +148,38 @@ def _fl(fk: str, scan_type: str = "exit") -> str:
 
 _EXIT_BANDS = {
     "HOOG":   ("Sterk frictiebeeld",       "#C0392B"),
-    "MIDDEN": ("Gemengd vertrekbeeld",      "#C17C00"),
+    # V13 (polijstronde): "frictiebeeld" zoals de twee andere banden; de
+    # grenzen zelf (RISK_HIGH/RISK_MEDIUM) bepalen ook de opgeslagen risk_band
+    # van alle producten en blijven dus gelijk. _frictie_duiding legt uit
+    # waarom ze niet de 5,0 en 6,5 van de onderwerpen zijn.
+    "MIDDEN": ("Gemengd frictiebeeld",      "#C17C00"),
     "LAAG":   ("Laag frictiebeeld",         "#3C8D8A"),
 }
+# De labelwoorden van de ladder 5,0 / 6,5 (gezondheidsschaal), van laag naar
+# hoog, geindexeerd met _factor_level. Eén bron: _factor_label geeft ze terug,
+# en de band onder de tegel Werkbeeld op p.02 (_RETENTION_BANDS) en de labels
+# op p.03 lezen ze hier, zodat het rapport voor dezelfde grenzen overal
+# dezelfde woorden gebruikt (polijstronde R12). Code die op een niveau test,
+# vergelijkt met _factor_level, nooit met deze woorden.
+_FACTOR_LABEL_WOORDEN = ("Kwetsbaar punt", "Aandachtspunt", "Relatief sterk")
+
+
+def _band_legenda() -> str:
+    """Kleurlegenda onder de balken (overzichtsprofiel, landingskwaliteit).
+
+    De woorden komen uit _FACTOR_LABEL_WOORDEN, zodat legenda en rijlabels niet
+    uit elkaar kunnen lopen (leesronde 4, S5: "goed geland" naast "RELATIEF
+    STERK")."""
+    kwetsbaar, aandacht, sterk = (w.lower() for w in _FACTOR_LABEL_WOORDEN)
+    return (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
+            f'<span style="color:{RAG_HIGH};">&#9632;</span> ' + kwetsbaar + ' &nbsp; '
+            f'<span style="color:{RAG_MID};">&#9632;</span> ' + aandacht + ' &nbsp; '
+            f'<span style="color:{RAG_LOW};">&#9632;</span> ' + sterk + '</p>')
+
 _RETENTION_BANDS = {
-    "HOOG":   ("Behoud onder druk",          "#C0392B"),
-    "MIDDEN": ("Behoud vraagt aandacht",    "#C17C00"),
-    "LAAG":   ("Behoudsklimaat stabiel",    "#3C8D8A"),
+    "HOOG":   (_FACTOR_LABEL_WOORDEN[0], "#C0392B"),
+    "MIDDEN": (_FACTOR_LABEL_WOORDEN[1], "#C17C00"),
+    "LAAG":   (_FACTOR_LABEL_WOORDEN[2], "#3C8D8A"),
 }
 _ONBOARDING_BANDS = {
     "HOOG":   ("Onboardingbasis vraagt aandacht", "#C0392B"),
@@ -160,7 +188,7 @@ _ONBOARDING_BANDS = {
 }
 
 def _signal_health(avg_risk: float | None) -> float | None:
-    """Behoudssignaal / checkpointscore zoals het rapport 'm toont: health = 11 - avg_risk.
+    """Werkbeeld / checkpointscore zoals het rapport 'm toont: health = 11 - avg_risk.
 
     B4: de opgeslagen risk_score (DB, API, campaign_stats) staat op de
     RISICO-schaal (hoog = slecht; per factor 11 - score, zie
@@ -190,16 +218,17 @@ def _band_key(score: float | None, scan_type: str = "exit") -> str | None:
     Polariteit per product (B4):
     - exit: RISICO-schaal (frictiescore, hoog = meer frictie):
       >= RISK_HIGH -> HOOG, >= RISK_MEDIUM -> MIDDEN, anders LAAG.
-    - retention / onboarding: GEZONDHEIDS-schaal (behoudssignaal /
+    - retention / onboarding: GEZONDHEIDS-schaal (werkbeeld /
       checkpointscore via _signal_health, hoog = goed), dezelfde ladder als
-      _factor_label: < 5,0 -> HOOG (onder druk), < 6,5 -> MIDDEN, anders LAAG.
+      _factor_label (via _factor_level): < 5,0 -> HOOG (kwetsbaar punt),
+      < 6,5 -> MIDDEN (aandachtspunt), anders LAAG (relatief sterk).
     HOOG betekent in beide gevallen "meeste aandacht nodig" (rood).
     Vergelijkt op de getoonde (afgeronde) score, zie _shown (B15)."""
     if score is None:
         return None
-    score = _shown(score)
     if scan_type in ("retention", "onboarding"):
-        return "HOOG" if score < 5.0 else "MIDDEN" if score < 6.5 else "LAAG"
+        return ("HOOG", "MIDDEN", "LAAG")[_factor_level(score)]
+    score = _shown(score)
     return "HOOG" if score >= RISK_HIGH else "MIDDEN" if score >= RISK_MEDIUM else "LAAG"
 
 
@@ -233,7 +262,7 @@ _MGMT_Q_EXIT: dict[str, str] = {
     "role_clarity": "Gaat de onduidelijkheid over prioriteiten, eigenaarschap of beslisruimte?",
 }
 _MGMT_Q_RETENTION: dict[str, str] = {
-    "leadership":   "Gaat het behoudssignaal over vertrouwen in leiding, feedback of zichtbare steun?",
+    "leadership":   "Gaat wat hier wringt over vertrouwen in leiding, feedback of zichtbare steun?",
     "culture":      "Is dit beeld over psychologische veiligheid, teambinding of cultuurmatch?",
     "growth":       "Speelt ontbrekend perspectief, te weinig concrete ontwikkelgesprekken of stagnatie een rol?",
     "compensation": "Is de kern hier ervaren fairness, uitlegbaarheid of beloningshoogte?",
@@ -303,13 +332,19 @@ def _friction_label(score: float | None) -> str:
 def _friction_color(score: float | None) -> str:
     return _band(score, "exit")[1]
 
+def _factor_level(score: float | None) -> int | None:
+    """Niveau op de gezondheidsladder: 0 kwetsbaar (< 5,0), 1 aandacht (< 6,5),
+    2 relatief sterk; None zonder score. Op de getoonde score (B15), via
+    zone_index: dezelfde grenzen als de kleur en de spreidingsstrook."""
+    if score is None:
+        return None
+    return zone_index(score)
+
+
 def _factor_label(score: float | None) -> str:
     # Drempels op de getoonde score (1 decimaal), zie _shown (B15).
     if score is None:  return "Geen data"
-    score = _shown(score)
-    if score < 5.0:    return "Kwetsbaar punt"
-    if score < 6.5:    return "Aandachtspunt"
-    return "Relatief sterk"
+    return _FACTOR_LABEL_WOORDEN[_factor_level(score)]
 
 
 def profile_shape(factor_avgs: dict[str, float | None]) -> dict[str, Any]:
@@ -572,6 +607,14 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     return f"{kiest} {primary_label}."
 
 
+def _p02_geen_kwetsbaar_tak(shape: dict[str, Any]) -> bool:
+    """De tak van de kernzin die begint met "Geen onderwerp scoort kwetsbaar.":
+    een factorprofiel zonder kwetsbaar onderwerp dat niet vlak is (een vlak
+    profiel krijgt _p02_flat_sentence). Eén bron voor _p02_opening en
+    _p02_afdelingen_zin, zodat de afdelingszin (S3) alleen achter die zin staat."""
+    return bool(shape["n_factors"]) and shape["n_vulnerable"] == 0 and not shape["flat"]
+
+
 def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str],
                  primary_key: str | None,
                  tie_break_kind: str | None = None,
@@ -602,7 +645,7 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
     aandacht: list[tuple[str, float]] = []
     if k == 0 and shape["flat"]:
         kop = _p02_flat_sentence(shape, labels)
-    elif k == 0:
+    elif _p02_geen_kwetsbaar_tak(shape):
         # De laagst scorende factor is NIET altijd het startpunt: bij Loep
         # Vertrek verschuift de vertrekredenweging de base, en binnen een
         # gelijkspelgroep kan richting, spreiding of verdieping de volgorde
@@ -683,13 +726,65 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
     # of een aandachtspuntenzin zou "Daar" naar meer dan het startpunt wijzen.
     # Een zin met grond (klein verschil, gelijkstand, richting) zegt iets nieuws
     # en blijft staan.
+    #
+    # R13 (polijstronde): staat er wel een aandachtspuntenzin tussen, dan noemde
+    # de kale startpuntzin het kwetsbare onderwerp een tweede keer bij naam.
+    # "Het kwetsbare onderwerp" wijst naar precies dat ene onderwerp en niet
+    # naar de aandachtspunten, dus geen "Daar". Is het startpunt een ander
+    # onderwerp dan het laagste, of draagt de zin een grond, dan blijft hij.
     kiest = "Als mogelijk startpunt kiest Loep" if indicatief else "Als startpunt kiest Loep"
     if (k == 1 and shape["factors_low_to_high"][0][0] == primary_key
-            and not aandacht
             and start == f"{kiest} {labels[primary_key]}."):
-        start = ("Daar begint het gesprek waarschijnlijk." if indicatief
-                 else "Daar begint het gesprek.")
+        if not aandacht:
+            start = ("Daar begint het gesprek waarschijnlijk." if indicatief
+                     else "Daar begint het gesprek.")
+        else:
+            start = ("Het gesprek begint waarschijnlijk bij het kwetsbare onderwerp." if indicatief
+                     else "Het gesprek begint bij het kwetsbare onderwerp.")
     return f"{kop} {start}"
+
+
+def _p02_afdelingen_zin(*, shape: dict[str, Any], labels: dict[str, str],
+                        primary_key: str | None, segment_rows: list[dict] | None,
+                        segment_factor_rows: dict[str, dict] | None) -> str:
+    """S3 (polijstronde): de zin achter "Geen onderwerp scoort kwetsbaar." als
+    op de afdelingspagina het laagste onderwerp van een afdeling wel kwetsbaar
+    scoort. Leeg in elke andere staat.
+
+    Alleen in dezelfde tak als _p02_opening (_p02_geen_kwetsbaar_tak): alleen
+    daar begint de kernzin met die zin.
+
+    Privacy: telt uitsluitend wat de afdelingspagina zelf laat zien. Een
+    afdeling telt mee als ze een eigen rij in de tabel heeft (niet de
+    restgroep; geen tabel zonder minstens twee afdelingen, dan ook geen zin)
+    en haar EERSTE onderwerp uit segment_factor_rows, het laagste, op de
+    getoonde score kwetsbaar is: precies het label in de kolom "Laagste
+    onderwerp", ook bij 5 tot 9 antwoorden. Een ander onderwerp van een kleine
+    afdeling staat niet op die pagina en telt dus nooit mee.
+
+    Losse zin en niet in _p02_opening: de noemer van een lage respons
+    (_p02_met_respons) hangt aan de laatste zin van de kernzin en relativeert
+    het startpunt. Net als de vertrekredenzin wordt deze zin daarom pas na
+    _p02_met_respons aangehaakt.
+    """
+    if (not _p02_geen_kwetsbaar_tak(shape) or primary_key is None
+            or not segment_rows or not segment_factor_rows):
+        return ""
+    eigen_rij = [r["department"] for r in segment_rows if not r.get("is_pooled", False)]
+    laagste: list[str] = []
+    for dept in eigen_rij:
+        factors = (segment_factor_rows.get(dept) or {}).get("factors") or []
+        if factors and _factor_level(factors[0][1]) == 0:
+            laagste.append(factors[0][0])
+    if not laagste:
+        return ""
+    k = len(laagste)
+    aantal = "één afdeling" if k == 1 else _TELWOORD.get(k, str(k)) + " afdelingen"
+    pagina = "(pagina " + _pref(LEIDRAAD_ANKERS["afdelingen"]) + ")."
+    if all(fk == primary_key for fk in laagste):
+        return ("In " + aantal + " is " + _h(labels[primary_key])
+                + " wel een kwetsbaar punt " + pagina)
+    return "In " + aantal + " scoort het eigen laagste onderwerp wel kwetsbaar " + pagina
 
 
 def _getoond_verschil(laag: float, hoog: float) -> float:
@@ -738,18 +833,46 @@ def _p02_startpunt_gronden(
     return kind, change, change_other, delta
 
 
-def _p02_signal_cell(label: str, value: str, band: str) -> str:
+# Uitleg onder de tegel Werkbeeld op p.02 (polijstronde R20). Waar: de score is
+# per respondent het gelijkgewogen gemiddelde van zeven delen, de zes
+# werkonderwerpen en de werkbeleving (products/retention/scoring.py,
+# compute_retention_risk). Dus nooit "gemiddelde van de zes".
+WERKBEELD_UITLEG = ("De zes werkonderwerpen en de werkbeleving samen; "
+                    "geen meting van of mensen blijven.")
+
+# De p.02-zin zonder factorprofiel, per bandsleutel van _band_key: dezelfde
+# woorden als de band onder de tegel, met het lidwoord dat de zin nodig heeft.
+# Uit _FACTOR_LABEL_WOORDEN, zodat de zin niet los van de bandlabels kan gaan
+# lopen (review Taak 3).
+_WERKBEELD_ZIN_BAND = {"HOOG": "een " + _FACTOR_LABEL_WOORDEN[0].lower(),
+                       "MIDDEN": "een " + _FACTOR_LABEL_WOORDEN[1].lower(),
+                       "LAAG": _FACTOR_LABEL_WOORDEN[2].lower()}
+
+
+def _werkbeeld_zin(signal: float) -> str:
+    """De p.02-zin zonder factorprofiel: "Het werkbeeld is 5.5/10: een
+    aandachtspunt." Loep Behoud, gezondheidsschaal (_signal_health)."""
+    return (f"Het werkbeeld is {_score_str(signal)}: "
+            f"{_WERKBEELD_ZIN_BAND[_band_key(signal, 'retention')]}.")
+
+
+def _p02_signal_cell(label: str, value: str, band: str, note: str = "") -> str:
     """Het totaalsignaal met zijn band, als cel in de onderbouwingsrij van p.02.
 
     Stond tot ronde 2 in de kernzin; die plek is nu van de zin over de vorm van
     het profiel. Leeg zonder waarde of band: een cel met een gat erin is geen
     eerlijke degradatie maar een kaal veld.
+
+    note (polijstronde R20): een regel uitleg onder de band. Alleen Loep Behoud
+    geeft er een mee, omdat "Werkbeeld" zonder uitleg leest als een meting van
+    behoud; dat is het niet.
     """
     if not value or not band:
         return ""
+    note_html = f'<div class="sc-n">{_h(note)}</div>' if note else ""
     return (f'<td><div class="sc-l">{_h(label)}</div>'
             f'<div class="sc-v">{_h(value)}</div>'
-            f'<div class="sc-b">{_h(band)}</div></td>')
+            f'<div class="sc-b">{_h(band)}</div>{note_html}</td>')
 
 
 def _p02_cijfers_block(cells: list[str]) -> str:
@@ -847,15 +970,20 @@ def _blijfintentie_zones(stay_scores: list[float]) -> tuple[int, int, int, int]:
 def _blijfintentie_cell(avg_si: float | None, stay_scores: list[float]) -> str:
     """Blijfintentie met dezelfde band als de onderwerpen en de zone-verdeling (B1).
 
-    "Blijfintentie 3.9/10: kwetsbaar. 25 van de 39 zitten onder de 5." De band
-    komt uit _factor_label (dus op de getoonde score, B15), de zones uit
+    "Blijfintentie 3.9/10 / Kwetsbaar punt: 25 van de 39 zitten onder de 5." De
+    band komt uit _factor_label (dus op de getoonde score, B15), met hoofdletter
+    zoals de cel Werkbeeld ernaast (eindreview polijstronde); de zones uit
     score_distribution: dezelfde grenzen als de spreidingsstrook verderop.
     """
     if avg_si is None:
         return ""
     low, _mid, _high, n = _blijfintentie_zones(stay_scores)
-    band = _factor_label(avg_si).lower()
+    band = _factor_label(avg_si)
     zones = _onder_de_vijf(low, n) if n else "geen losse scores beschikbaar"
+    # "onder de 5" blijft bij elkaar: in de smalle cel viel de "5" anders
+    # alleen op een nieuwe regel (eindreview polijstronde, zichtbaar in de hero).
+    nbsp = chr(0xA0)  # vaste spatie
+    zones = zones.replace(" onder de 5", " onder" + nbsp + "de" + nbsp + "5")
     return (f'<td><div class="sc-l">Blijfintentie</div>'
             f'<div class="sc-v" style="color:{_factor_color(avg_si)};">{_score_str(avg_si)}</div>'
             f'<div class="sc-b">{_h(band)}: {_h(zones)}</div></td>')
@@ -880,7 +1008,7 @@ def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
     niet, dan zegt de kop "Geen onderwerp scoort kwetsbaar." en zou "Ook" die
     zin tegenspreken; dan wordt het "Wel is de blijfintentie kwetsbaar".
     """
-    if avg_si is None or _factor_label(avg_si) != "Kwetsbaar punt":
+    if avg_si is None or _factor_level(avg_si) != 0:
         return ""
     low, _mid, _high, n = _blijfintentie_zones(stay_scores)
     if not n:
@@ -897,12 +1025,16 @@ def _blijfintentie_kopzin(avg_si: float | None, stay_scores: list[float], *,
 # waar of waarom; daarom begint het gesprek bij het startpunt.
 #
 # De zin noemt blijf- en vertrekintentie bij naam (codereview taak 3): de
-# alinea staat direct onder de cel Behoudssignaal, en dat getal splitst het
-# afdelingsblok wel per afdeling uit (kolom Score). "Deze cijfers" zou dat
+# alinea staat direct onder de cel Werkbeeld, en dat getal splitst het
+# afdelingsblok wel per afdeling uit (kolom Werkbeeld). "Deze cijfers" zou dat
 # getal meenemen en dan onwaar zijn.
+# R27 (polijstronde): "en ook niet wie er vertrekt" stond alleen op de
+# methodiekpagina. Een reden waarom de intenties niet per afdeling staan is
+# niet vastgelegd; die zin verzint Loep dus niet (beslispunt voor Lars).
 INTENTIE_DUIDING_KERN = (
     "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling "
-    "het speelt of waarom: dit rapport splitst ze niet per afdeling uit.")
+    "het speelt of waarom, en ook niet wie er vertrekt: dit rapport splitst ze niet per "
+    "afdeling uit.")
 
 
 def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
@@ -931,7 +1063,7 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     """
     if avg_si is None or not startpunt_label:
         return ""
-    if _factor_label(avg_si) == "Relatief sterk":
+    if _factor_level(avg_si) == 2:
         return ""
     delen: list[str] = []
     vals = [v for v in to_scores if v is not None]
@@ -947,7 +1079,7 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
                          + " veel vertrekgedachten (vertrekintentie vanaf " + grens + ").")
     delen.append(INTENTIE_DUIDING_KERN)
     wringt = (startpunt_score is not None
-              and _factor_label(startpunt_score) != "Relatief sterk")
+              and _factor_level(startpunt_score) != 2)
     staart = ("daar zie je waar het wringt, en daar kan het MT zelf iets besluiten."
               if wringt else "daar kan het MT zelf iets besluiten.")
     if indicatief:
@@ -976,6 +1108,14 @@ def _frictie_duiding(avg_risk: float | None, *, met_onderwerpen: bool = True) ->
            "rapport: vanaf " + sterk + " is de frictie sterk, onder " + laag + " laag. Het "
            "getal zegt hoe breed het wringt, niet waar")
     zin += "; dat laten de onderwerpen zien." if met_onderwerpen else "."
+    # V13 (polijstronde): de frictiescore heeft eigen grenzen naast de vaste
+    # ladder van de onderwerpen. Alleen als het rapport onderwerpen toont: op
+    # een degraded pagina twee is er geen ladder om mee te vergelijken.
+    if met_onderwerpen:
+        onder_laag = f"{ZONE_LOW:.1f}".replace(".", ",")
+        onder_hoog = f"{ZONE_HIGH:.1f}".replace(".", ",")
+        zin += (" Deze grenzen horen bij de frictiescore en zijn niet dezelfde als de "
+                "grenzen " + onder_laag + " en " + onder_hoog + " bij de onderwerpen.")
     return '<p class="p02-duiding">' + _h(zin) + "</p>"
 
 
@@ -1250,7 +1390,7 @@ def _p02_met_respons(zin: str, *, completed: int, invited: int | None,
     aan hangt.
 
     `verwijzing=True` voor de ene terugval die geen uitspraak doet maar alleen
-    doorverwijst ("Zie de vertrekcontext ... voor wat dit rapport wel toont").
+    doorverwijst ("Zie de vertrekredenen ... voor wat dit rapport wel toont").
     Daar hoort de responsbasis als eigen mededeling vóór de verwijzing, niet als
     haakje erachter: een haakje relativeert een claim, en die staat er niet.
     """
@@ -1350,6 +1490,14 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     """
     maanden = sorted(m for m in (exit_months or []) if m)
     bekend = len(maanden)
+    bereik = _uitstroom_bereik(maanden)
+    if bereik is not None:
+        eerste, laatste = bereik
+        regel = ("Uitstroomperiode: vertrek in " + eerste if eerste == laatste
+                 else "Uitstroomperiode: vertrek tussen " + eerste + " en " + laatste)
+        if bekend < n:
+            regel += " (bij " + str(bekend) + " van de " + str(n) + " vastgelegd)"
+        return regel + ".", None
     if bekend == 0:
         if not heeft_meetperiode:
             return None, "de maand van vertrek (niet vastgelegd)"
@@ -1358,15 +1506,27 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     if bekend < MIN_SEGMENT_N:
         return None, ("de maand van vertrek (bij " + str(bekend) + " van de " + str(n)
                       + " vastgelegd, te weinig om een periode te noemen)")
+    # Wel genoeg bekende maanden, geen bereik: dan is een randmaand te klein.
+    return None, UITSTROOM_RAND_TE_KLEIN
+
+
+def _uitstroom_bereik(exit_months: list[str] | None) -> tuple[str, str] | None:
+    """(vroegste, laatste) maand als Nederlandse tekst, of None.
+
+    De enige plek die beslist of maanden in het rapport mogen staan: de regel
+    op pagina twee (_uitstroomperiode) en het tijdsanker in de werkvragen
+    (_werkvragen_block, V11) lezen allebei deze helper, zodat er nooit een
+    maand verschijnt die de gate niet haalde. Gate: minstens MIN_SEGMENT_N
+    bekende maanden en de vroegste en laatste maand elk door minstens
+    UITSTROOM_RAND_MIN mensen gekozen (zie _uitstroomperiode voor het waarom).
+    """
+    maanden = sorted(m for m in (exit_months or []) if m)
+    if len(maanden) < MIN_SEGMENT_N:
+        return None
     per_maand = Counter(maanden)
     if per_maand[maanden[0]] < UITSTROOM_RAND_MIN or per_maand[maanden[-1]] < UITSTROOM_RAND_MIN:
-        return None, UITSTROOM_RAND_TE_KLEIN
-    eerste, laatste = _maand_nl(maanden[0]), _maand_nl(maanden[-1])
-    regel = ("Uitstroomperiode: vertrek in " + eerste if eerste == laatste
-             else "Uitstroomperiode: vertrek tussen " + eerste + " en " + laatste)
-    if bekend < n:
-        regel += " (bij " + str(bekend) + " van de " + str(n) + " vastgelegd)"
-    return regel + ".", None
+        return None
+    return _maand_nl(maanden[0]), _maand_nl(maanden[-1])
 
 
 def _cover_respons_stat(completion_pct: float | None) -> tuple[str, str]:
@@ -1606,10 +1766,12 @@ SECTION_INTROS: dict[str, str] = {
     # samenstelling van het signaal blijft zonder die verwijzing gewoon waar,
     # dus vervalt hij in beide staten (review ronde 2).
     "behoudscontext": (
-        "Het behoudssignaal is een samenvattende groepsscore: de zes onderwerpen over "
-        "het werk en de werkbeleving samen, teruggebracht tot &eacute;&eacute;n getal "
-        "tussen 1 en 10. Hoe hoger, hoe beter. "
-        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "Het werkbeeld is een samenvattende groepsscore: de zes onderwerpen over "
+        "het werk en de werkbeleving (de drie basisbehoeften autonomie, competentie en "
+        "verbondenheid) samen, teruggebracht tot &eacute;&eacute;n getal tussen 1 en 10. "
+        "Het zegt hoe mensen hun werk ervaren, niet of ze blijven; dat zeggen blijf- en "
+        "vertrekintentie. Hoe hoger, hoe beter. "
+        "Onder de 5,0 heet een score een kwetsbaar punt, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. De drie signalen daaronder geven context: "
         "bij vertrekintentie leest een hoge score juist als meer vertrekgedachten, bij de "
         "andere twee is hoog weer beter. "
@@ -1621,7 +1783,7 @@ SECTION_INTROS: dict[str, str] = {
     "vertrekcontext": (
         "Deze pagina zet de vertrekredenen op een rij zoals vertrokken medewerkers ze zelf "
         "opgaven: eerst de hoofdreden, daarna wat er volgens hen meespeelde. Samen met de "
-        "scores per onderwerp verderop laat dit zien of de opgegeven redenen en het bredere werkbeeld "
+        "scores per onderwerp verderop laat dit zien of de opgegeven redenen en het bredere beeld van het werk "
         "hetzelfde verhaal vertellen. Lees dit als de context waarin de rest van het rapport "
         "staat: het beschrijft waarom mensen zeggen te vertrekken, niet wie er nog zal vertrekken."
     ),
@@ -1642,7 +1804,7 @@ SECTION_INTROS: dict[str, str] = {
         "De checkpointscore vat samen hoe nieuwe medewerkers hun eerste werkperiode ervaren: "
         "de landingsdomeinen samengebracht tot &eacute;&eacute;n getal tussen "
         "1 en 10. Hoe hoger, hoe beter. "
-        "Onder de 5,0 noemen we een score kwetsbaar, tussen 5,0 en 6,5 een "
+        "Onder de 5,0 heet een score een kwetsbaar punt, tussen 5,0 en 6,5 een "
         "aandachtspunt, vanaf 6,5 relatief sterk. Dit is een momentopname van de landing: "
         "een startpunt voor het gesprek over onboarding, geen beoordeling van individuele "
         "starters of hun begeleiders."
@@ -1662,7 +1824,7 @@ SECTION_INTROS: dict[str, str] = {
         "geen interpretatie achteraf. Wat er volgens hen moet gebeuren staat bij de gespreksagenda."
     ),
     "werkbeleving": (
-        "Naast de onderwerpen over het werk meten we drie psychologische basisbehoeften: autonomie (regie "
+        "Naast de onderwerpen over het werk meet de vragenlijst drie psychologische basisbehoeften: autonomie (regie "
         "over de eigen werkwijze), competentie (ervaren bekwaamheid) en verbondenheid (de band "
         "met collega's en organisatie). Onderzoek naar werkmotivatie laat consistent zien dat "
         "deze drie bepalen hoe duurzaam iemand op zijn plek zit. De onderwerpen over het werk "
@@ -1678,20 +1840,24 @@ SECTION_INTROS: dict[str, str] = {
     ),
     "segmentanalyse": (
         "Deze tabel splitst het beeld uit per afdeling: het aantal ingevulde vragenlijsten "
-        "tegenover het aantal uitgenodigden, de gemiddelde score en, bij voldoende "
+        "tegenover het aantal uitgenodigden, een score en, bij voldoende "
         "antwoorden, de spreiding. Afdelingen met minder dan vijf antwoorden worden "
         "gebundeld onder &ldquo;Overige afdelingen&rdquo;, zodat antwoorden nooit herleidbaar "
         "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
         "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;. "
-        "De kolom met het laagste onderwerp toont per afdeling het onderwerp dat daar het laagst "
-        "scoort. Bij kleine afdelingen (5 tot 9 antwoorden) tonen we bewust alleen een "
-        "duidingslabel, geen cijfer achter de komma; alle onderwerpen per afdeling met hun "
-        "scores staan er vanaf 10 antwoorden."
+        "De kolom met het laagste onderwerp noemt per afdeling het laagst scorende onderwerp; "
+        "bij kleine afdelingen (5 tot 9 antwoorden) staat daar alleen een label zoals "
+        "&lsquo;aandachtspunt&rsquo;, geen cijfer achter de komma. Vanaf 10 antwoorden staan "
+        "alle onderwerpen met hun scores onder de tabel, bij "
+        "&lsquo;Alle onderwerpen per afdeling&rsquo;."
+        # Die naam is de openingsregel van _segment_factor_subblocks.
+        # De zin over de scorekolom verschilt per product en komt uit
+        # SEGMENT_SCOREKOLOM; _segment_intro zet hem hierachter (R14).
     ),
     "open_toelichtingen": (
         "Dit zijn de open antwoorden zoals respondenten ze zelf schreven, alleen ontdaan van "
         "herkende namen, e-mailadressen, telefoonnummers en postcodes. Ze staan in ontvangstvolgorde: er is niet geselecteerd "
-        "op inhoud en er is geen automatische duiding op losgelaten. De stemmen hieronder geven "
+        "op inhoud en er is niets automatisch uit afgeleid. De stemmen hieronder geven "
         "kleur aan de cijfers; wat ze betekenen en hoe zwaar ze wegen, bepaal je in de bespreking."
     ),
     "appendix": (
@@ -1740,8 +1906,9 @@ OVERZICHTSPROFIEL_RANGORDE: dict[str, str] = {
 OVERZICHTSPROFIEL_RANGORDE["retention"] = OVERZICHTSPROFIEL_RANGORDE["exit"]
 
 
-def _intro(key: str) -> str:
-    return f'<p class="sec-intro">{SECTION_INTROS[key]}</p>'
+def _intro(key: str, extra: str = "") -> str:
+    """De sectie-intro. extra (al geëscapet) sluit dezelfde alinea af."""
+    return f'<p class="sec-intro">{SECTION_INTROS[key]}{extra}</p>'
 
 
 class _ChapterCounter:
@@ -1797,7 +1964,23 @@ LEIDRAAD_ANKERS = {
     "drempels": "sec-drempels",        # drempeltabel op de methodiekpagina (taak 11)
     "besluit": "sec-besluit",          # besluitpagina "Besluit van het MT" (plan 3b)
     "werkvragen": "sec-werkvragen",    # blok "Zo maak je er een besluit van" (N1, plan 3b eindreview)
+    "richting_overig": "sec-richting-overig",  # blok "Richtingvraag bij de andere onderwerpen" (V12)
 }
+
+
+def _verdieping_anker(factor_key: str) -> str:
+    """Anker op het toelichtingsblok van één onderwerp (R7/V7, polijstronde
+    taak 5). De richtingkaart verwijst ernaar als zij een ander getal toont
+    dan die toelichting.
+
+    Op het blok zelf en niet op de kop van de verdiepingspagina: bij een
+    verdiepingsblok dat over een paginagrens mag lopen (.verd-los, _verd_los)
+    kan de toelichting een vel later staan dan de kop, en dan zou "de
+    toelichting op pagina N" een pagina te vroeg wijzen. Het leidraad-anker
+    (LEIDRAAD_ANKERS["verdieping"]) blijft op de kop van de eerste
+    verdiepingspagina; daar verwijst de leidraad naar het onderwerp als geheel.
+    """
+    return "sec-verdieping-" + factor_key
 
 # V1/V5 (koude leesronde 24-9): bij Loep Vertrek zitten er managers aan tafel
 # die weten wie er uit hun team vertrok. De werkvragen ("waar zie je dat bij
@@ -1807,10 +1990,12 @@ LEIDRAAD_ANKERS = {
 # niet nodig: daar gaat het gesprek over wie er nog werkt.
 NAMENREGEL_VERTREK = ("Praat over hoe het werkt, niet over wie er vertrok. Valt er een naam, "
                       "ga dan terug naar de vraag.")
-# Eén bron voor de vraag bij de open antwoorden: hij staat zowel in rij 4 van
-# de leidraad als boven de open antwoorden zelf, en mag niet uit elkaar lopen.
-PATROONVRAAG_VERTREK = "wat komt terug in meer dan één antwoord?"
-TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: " + PATROONVRAAG_VERTREK
+# Eén bron voor de vraag bij de open antwoorden: hij staat in rij 4 van de
+# leidraad (Loep Vertrek en Loep Start), boven de open antwoorden zelf (Loep
+# Vertrek) en bij Loep Start in rij 3 als rij 4 niet naar de open antwoorden
+# wijst (S11). De plaatsen mogen niet uit elkaar lopen.
+PATROONVRAAG = "wat komt terug in meer dan één antwoord?"
+TOELICHTINGEN_VRAAG_VERTREK = ("Lees ze als patroon: " + PATROONVRAAG
                                + " Raad niet wie wat schreef.")
 TOELICHTINGEN_REGEL_VERTREK_HTML = ('<p class="trustline">'
                                     + _h(TOELICHTINGEN_VRAAG_VERTREK + " " + NAMENREGEL_VERTREK)
@@ -1820,7 +2005,8 @@ TOELICHTINGEN_REGEL_VERTREK_HTML = ('<p class="trustline">'
 def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
                     has_deepening: bool, has_werkvragen: bool = False,
                     intentie_duiding: bool = False,
-                    has_tweede_punt: bool = False) -> str:
+                    has_tweede_punt: bool = False,
+                    has_afdeling_afspraak: bool = False) -> str:
     """"Zo leid je dit gesprek in 45 minuten" (spec par. 4 blok 5): vijf regels
     met tijdvak, wat je op tafel legt en de paginaverwijzing. Vervangt het
     gebruiksblok en de zin over de begeleide managementbespreking (H5): de
@@ -1843,18 +2029,28 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     intentie_duiding (R1, alleen Loep Behoud): onder de cijfers op pagina twee
     staat de duiding van blijf- en vertrekintentie; rij 2 stuurt de
     HR-manager daarheen. De renderer geeft bool(_intentie_duiding(...)) door.
+    has_afdeling_afspraak (R21): de besluitpagina krijgt een blok "Afspraak per
+    afdeling". De renderer haalt de vlag uit dezelfde waarde die hij aan
+    _besluit_page geeft, zodat de leidraad dat blok alleen noemt als het er
+    staat.
     """
     A = LEIDRAAD_ANKERS
     p = _pref
-    context = {"exit": "de vertrekredenen", "retention": "de blijfintentie en het behoudssignaal",
+    context = {"exit": "de vertrekredenen", "retention": "de blijfintentie en het werkbeeld",
                "onboarding": "de checkpointscore"}[scan_type]
+    # Wijst rij 4 naar de open antwoorden? Rij 3 van Loep Start (S11) leest
+    # deze vlag, zodat die twee rijen niet allebei naar die pagina verwijzen.
+    rij4_toelichtingen = not has_segments and has_quotes
     if has_segments:
         rij4 = ("Per afdeling", "Waar het per afdeling begint, en hoe dat zich verhoudt tot het "
                                 f"startpunt (pagina {p(A['afdelingen'])}).")
-    elif has_quotes:
+    elif rij4_toelichtingen:
         # V5: bij Loep Vertrek krijgt dit slot een vraag, anders lees je acht
         # minuten losse vertrekverhalen voor aan wie de vertrekkers kende.
-        vraag = " Vraag: " + PATROONVRAAG_VERTREK if scan_type == "exit" else ""
+        # S11: ook bij Loep Start, waar de open antwoorden de enige
+        # waarom-bron zijn; zo krijgt Start de patroonvraag altijd precies één
+        # keer, in rij 3 of hier.
+        vraag = " Vraag: " + PATROONVRAAG if scan_type in ("exit", "onboarding") else ""
         rij4 = ("Wat mensen zelf schreven",
                 f"De open toelichtingen, ongefilterd (pagina {p(A['toelichtingen'])})." + vraag)
     else:
@@ -1873,8 +2069,21 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     if has_werkvragen:
         # "wat eronder staat", niet "de vragen eronder": onder Herkennen staat
         # bij het startpunt vaak alleen nog Besluiten.
+        # R21 (polijstronde): wie het tweede punt parkeert, vult de
+        # terugkoppeling (en de afdelingsafspraak) toch in; anders kregen die
+        # velden in de leidraad geen tijd. Korte vorm sinds Taak 11: "Vul op
+        # de besluitpagina ... ook in als je het tweede punt parkeert" maakte
+        # rij 5 een regel langer en liet p.02 van Loep Vertrek overlopen
+        # (08, 21, 22, voorbeeld; gemeten in het productie-image). De vaste
+        # terugvaloptie uit het plan ("Vul op de besluitpagina ook ... in.")
+        # spaarde geen regel. "altijd", niet "dan toch": direct na "tot het
+        # vervolgmoment" las "dan" als "op het vervolgmoment" (spec-review
+        # taak 11). De zin staat er alleen met een tweede punt, dus "altijd"
+        # klopt; de besluitpagina staat in de zin erna.
+        vul = ("de afdelingsafspraak en de terugkoppeling" if has_afdeling_afspraak
+               else "de terugkoppeling")
         tweede = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
-                  "vervolgmoment. " if has_tweede_punt else "")
+                  "vervolgmoment. Vul " + vul + " altijd in. " if has_tweede_punt else "")
         slot = (f"De werkvragen (pagina {p(A['werkvragen'])}). Bij het startpunt sla je "
                 "Herkennen over, dat deden jullie al; neem wat eronder staat. "
                 + tweede + besluit)
@@ -1883,6 +2092,12 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     if scan_type == "onboarding":
         rij3 = (f"Het startpunt: de score en de laagste stelling (pagina {p(A['verdieping'])}). "
                 "Open met de gespreksopener hierboven.")
+        # S11 (polijstronde): de enige waarom-bron van Loep Start zijn de open
+        # antwoorden. Alleen als die er zijn, en niet als rij 4 er al naar
+        # verwijst (geen afdelingen): dan zou dezelfde pagina twee keer staan.
+        if has_quotes and not rij4_toelichtingen:
+            rij3 += (f" Het waarom staat in de open antwoorden (pagina {p(A['toelichtingen'])}); "
+                     "vraag: " + PATROONVRAAG)
     elif has_deepening:
         rij3 = ("De verdieping van het startpunt: de laagste stelling en wat mensen als toelichting "
                 f"kozen (pagina {p(A['verdieping'])}). Open met de gespreksopener hierboven.")
@@ -1936,7 +2151,8 @@ def _heeft_werkbeleving(sdt_avgs: dict) -> bool:
 def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
                    startpunt_fk: str | None, has_sdt: bool, geen_profiel: bool,
                    has_werkvragen: bool = False, intentie_duiding: bool = False,
-                   has_tweede_punt: bool = False) -> str:
+                   has_tweede_punt: bool = False,
+                   has_afdeling_afspraak: bool = False) -> str:
     """Kiest de vlaggen van de leidraad uit de data van dit rapport.
 
     Eén plek voor de drie renderers (codereview taak 5), zodat ze niet uit
@@ -1954,6 +2170,8 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
       door, dus de leidraad verwijst alleen naar dat blok als het rendert.
       `has_tweede_punt` komt uit dezelfde ranglijst als dat blok: alleen met
       een tweede gesprekspunt noemt regel 5 het parkeren ervan.
+    - `has_afdeling_afspraak` (R21) is `_bl_afdeling is not None` van de
+      renderer: dezelfde waarde die als `afdeling` naar _besluit_page gaat.
     """
     if geen_profiel:
         return ""
@@ -1966,7 +2184,7 @@ def _leidraad_html(scan_type: str, *, data: dict, deep_agg: dict,
         has_deepening=_deepening_shows_distribution(
             deep_agg.get(startpunt_fk) if startpunt_fk else None),
         has_werkvragen=has_werkvragen, intentie_duiding=intentie_duiding,
-        has_tweede_punt=has_tweede_punt)
+        has_tweede_punt=has_tweede_punt, has_afdeling_afspraak=has_afdeling_afspraak)
 
 
 # Standaardwaarde voor het derde coverstatistiek als er geen factorprofiel is
@@ -1999,28 +2217,35 @@ ONBOARDING_GEEN_RANGORDE = (
     "scores is er geen volgorde om de onderwerpen met de meeste aandacht aan te wijzen."
 )
 
-# Loep Start levert de verdiepings- en richtinglaag nog niet (spec ronde 2
+# Loep Start levert de verdiepings- en richtinglaag niet (spec ronde 2
 # par. 7, B18). Loep Vertrek en Loep Behoud vragen door op een lage score
 # (waarom scoort dit zo, volgens de respondent) en stellen daarna de
 # richtingvraag (wat zou hier het meest helpen); die twee vullen samen het blok
-# "Wat er moet gebeuren". Loep Start heeft geen van beide. Zolang dat zo is,
-# zegt het rapport dat zelf, op de plek waar de lezer anders naar die laag zou
-# zoeken. Dezelfde zin staat op de site (home-page-content.tsx,
-# producten-content.tsx): rapport en site zeggen hetzelfde.
+# "Wat er moet gebeuren". Loep Start heeft geen van beide. Het rapport zegt dat
+# zelf, op de plek waar de lezer anders naar die laag zou zoeken, en zegt wat
+# de lezer in plaats daarvan doet (leesronde 4, S2): geen productplanning in
+# een klantrapport.
+#
+# Let op: rapport en site zeggen dit NIET meer met dezelfde woorden. De
+# disclosure op de site (loep-start-scope-disclosure in
+# home-page-content.tsx en producten-content.tsx) zegt nog dat de laag "in een
+# volgende versie" komt. Dat is een verkoopkeuze en bewust buiten de
+# polijstronde gehouden (spec 2026-10-09 par. 6).
 ONBOARDING_GEEN_VERDIEPING_NOTE = (
-    "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag. Het rapport "
+    "Deze scan bevat geen verdiepingsvragen en geen richtingvraag. Het rapport "
     "laat zien waar het wringt bij nieuwe medewerkers; wat er volgens hen moet "
-    "gebeuren volgt in een volgende versie."
+    "gebeuren, vraag je in het gesprek met hen."
 )
 
 # Zonder factorprofiel weerlegt de tweede helft zichzelf binnen drie zinnen: het
 # degraded blok eronder zegt juist dat Loep bij dit aantal antwoorden nog geen
 # profiel per factor toont, dus "laat zien waar het wringt" is dan geen belofte
 # die dit rapport waarmaakt. De eerste zin gaat over het product en blijft waar;
-# die blijft staan, met alleen het deel over de volgende versie erachter.
+# die blijft staan, met alleen het deel over het gesprek met nieuwe
+# medewerkers erachter.
 ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED = (
-    "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag. Wat er "
-    "volgens nieuwe medewerkers moet gebeuren volgt in een volgende versie."
+    "Deze scan bevat geen verdiepingsvragen en geen richtingvraag. Wat er "
+    "volgens nieuwe medewerkers moet gebeuren, vraag je in het gesprek met hen."
 )
 
 
@@ -2079,7 +2304,8 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
                        responsbasis_html: str = "", opener_html: str = "",
                        direction_line: str = "", brug_zin: str = "",
                        degraded_note: str = "", why_title: str = "",
-                       scope_note: str = "") -> str:
+                       scope_note: str = "", afdelingen_zin: str = "",
+                       kernzin_vervolg: str = "") -> str:
     """Pagina twee als MT-vel (spec 16-9 par. 4), in vaste blokvolgorde:
     1 kernzin, 2 cijfers (cijfers_html, taak 2), 3 startpunt en waarom (why-blok
     met alleen echte redenen, C10), 4 gespreksopener (dezelfde als op de agenda,
@@ -2090,6 +2316,11 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
 
     scope_note (spec ronde 2 par. 7): één regel direct onder de kernzin over wat
     dit product nog niet levert; rendert in beide staten.
+
+    afdelingen_zin (S3, polijstronde) is HTML uit _p02_afdelingen_zin, met een
+    paginaverwijzing, en gaat daarom niet door _h(). Hij staat direct achter de
+    kernzin; kernzin_vervolg (platte tekst, bijv. de vertrekredenzin of de
+    blijfintentie) volgt daarna in dezelfde alinea.
 
     Degraded (bug B2): zonder factorprofiel rendert één expliciete alinea in
     plaats van het why-blok; cijfers en meetgegevens blijven staan, want die
@@ -2116,8 +2347,17 @@ def _bestuurlijke_read(*, kernzin: str, primary_label: str, why_cells_html: str,
                   f'{_h(scope_note)}</p>') if scope_note else ""
     # Een uitzonderlijk lange kop (meer dan KERNZIN_LANG tekens) krijgt een
     # kleinere letter via de wrapper, zodat p.02 op een vel blijft (H16).
-    kernzin_html = f'<p class="br-kernzin">{_h(kernzin)}</p>'
-    if len(kernzin) > KERNZIN_LANG:
+    delen = [_h(kernzin)]
+    lengte = len(kernzin)
+    if afdelingen_zin:
+        delen.append(afdelingen_zin)
+        # Het paginanummer telt als twee tekens mee.
+        lengte += 1 + len(re.sub(r"<[^>]+>", "", afdelingen_zin)) + 2
+    if kernzin_vervolg:
+        delen.append(_h(kernzin_vervolg))
+        lengte += 1 + len(kernzin_vervolg)
+    kernzin_html = '<p class="br-kernzin">' + " ".join(delen) + "</p>"
+    if lengte > KERNZIN_LANG:
         kernzin_html = f'<div class="kz-lang">{kernzin_html}</div>'
     return f"""<div class="pb sec" id="p02">
   {opener_html or '<span class="slabel">Het antwoord in het kort</span>'}
@@ -2354,12 +2594,19 @@ def _laagste_stelling_zin(factor_label: str, stelling: str, score: float,
     _laagste_stelling_reikwijdte). uniek slaat op de reikwijdte die de zin
     noemt: bij laagste_van_alles op alle gemeten stellingen, anders op het
     thema, waar de gekozen stelling per definitie de laagste is.
+
+    score is de score van de STELLING zelf (de aanroeper geeft het item uit
+    data["org_item_avgs"] door, niet het factorgemiddelde), dus het getal staat direct
+    achter de stelling (leesronde 4, S8). Een afsluitend leesteken van de
+    stelling (. ? ! of het beletselteken …) valt weg, anders staat het
+    binnen de aanhalingstekens midden in de zin.
     """
     welke = ("de laagst scorende stelling" if uniek
              else "een van de laagst scorende stellingen")
     waar = "in het cijferbeeld" if laagste_van_alles else "van dit onderwerp"
-    return (f"Bespreek eerst ‘{stelling}’ binnen {factor_label.lower()} "
-            f"({score:.1f}/10). Dat is {welke} {waar}.")
+    stelling = stelling.strip().rstrip(".?!…").rstrip()
+    return (f"Bespreek eerst de stelling ‘{stelling}’ ({score:.1f}/10), "
+            f"binnen {factor_label.lower()}. Dat is {welke} {waar}.")
 
 
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
@@ -2508,7 +2755,7 @@ def raster_intro(scan_type: str, deepening_active: bool,
     staart = f" {_RASTER_DIRECTION_CLAUSE}" if direction_active else ""
     return (f"Dit overzicht weegt alle zes onderwerpen tegen elkaar af op "
             f"{_TELWOORD[len(signals)]} signalen: {lijst}. {waar}{staart} Zo is de "
-            "volgorde navolgbaar. De bespreking beslist; dit raster structureert.")
+            "volgorde navolgbaar. Het MT beslist; de rangorde helpt alleen ordenen.")
 
 
 def raster_uitleg(scan_type: str, deepening_active: bool,
@@ -2583,6 +2830,74 @@ def _raster_deepening_cell(row: dict, scan_type: str) -> str:
                4: CELL_CAP_REACHED, 5: CELL_NOT_TRIGGERED}.get(state, ""))
 
 
+def _bijna_gelijk_zinnen(ranked: list[dict]) -> list[str]:
+    """De bijna-gelijkregel onder het raster, één zin per groep (polijstronde R26).
+
+    Eerder stond er per koppeling een zin ("B staat vrijwel gelijk aan A; C
+    staat vrijwel gelijk aan B"), ook als drie onderwerpen op dezelfde 7.1
+    stonden. Nu vormen opeenvolgende near_tie_with-koppelingen een groep. Zijn
+    alle getoonde scores in de groep gelijk, dan staan ze gelijk op die score;
+    anders staan ze "in de rangorde vrijwel gelijk" met het bereik erbij. "In
+    de rangorde", want bijna-gelijk gaat over de rangschikking, die bij Loep
+    Vertrek ook de vertrekredenen weegt: de scores zelf kunnen dan verder uit
+    elkaar liggen dan de marge.
+
+    Een groep groeit alleen zolang de hele groep, met de nieuwe rij erbij,
+    binnen de marge blijft (hoogste min laagste base). Vergelijken met alleen
+    de eerste rij is niet genoeg: wint een rij op de vraag om verandering, dan
+    staat hij vooraan zonder de laagste te zijn, en dan kon een groep tot
+    bijna twee keer de marge beslaan. near_tie_with vergelijkt telkens twee buren,
+    dus een keten van koppelingen kan samen verder uit elkaar liggen dan de
+    marge (6.8, 7.0, 7.2, 7.5): die vier "vrijwel gelijk" noemen zou meer
+    beweren dan de rangschikking deed. Valt een rij buiten de marge van de
+    groep, dan begint een nieuwe groep met de vorige rij erbij, zodat elke
+    koppeling in precies een zin blijft staan en elke zin waar is.
+
+    near_tie_with wijst naar de vorige rij (rank_factors). Wijst hij naar een
+    rij die niet direct voorafgaat, dan begint er een nieuwe groep met die rij
+    erbij. Een sleutel die in de lijst ontbreekt (hoort niet voor te komen)
+    geeft geen fout in een klantrapport: dan staat de sleutel als naam en telt
+    hij niet mee in het bereik.
+    """
+    def _base(x: dict) -> float | None:
+        return x.get("base", x.get("score"))
+
+    def _binnen_marge(groep: list[dict], r: dict) -> bool:
+        bs = [_base(x) for x in groep] + [_base(r)]
+        return None not in bs and max(bs) - min(bs) < PRIORITY_TIE_MARGIN
+
+    groepen: list[list[dict]] = []
+    vorige: dict | None = None
+    for r in ranked:
+        ref = r.get("near_tie_with")
+        if ref:
+            if (groepen and vorige is not None and groepen[-1][-1] is vorige
+                    and vorige["key"] == ref and _binnen_marge(groepen[-1], r)):
+                groepen[-1].append(r)
+            else:
+                doel = next((x for x in ranked if x["key"] == ref),
+                            {"key": ref, "label": ref, "score": None})
+                groepen.append([doel, r])
+        vorige = r
+    # Zelfde vorm als de sterke-basiszin in het overzichtsprofiel (R9): telwoord
+    # vooraan, namen achter een dubbele punt met komma's. Met "A, B en C" las
+    # het niet, omdat de onderwerpnamen zelf "en" bevatten ("Werkdruk en
+    # herstelruimte en Leiderschap en vertrouwen staan ...").
+    zinnen = []
+    for g in groepen:
+        aantal = _TELWOORD.get(len(g), str(len(g))).capitalize()
+        namen = ", ".join(x["label"] for x in g)
+        scores = [_shown(x["score"]) for x in g if x.get("score") is not None]
+        if scores and min(scores) == max(scores) and len(scores) == len(g):
+            zinnen.append(f"{aantal} onderwerpen staan gelijk op {scores[0]:.1f}: {namen}.")
+        elif scores:
+            zinnen.append(f"{aantal} onderwerpen staan in de rangorde vrijwel gelijk "
+                          f"({min(scores):.1f} tot {max(scores):.1f}): {namen}.")
+        else:
+            zinnen.append(f"{aantal} onderwerpen staan in de rangorde vrijwel gelijk: {namen}.")
+    return zinnen
+
+
 def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          factor_resp_scores: dict[str, list[float]],
                          deepening_active: bool,
@@ -2619,7 +2934,10 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     omdat de methodiekpagina moet weten of het blok daadwerkelijk gerenderd
     is (_trust_page's direction_active). Meegegeven blok wint; zonder dat
     argument bouwt deze functie het blok alsnog uit direction_agg, zodat
-    directe aanroepers (tests) niets hoeven te weten van die volgorde.
+    directe aanroepers (tests) niets hoeven te weten van die volgorde. Dat
+    terugvalpad kent het verdiepingsaggregaat niet en geeft geen
+    toelichting_n mee, dus de kaarten krijgen daar geen zin "Dit is een andere
+    telling" (R7/V7); in de rapporten bouwen de renderers het blok altijd zelf.
 
     werkvragen_html (plan 3b): het blok "Zo maak je er een besluit van", door de
     renderers gebouwd met _werkvragen_block. Leeg voor directe aanroepers. Het
@@ -2738,14 +3056,9 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     legenda = f'<p class="r-legend">{RASTER_LEGENDA}</p>' if any_full_spread else ""
 
     # C13: de gelijkspel-meldingen als volle zinnen onder de tabel, in dezelfde
-    # volgorde als de rijen. De fallback op de sleutel blijft staan (zoals in de
-    # oude agendacel): near_tie_with hoort naar een rij in deze lijst te wijzen,
-    # maar een ontbrekende rij mag geen StopIteration in een klantrapport geven.
-    ties = [f'{_h(r["label"])} staat vrijwel gelijk aan '
-            + _h(next((x["label"] for x in ranked if x["key"] == r["near_tie_with"]),
-                      r["near_tie_with"]))
-            for r in ranked if r["near_tie_with"]]
-    ties_html = f'<p class="r-legend">{"; ".join(ties)}.</p>' if ties else ""
+    # volgorde als de rijen. Zie _bijna_gelijk_zinnen (polijstronde R26).
+    ties = _bijna_gelijk_zinnen(ranked)
+    ties_html = f'<p class="r-legend">{_h(" ".join(ties))}</p>' if ties else ""
 
     # Kop in een <thead> (ronde 2 observatie 4): in een <tbody> herhaalt WeasyPrint
     # hem niet, dus stond de tabel op een vervolgpagina zonder kolomnamen.
@@ -2925,10 +3238,12 @@ DIRECTION_HEAD_SPLIT_NONE = ("Verdeeld: een deel zegt dat hier niets hoeft, een 
                              "{deel} deel vraagt om ‘{opt}’.")
 
 
-def _telling(x: int, y: int) -> str:
+def _telling(x: int, y: int, *, pct: bool = True) -> str:
     """Vaste tellingsvorm (B14): "X van de Y (P%)" vanaf MIN_DISTRIBUTION_N,
     anders zonder percentage (dezelfde staffel als de tabellen; onder tien
     antwoorden suggereert een percentage precisie die er niet is).
+
+    pct=False alleen voor pagina twee (R18); de kaart houdt het percentage.
 
     De uitleg van de noemer hoort in de zin en niet hier: die verschilt per
     plaats (_dir_n_wie voor de richtingkaarten, "= wie hier duidelijk laag antwoordde" in de
@@ -2940,8 +3255,8 @@ def _telling(x: int, y: int) -> str:
     """
     if y <= 0:
         raise ValueError(f"_telling: telling {x} zonder noemer (y={y})")
-    pct = f" ({round(x / y * 100)}%)" if y >= MIN_DISTRIBUTION_N else ""
-    return f"{x} van de {y}{pct}"
+    aandeel = f" ({round(x / y * 100)}%)" if pct and y >= MIN_DISTRIBUTION_N else ""
+    return f"{x} van de {y}{aandeel}"
 
 
 def _respondenten(n: int) -> str:
@@ -3009,6 +3324,17 @@ def _niets_tekst(scan_type: str) -> str:
     return teksten.pop()
 
 
+def _richting_optie_tekst(texts: dict[str, str], key: str, factor_key: str,
+                          scan_type: str) -> str:
+    """De respondenttekst van een richtingoptie, met een nette fout in plaats
+    van een rauwe sleutel in een klant-PDF. Eén plek voor de kaart (_opt), de
+    niets-stemmen (_niets_apart) en de appendix (_bijlage_richting_block)."""
+    if key not in texts:
+        raise KeyError(
+            f"direction: onbekende optiesleutel {key!r} voor {factor_key!r} ({scan_type})")
+    return texts[key]
+
+
 def _niets_apart(st: dict, scan_type: str, factor_key: str) -> str:
     """"; 3 kozen ‘Niets, dit zit hier goed’": de niets-stemmen naast een
     richting die op de veranderkeuzes rust (spec 2026-10-07, taak 7). Leeg
@@ -3016,11 +3342,9 @@ def _niets_apart(st: dict, scan_type: str, factor_key: str) -> str:
     _opt in _direction_card_cell bij een onbekende sleutel."""
     if not st["none_n"]:
         return ""
-    texts = direction_option_texts(scan_type, factor_key)
-    if st["none_key"] not in texts:
-        raise KeyError(f"direction: onbekende optiesleutel {st['none_key']!r} voor "
-                       f"{factor_key!r} ({scan_type})")
-    return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{texts[st['none_key']]}’"
+    tekst = _richting_optie_tekst(direction_option_texts(scan_type, factor_key),
+                                  st["none_key"], factor_key, scan_type)
+    return f"; {_tel(st['none_n'], 'koos', 'kozen')} ‘{tekst}’"
 
 
 def _op_veranderkeuzes(st: dict) -> bool:
@@ -3037,13 +3361,14 @@ def _op_veranderkeuzes(st: dict) -> bool:
     return st["change_n"] != st["n"]
 
 
-def _richting_telling(st: dict) -> str:
+def _richting_telling(st: dict, *, pct: bool = True) -> str:
     """De telling achter een richting (clear, plurality): de grootste route op
     de veranderkeuzes als die afwijken van alle beantwoorders, anders op alle
     beantwoorders. Eén bron voor kaart en pagina twee; die verschillen alleen
-    in het zinskader eromheen."""
+    in het zinskader eromheen, en pagina twee toont geen percentage (pct=False,
+    R18)."""
     noemer = st["change_n"] if _op_veranderkeuzes(st) else st["n"]
-    return _telling(st["top_n"], noemer)
+    return _telling(st["top_n"], noemer, pct=pct)
 
 
 def _zonder_keuze_n(st: dict) -> int:
@@ -3074,6 +3399,10 @@ def _zonder_keuze_zin(st: dict) -> str:
 # divided-kaart): "de 10 die dit het laagst scoorden en de vraag beantwoordden".
 DIR_N_DIE_WIE = "die dit het laagst scoorden en de vraag beantwoordden"
 
+# Hetzelfde label wanneer een richting op de veranderkeuzes rust (pagina twee,
+# spec 2026-10-07 taak 7): wie dit het laagst scoorde én om verandering vroeg.
+DIR_N_DIE_VERANDERING = "die dit het laagst scoorden en om verandering vroegen"
+
 
 def _beperkte_basis_note() -> str:
     """De beperkte-basis-regel onder een verdeling, met de verwijzing naar de
@@ -3081,7 +3410,8 @@ def _beperkte_basis_note() -> str:
 
     Eén bron voor twee plekken: onder de verdiepingsverdeling (_deepening_block,
     onder MIN_AGGREGATE_N antwoorden) en onder een richtingkaart
-    (_direction_card_cell, bij DIRECTION_MIN_N of DIRECTION_CAVEAT_MAX_N). De twee
+    (_direction_card_cell, bij DIRECTION_MIN_N of DIRECTION_CAVEAT_MAX_N, en sinds
+    V10 ook bij een richting op minder dan MIN_AGGREGATE_N veranderkeuzes). De twee
     hadden dezelfde bedoeling in twee formuleringen ("Beperkte antwoordbasis" en
     "Beperkte basis") en de drempel erachter stond nergens uitgelegd. De opmaak
     zit in .dir-caveat in het stylesheet (codereview taak 9, bevinding 3).
@@ -3186,8 +3516,23 @@ def _direction_totals(direction_agg: dict) -> tuple[int, int, int]:
             sum(a["skipped"] for a in direction_agg.values()))
 
 
+# V12 (polijstronde): de kop van het blok onderaan de appendix met de keuzes
+# bij de onderwerpen buiten de agenda. De totaalregel noemt het blok bij deze
+# naam (niet "de bijlage": de sectie heet Appendix), en de paginaverwijzing
+# landt op het blok zelf (LEIDRAAD_ANKERS["richting_overig"]), niet op de
+# appendixkop, die een pagina eerder kan staan.
+BIJLAGE_RICHTING_KOP = "Richtingvraag bij de andere onderwerpen"
+# Plaatshouder voor die paginaverwijzing in de (platte) tekst van
+# _direction_totals_line. Die tekst gaat door _h(); het anker (_pref) is HTML
+# en wordt pas daarna ingevoegd, in _wat_moet_gebeuren_block. _h laat
+# accolades staan, dus de plaatshouder overleeft het escapen.
+RICHTING_OVERIG_PAGINA = "{richting-overig-pagina}"
+BIJLAGE_RICHTING_ZIN = (" Wat zij kozen, staat bij ‘" + BIJLAGE_RICHTING_KOP + "’ (pagina "
+                        + RICHTING_OVERIG_PAGINA + ").")
+
+
 def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_type: str,
-                           n_total: int) -> str:
+                           n_total: int, *, bijlage: bool = False) -> str:
     """De sluitende richtingketen op de gespreksagenda (B14, H19): totaal
     gekregen/beantwoord/overgeslagen, wie het startpunt en het tweede punt als
     laagste had, en waar de rest is gebleven. Elke respondent krijgt precies één
@@ -3220,6 +3565,15 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     Alleen `toegewezen > n_total` blijft een harde fout: dat is rekenkundig
     onmogelijk (elke respondent draagt aan ten hoogste één onderwerp bij), dus
     geen drift maar een codebug of een inconsistente aanroep.
+
+    bijlage (V12, polijstronde): de renderer toont de bijlage (dezelfde
+    _should_show_appendix-waarde die de appendix rendert, van buiten
+    meegegeven). Dan staan de keuzes bij de onderwerpen buiten de agenda
+    daar (_bijlage_richting_block, voor precies de onderwerpen in `rest`
+    hieronder), en verwijst de zin "niet uitgewerkt" ernaar, mits het blok
+    bij minstens één onderwerp keuzes toont (_richting_overig). De verwijzing
+    staat als RICHTING_OVERIG_PAGINA in de tekst; de aanroeper vult het anker
+    in.
     """
     offered, answered, skipped = _direction_totals(direction_agg)
     if not offered:
@@ -3287,6 +3641,12 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
         if rest_antwoorden:
             zin += (" Die antwoorden gaan over onderwerpen die niet op de agenda staan "
                     "en zijn daarom niet uitgewerkt.")
+            # Alleen als het blok in de appendix staat (bijlage) én daar bij
+            # minstens één onderwerp keuzes toont: met alleen "te weinig
+            # antwoorden"-regels valt er niets na te lezen.
+            if bijlage and any(toont for _k, toont in _richting_overig(direction_agg,
+                                                                         agenda_keys)):
+                zin += BIJLAGE_RICHTING_ZIN
     elif delen2:
         zin += "."
     # Van de groep zonder aanbod op het eigen laagste onderwerp kan hoogstens het
@@ -3324,9 +3684,102 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     return zin
 
 
+def _direction_table_html(st: dict, texts: dict[str, str], n: int, agg: dict,
+                          opt) -> str:
+    """De verdelingstabel van een richtingkaart met wat eronder hoort: de
+    veranderopties, de niets-rij (R22), de niet gekozen richtingen (R19), de
+    beperkte-basis-regel (V10) en het Anders-blok (B13). Niet voor too_few:
+    daar toont de kaart geen enkele telling.
+
+    `opt` is de optietekst-opzoeker van de kaart (_opt in
+    _direction_card_cell), zodat een onbekende sleutel hier dezelfde nette
+    fout geeft als in de koppen."""
+    # R22 (polijstronde): eerst de veranderopties op aantal (*_other
+    # meegerekend, want dat is ook een vraag om verandering), dan de
+    # niets-optie in een eigen rij onder een streep, ook bij 0 stemmen.
+    # Gesorteerd tussen de richtingen las "Niets" aan tafel als een van de
+    # richtingen, terwijl de methodiekpagina belooft dat het apart staat.
+    # De sleutel komt uit de optieset, niet uit st["none_key"]: die is
+    # None als niemand niets koos.
+    none_key = next((k for k in texts if k.endswith("_none")), None)
+    counts = dict(st["ranked"])
+    row_htmls = []
+    for k, c in st["ranked"]:
+        if k == none_key:
+            continue
+        # Vaste tellingsvorm (B14): dezelfde "X van de Y (P%)" als de
+        # bronregel erboven en de verdiepingstabel, in plaats van "70% (7)"
+        # naast een kaal aantal onder de staffel.
+        row_htmls.append(f'<tr><td class="iq">{_h(opt(k))}</td>'
+                         f'<td class="is">{_telling(c, n)}</td></tr>')
+    if none_key is not None:
+        row_htmls.append(f'<tr class="dir-niets"><td class="iq">{_h(opt(none_key))}</td>'
+                         f'<td class="is">{_telling(counts.get(none_key, 0), n)}</td></tr>')
+    rows = "".join(row_htmls)
+    table = f'<table class="item-tbl dir-tbl">{rows}</table>'
+    # R19 (polijstronde): de richtingen die niemand koos, in één regel, zodat
+    # de lezer ziet dat er meer te kiezen viel. Korte vorm (alleen het aantal)
+    # sinds Taak 11, terugvaloptie 1 van het plan: met de namen erbij paste het
+    # agendaslot in stresstest 19 niet meer onder de kaarten (R23 houdt de kop
+    # bij de kaarten) en stond het alleen op een vel. Zonder de niets-optie (die
+    # heeft haar eigen rij) en zonder Anders (geen richting). Eén
+    # optieversie per scan in de opgeslagen antwoorden (de server weigert
+    # elke andere question_set_version), dus de huidige optieset is ook de
+    # set waaruit deze mensen kozen.
+    niet_gekozen = [k for k in texts
+                    if not k.endswith(("_none", "_other")) and counts.get(k, 0) == 0]
+    if niet_gekozen:
+        table += ('<div class="dir-unchosen">'
+                  + _h("Niet gekozen: " + _tel(len(niet_gekozen), "andere richting", "andere richtingen") + ".")
+                  + "</div>")
+    # V10 (polijstronde): het voorbehoud hangt aan de basis waar de
+    # richting echt op rust. Een richting (clear, plurality) rust op de
+    # veranderkeuzes; onder de tien is dat dezelfde beperkte basis als
+    # bij een verdieping onder de tien antwoorden op dezelfde pagina.
+    # DIRECTION_CAVEAT_MAX_N blijft de regel voor kaarten met drie of vier
+    # antwoorden.
+    weinig_veranderkeuzes = (st["state"] in ("clear", "plurality")
+                             and st["change_n"] < MIN_AGGREGATE_N)
+    if n <= DIRECTION_CAVEAT_MAX_N or weinig_veranderkeuzes:
+        table += _beperkte_basis_note()
+    # B13, zelfde blok als onder de verdiepingsverdeling, en net als daar na
+    # de beperkte-basis-regel (die hoort bij de verdeling). Bewust in deze
+    # helper, die niet voor too_few draait: daar toont de kaart geen enkele
+    # telling, en dan hoort er ook geen aantal "Anders" bij te komen.
+    table += _anders_block(
+        other_n=sum(c for k, c in st["ranked"] if k.endswith("_other")),
+        answered=n, texts=agg.get("other_texts") or [])
+    return table
+
+
+def _andere_telling_html(factor_key: str, toelichting_n: int | None) -> str:
+    """R7/V7 (polijstronde): de zin onder de keten van een richtingkaart.
+
+    Op dezelfde pagina staan twee tellingen die vaak hetzelfde getal dragen
+    (bijv. twee keer 16): wie dit als eigen laagste onderwerp had (de keten)
+    en wie hier duidelijk laag antwoordde en de verdiepende vraag beantwoordde
+    (de toelichting; toelichting_n telt de beantwoorders, niet iedereen die
+    de vraag kreeg, eindreview polijstronde). "Telling", niet
+    "groep": de twee groepen kunnen overlappen. Leeg zonder toelichtingsblok
+    (None) of als niemand de verdiepingsvraag beantwoordde (0). De
+    paginaverwijzing staat buiten _h(), anders wordt het anker tekst.
+    """
+    if not toelichting_n:
+        return ""
+    wie = "die ene" if toelichting_n == 1 else "de " + str(toelichting_n)
+    return ('<div class="dir-chain dir-telling">'
+            + _h("Dit is een andere telling dan " + wie + " bij de toelichting op pagina ")
+            + _pref(_verdieping_anker(factor_key))
+            + _h(": daar gaat het om wie op dit onderwerp duidelijk laag "
+                 "antwoordde en de verdiepende vraag beantwoordde, hier om wie "
+                 "dit als eigen laagste onderwerp had.")
+            + "</div>")
+
+
 def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                          factor_key: str, n_total: int,
-                         factor_score: float | None) -> str:
+                         factor_score: float | None,
+                         toelichting_n: int | None = None) -> str:
     """Eén tabelcel (<td>) voor het startpunt of tweede punt, in de zes
     staten van spec par. 6.1 + ronde 2 par. 4. Keyword-only na role:
     scan_type/factor_key en label zijn anders aangrenzende gelijksoortige
@@ -3337,7 +3790,13 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
     gaat via _shown naar direction_state: de staat moet beslissen op de score
     die de lezer op de pagina ziet, niet op de rauwe waarde (B15). Anders zegt
     de kaart "op een onderwerp dat laag scoort (5.0/10)" naast een legenda die
-    kwetsbaar definieert als onder de 5,0."""
+    kwetsbaar definieert als onder de 5,0.
+
+    toelichting_n (R7/V7, polijstronde taak 5): het aantal beantwoorde
+    verdiepingsvragen in het toelichtingsblok van dit onderwerp, of None als
+    dat blok niet in dit rapport staat. Is het groter dan nul, dan legt een
+    zin onder de keten uit dat dit een andere telling is
+    (_andere_telling_html)."""
     st = direction_state(agg, factor_key, _shown(factor_score))
     texts = direction_option_texts(scan_type, factor_key)
     n = st["n"]
@@ -3347,10 +3806,7 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
         klant-PDF. Alle takken lopen hierlangs, ook de koppen die vóór de
         verdelingstabel worden opgebouwd: een onbekende sleutel gaf daar anders
         een kale KeyError in plaats van deze melding."""
-        if key not in texts:
-            raise KeyError(
-                f"direction: onbekende optiesleutel {key!r} voor {factor_key!r} ({scan_type})")
-        return texts[key]
+        return _richting_optie_tekst(texts, key, factor_key, scan_type)
     if role == "startpunt":
         role_lbl, which = "Startpunt", "het startpunt"
     elif role == "tweede":
@@ -3422,42 +3878,65 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
                f"({_score_str(factor_score)}) is dat verschil van inzicht zelf het "
                f"gesprek. Wat die andere groep vraagt: "
                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+    elif direction_none_at_least_top_shown(st):
+        # Spec 2026-10-09 par. 3 (besluit Lars 9-10): de niets-groep is even
+        # groot als of groter dan de grootste richting, dus geen richting. Beide
+        # tellingen staan erbij, zodat de lezer ziet waarom er geen opdrachtvorm
+        # komt. De niets-tekst via _opt: per onderwerp, met de nette fout. Bij
+        # een grootste richting van één stem valt dit terug op de gewone
+        # verdeeld-tekst hieronder (DIRECTION_NONE_TOP_COUNTS_MIN).
+        head = DIRECTION_HEAD_DIVIDED
+        niets = _opt(st["none_key"])
+        top = st["change_top_n"]
+        vergelijking, verbinding = (("even veel mensen kozen", "als")
+                                    if st["none_n"] == top
+                                    else ("meer mensen kozen", "dan"))
+        src = (f"De {n} {DIR_N_DIE_WIE} zijn verdeeld: {vergelijking} "
+               f"‘{niets}’ ({st['none_n']}) {verbinding} de grootste richting "
+               f"({top}).{_zonder_keuze_zin(st)}")
     else:
         head = DIRECTION_HEAD_DIVIDED
         src = f"De {n} {DIR_N_DIE_WIE} kozen verschillend.{_zonder_keuze_zin(st)}"
 
-    table = ""
-    if st["state"] != "too_few":
-        row_htmls = []
-        for k, c in st["ranked"]:
-            # Vaste tellingsvorm (B14): dezelfde "X van de Y (P%)" als de
-            # bronregel erboven en de verdiepingstabel, in plaats van "70% (7)"
-            # naast een kaal aantal onder de staffel.
-            row_htmls.append(f'<tr><td class="iq">{_h(_opt(k))}</td>'
-                             f'<td class="is">{_telling(c, n)}</td></tr>')
-        rows = "".join(row_htmls)
-        table = f'<table class="item-tbl dir-tbl">{rows}</table>'
-        if n <= DIRECTION_CAVEAT_MAX_N:
-            table += _beperkte_basis_note()
-        # B13, zelfde blok als onder de verdiepingsverdeling, en net als daar na
-        # de beperkte-basis-regel (die hoort bij de verdeling). Bewust binnen
-        # deze tak: in de staat too_few toont de kaart geen enkele telling, en
-        # daar hoort ook geen aantal "Anders" bij te komen.
-        table += _anders_block(
-            other_n=sum(c for k, c in st["ranked"] if k.endswith("_other")),
-            answered=n, texts=agg.get("other_texts") or [])
+    table = ("" if st["state"] == "too_few"
+             else _direction_table_html(st, texts, n, agg, _opt))
     # head en src worden hier eenmalig samen door _h() gehaald: beide zijn
     # hierboven bewust rauw (ongeescaped) opgebouwd, dus geen asymmetrie meer
     # tussen een vooraf geescapete head en een deels geescapete src.
     src_html = f'<div class="dir-src">{_h(src)}</div>' if src else ""
+    telling_html = _andere_telling_html(factor_key, toelichting_n)
     return (f'<td class="dir-card dir-{st["state"]}">'
             f'<div class="dir-role">{role_lbl}: {_h(label)}</div>'
             f'<div class="dir-head">{_h(head)}</div>{src_html}{table}'
-            f'<div class="dir-chain">{_h(_direction_chain(agg, n_total))}</div></td>')
+            f'<div class="dir-chain">{_h(_direction_chain(agg, n_total))}</div>'
+            f'{telling_html}</td>')
+
+
+def _agenda_sleutels(ranked: list[dict]) -> list[str]:
+    """De onderwerpen op de agenda (startpunt en tweede punt), in rasterorde.
+    Eén definitie voor de totaalregel en de bijlage (V12), zodat "buiten de
+    agenda" op beide plekken dezelfde onderwerpen zijn."""
+    return [r["key"] for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
+
+
+def _richting_overig(direction_agg: dict, agenda_keys: list[str]) -> list[tuple[str, bool]]:
+    """(onderwerp, toont keuzes) voor elk onderwerp buiten de agenda dat iemand
+    als laagste had (lowest_n > 0), op aantal laagste-onderwerpen en dan op
+    sleutel. "Toont keuzes" = minstens DIRECTION_MIN_N beantwoorders, dezelfde
+    vloer als de richtingkaart.
+
+    Eén predicaat voor de totaalregel en het appendixblok (V12): de totaalregel
+    verwijst alleen naar het blok als het blok bij minstens één onderwerp echt
+    keuzes toont, en het blok toont precies deze onderwerpen."""
+    rest = [k for k, a in direction_agg.items() if k not in agenda_keys and a["lowest_n"] > 0]
+    return [(k, direction_agg[k]["answered"] >= DIRECTION_MIN_N)
+            for k in sorted(rest, key=lambda fk: (-direction_agg[fk]["lowest_n"], fk))]
 
 
 def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
-                             scan_type: str, n_total: int) -> str:
+                             scan_type: str, n_total: int, *,
+                             toelichting_n: dict[str, int] | None = None,
+                             bijlage: bool = False) -> str:
     """Twee kaarten (startpunt + tweede punt) onder het raster. Leeg zonder
     richtingdata (campagne-gate zit in build_report_data).
 
@@ -3469,14 +3948,24 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
     stil een lege-kaart-tekst tonen. Om dezelfde reden wordt ook r["score"]
     direct geïndexeerd: die score bepaalt of de kaart de split_none-staat mag
     tonen (ronde 2 par. 4.3), en een rasterrij zonder score bestaat niet.
+
+    toelichting_n (R7/V7, polijstronde taak 5): per onderwerp het aantal
+    beantwoorde verdiepingsvragen in het toelichtingsblok, alleen voor de
+    onderwerpen waarvan dat blok in dit rapport is gerenderd. De renderers
+    vullen het op de plek waar het blok ontstaat, zodat er één bron is voor
+    "deze toelichting staat er". Een onderwerp dat er niet in staat, krijgt
+    geen verwijzing.
     """
     if not direction_agg:
         return ""
+    toelichting_n = toelichting_n or {}
+
     cards = "".join(
         _direction_card_cell(r["agenda_role"], label=r["label"],
                              agg=direction_agg[r["key"]], scan_type=scan_type,
                              factor_key=r["key"], n_total=n_total,
-                             factor_score=r["score"])
+                             factor_score=r["score"],
+                             toelichting_n=toelichting_n.get(r["key"]))
         for r in ranked if r["agenda_role"] in ("startpunt", "tweede"))
     if not cards:
         # Geen rasterrijen, dus geen startpunt om een richting aan te hangen
@@ -3487,9 +3976,14 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
     # deze regel verdwenen de antwoorden van wie een ander onderwerp als laagste
     # had spoorloos. De aparte totals_html-regel is bewust: een geneste f-string
     # met aanhalingstekens in de expressie is geen Python 3.11.
-    agenda_keys = [r["key"] for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
-    totals = _direction_totals_line(direction_agg, agenda_keys, scan_type, n_total)
-    totals_html = f'<p class="dir-chain dir-totals">{_h(totals)}</p>' if totals else ""
+    agenda_keys = _agenda_sleutels(ranked)
+    totals = _direction_totals_line(direction_agg, agenda_keys, scan_type, n_total,
+                                    bijlage=bijlage)
+    # V12: de paginaverwijzing pas na het escapen, anders wordt het anker tekst.
+    totals_html = ('<p class="dir-chain dir-totals">'
+                   + _h(totals).replace(RICHTING_OVERIG_PAGINA,
+                                        _pref(LEIDRAAD_ANKERS["richting_overig"]))
+                   + "</p>") if totals else ""
     return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
             f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
             f'{totals_html}'
@@ -3574,23 +4068,27 @@ def _besluitvraag(state: str) -> str:
 
 def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     """R6/V9 (koude leesronde 24-9): in de staat `divided` zegt de vaste
-    verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen, en de kaart
-    sorteert "Niets, dit zit hier goed" ertussen. Deze regel wijst de meest
-    gekozen richtingen aan via hun tellingen (hoogste en op één na hoogste; de
-    teksten staan op de kaart ‘Wat er moet gebeuren’) en weegt de niets-optie apart: die is
-    geen richting. Anders telt ook niet mee (geen opdrachtvorm); de regel zegt
-    dat erbij zodra Anders even vaak of vaker gekozen is dan de laagste
-    genoemde telling, anders blijft een even hoge rij op de kaart onverklaard.
+    verdeeld-zin "de meest gekozen richtingen" zonder ze te noemen. Deze regel
+    noemt de meest gekozen richtingen bij naam met hun aantal, voor de hoogste
+    en op één na hoogste telling (R22, polijstronde), en weegt de niets-optie
+    apart: die is geen richting (op de kaart staat zij in een eigen rij).
+    Anders telt ook niet mee (geen opdrachtvorm); de regel zegt dat erbij
+    zodra Anders even vaak of vaker gekozen is dan de laagste genoemde
+    telling, anders blijft een even hoge rij op de kaart onverklaard.
 
     De noemer is dezelfde als op de richtingkaart (alle beantwoorders, de
     niets-stemmen inbegrepen), zodat elk getal in deze regel letterlijk op de
     kaart terug te vinden is.
 
     Leeg buiten `divided`, en bij minder dan twee inhoudelijke richtingen (dan
-    geeft translation_question ook geen verdeeld-zin). Een onbekende
+    geeft translation_question ook geen verdeeld-zin). Ook leeg als de
+    niets-groep minstens zo groot is als de grootste richting
+    (direction_none_at_least_top_shown, spec 2026-10-09 par. 3): de vertaalvraag
+    is dan de eigen niets-zin, die juist over die niets-groep gaat, en "is geen
+    richting en telt hier niet mee" zou hem direct tegenspreken. Een onbekende
     optiesleutel valt luid om, net als in _direction_card_cell.
     """
-    if st["state"] != "divided":
+    if st["state"] != "divided" or direction_none_at_least_top_shown(st):
         return ""
     n = st["n"]
     inhoud = [(k, c) for k, c in st["ranked"] if c > 0 and not k.endswith(("_none", "_other"))]
@@ -3605,12 +4103,21 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
         if k not in teksten:
             raise KeyError("richtingen_weging: onbekende optiesleutel " + repr(k)
                            + " voor " + repr(factor_key) + " (" + scan_type + ")")
-    # De teksten staan al op de kaart ‘Wat er moet gebeuren’ (met dezelfde
-    # tellingen); hier alleen de aantallen, zodat de regel kort blijft en het
-    # agendaslot niet naar een volgend vel duwt (controllerbesluit taak 10).
+    # R22 (polijstronde): de richtingen bij naam, gegroepeerd per aantal, voor
+    # de twee hoogste aantallen. Alleen de aantallen noemen ("die met 3 en 2
+    # stemmen") liet "2" aan tafel ook de niets-rij op de kaart omvatten.
+    # Tussen de groepen een puntkomma: met " en " stond er twee keer "en"
+    # achter elkaar zodra een groep uit meer namen bestaat. Kost dit het
+    # agendaslot een vel, dan is de terugvaloptie in Taak 11 de namen weer
+    # weglaten.
     hoogste = sorted({c for _k, c in inhoud}, reverse=True)[:2]
-    zin = ("De meest gekozen richtingen zijn die met " + _stemmen(hoogste)
-          + " op de kaart bij ‘Wat er moet gebeuren’.")
+    groepen = []
+    for aantal in hoogste:
+        namen = ["‘" + teksten[k] + "’" for k, c in inhoud if c == aantal]
+        groepen.append(namen[0] + " (" + str(aantal) + ")" if len(namen) == 1
+                       else _opsomming(namen) + " (elk " + str(aantal) + ")")
+    zin = ("De meest gekozen richtingen op de kaart bij ‘Wat er moet gebeuren’ zijn "
+           + "; ".join(groepen) + ".")
     # Anders alleen noemen als zijn telling tussen of naast de genoemde staat;
     # de kaart toont hem als "Anders, namelijk…" (content-guard in de tests).
     anders_telt = anders is not None and anders[1] >= min(hoogste)
@@ -3626,18 +4133,24 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     return zin
 
 
-def _stemmen(tellingen: list[int]) -> str:
-    """"3 en 2 stemmen", "2 stemmen", "3 stemmen en 1 stem", "1 stem"."""
-    if len(tellingen) == 1:
-        return _tel(tellingen[0], "stem", "stemmen")
-    a, b = tellingen
-    if b == 1:
-        return _tel(a, "stem", "stemmen") + " en " + _tel(b, "stem", "stemmen")
-    return str(a) + " en " + _tel(b, "stem", "stemmen")
+WERKVRAGEN_TIJDSANKER = "in de periode waar deze meting over gaat"
+
+
+def _werkvraag_tijdsanker(tekst: str, uitstroom: tuple[str, str] | None) -> str:
+    """V11 (polijstronde): het tijdsanker van de Vertrek-werkvragen met het
+    woord van pagina twee. Alleen met een bereik uit _uitstroom_bereik (dus
+    alleen maanden die de randmaandgate haalden); anders de tekst zoals hij is."""
+    if not uitstroom:
+        return tekst
+    eerste, laatste = uitstroom
+    # Dezelfde woorden als de regel op pagina twee ("vertrek in X" /
+    # "vertrek tussen X en Y", _uitstroomperiode).
+    periode = eerste if eerste == laatste else "tussen " + eerste + " en " + laatste
+    return tekst.replace(WERKVRAGEN_TIJDSANKER, "in de uitstroomperiode (" + periode + ")")
 
 
 def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
-                      scan_type: str) -> str:
+                      scan_type: str, *, uitstroom: tuple[str, str] | None = None) -> str:
     """Twee kaarten (startpunt en tweede punt) met elk twee of drie vragen.
 
     Leeg zonder gesprekspunten (geen factorprofiel). Zonder richtingdata rendert
@@ -3650,9 +4163,16 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
     regel over de leidinggevenden aan tafel. Alleen als er ook echt een
     vertaalvraag staat, alleen bij dat ene onderwerp, en sinds amendement 24-9
     (A2) alleen bij Loep Behoud.
+
+    uitstroom (V11, polijstronde): het bereik uit _uitstroom_bereik, alleen bij
+    Loep Vertrek. Met een bereik leest het tijdsanker "in de uitstroomperiode
+    (tussen december 2025 en maart 2026)", de woorden van pagina twee; zonder bereik
+    blijft "in de periode waar deze meting over gaat" staan.
     """
     if scan_type not in DIRECTION_SCAN_TYPES:
         raise ValueError(f"_werkvragen_block: geen werkvragen voor scan_type {scan_type!r}")
+    if scan_type != "exit":
+        uitstroom = None
     punten = [r for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
     if not punten:
         return ""
@@ -3687,7 +4207,7 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
             herken_html += _beperkte_basis_note()
         rijen = [("Herkennen", herken_html)]
         if vertaal:
-            vertaal_cel = _h(vertaal)
+            vertaal_cel = _h(_werkvraag_tijdsanker(vertaal, uitstroom))
             # R6/V9 (fixronde 24-9): onder de verdeeld-zin de tellingen van de
             # meest gekozen richtingen, met de niets-optie (en zo nodig Anders)
             # apart gewogen. Leeg in elke andere staat.
@@ -3739,7 +4259,7 @@ BESLUIT_DATUM_HINT = "Kies een datum, geen termijn."
 BESLUIT_REVIEW_HINT = {
     "retention": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
     "exit": "Richtlijn: 45 tot 90 dagen na dit gesprek.",
-    "onboarding": "Richtlijn: rond het volgende checkpoint.",
+    "onboarding": "Richtlijn: rond het volgende checkpoint, ongeveer 30 dagen na dit gesprek.",
 }
 BESLUIT_ONLEESBAAR = ("Loep kon niet nagaan of er al een besluit is vastgelegd in het dashboard; "
                       "vul het hieronder in.")
@@ -3774,7 +4294,12 @@ BESLUIT_AFDELING_VRAAG = "Wat vragen jullie deze afdeling zelf, wie doet dat, en
 # (_toont_toelichtingen, dezelfde gate als SEGMENT_TOELICHTING_GRENS).
 BESLUIT_AFDELING_HINT = ("Het rapport toont de toelichtingen alleen voor de hele organisatie. "
                          + BESLUIT_AFDELING_VRAAG)
-BESLUIT_AFDELING_SAMEN = "Dit onderwerp is ook het tweede punt; neem de afdeling daarin mee."
+# R21 (polijstronde): de afdeling hing aan het tweede punt, en dat mag je
+# parkeren. De afspraak per afdeling blijft daarom staan, ook bij parkeren.
+# Wie en wanneer staan in de hint die volgt (BESLUIT_AFDELING_VRAAG), dus
+# hier niet nog een keer.
+BESLUIT_AFDELING_SAMEN = ("Dit onderwerp is ook het tweede punt. Maak deze afspraak ook als "
+                          "jullie het tweede punt parkeren.")
 # R4 (koude leesronde 24-9): het tweede punt had geen eigenaar en geen datum.
 # Geen eigen kolommen (zie plan, "Besluit over de migratie"), wel een regel die
 # het punt een eigenaar en een datum geeft: die van het startpunt.
@@ -3786,16 +4311,31 @@ BESLUIT_PARKEERREGEL = ("Spreken jullie hier vandaag iets over af, schrijf dan b
                         "startpunt zet het op de agenda van het vervolgmoment.")
 # R8/V4 (koude leesronde 24-9): wat mag je terugkoppelen, en bij Loep Vertrek:
 # aan wie? De grens van de afdelingen is die van een afdeling met een score in
-# het rapport (MIN_DISTRIBUTION_N). Loep Start valt buiten deze ronde.
-BESLUIT_TERUGKOPPELING = {
+# het rapport (MIN_DISTRIBUTION_N).
+# S10 (polijstronde): Loep Start krijgt dezelfde grens; de afdelingen daar zijn
+# klein. V14 (polijstronde): het afdelingsdeel staat er alleen als het rapport
+# afdelingen toont (besluit_terugkoppeling). Het dashboard toont per scan de
+# volledige regel (DECISION_FEEDBACK_HINTS in
+# frontend/lib/dashboard/campaign-decision.ts, gelijk aan
+# besluit_terugkoppeling(scan, True)); tests/test_report_leesronde_fixes.py
+# houdt ze gelijk.
+BESLUIT_TERUGKOPPELING_BASIS = {
     "retention": ("Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. "
-                  "Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan "
-                  + str(MIN_DISTRIBUTION_N) + " antwoorden."),
+                  "Deel geen open antwoorden"),
     "exit": ("Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met "
-             "de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van "
-             "afdelingen met minder dan " + str(MIN_DISTRIBUTION_N) + " antwoorden."),
-    "onboarding": "Je mensen vulden in; ze horen wat het MT ermee doet.",
+             "de vertrekredenen doet. Deel geen open antwoorden"),
+    "onboarding": ("Je mensen vulden in; ze horen wat het MT ermee doet. Deel het startpunt, het "
+                   "beeld van de hele groep en wat het MT besluit. Deel geen open antwoorden"),
 }
+
+
+def besluit_terugkoppeling(scan_type: str, heeft_afdelingen: bool) -> str:
+    """Terugkoppelingsregel op de besluitpagina. Het afdelingsdeel staat er alleen
+    als het rapport afdelingen toont (V14); het dashboard weet dat niet en toont
+    altijd de volledige regel."""
+    staart = (" en geen uitkomsten van afdelingen met minder dan "
+              + str(MIN_DISTRIBUTION_N) + " antwoorden.") if heeft_afdelingen else "."
+    return BESLUIT_TERUGKOPPELING_BASIS[scan_type] + staart
 
 
 def _besluit_afdeling(seg: dict | None, scan_type: str, tweede_key: str | None) -> dict | None:
@@ -3816,7 +4356,7 @@ def _besluit_afdeling(seg: dict | None, scan_type: str, tweede_key: str | None) 
         return None
     fk = seg.get("low_fk")
     zwaar = (bool(fk) and seg.get("low_avg") is not None
-             and _factor_label(seg["low_avg"]) != "Relatief sterk")
+             and _factor_level(seg["low_avg"]) != 2)
     return {"department": seg["department"],
             "topic": _fl(fk, scan_type) if fk else None,
             "zwaar": zwaar,
@@ -3866,8 +4406,8 @@ def _bl_waarde(tekst: str | None, lijnen: int) -> str:
 def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
                   startpunt_label: str | None, tweede_label: str | None,
                   review_hint: str, heeft_werkvragen: bool, decision: dict | None = None,
-                  decision_unavailable: bool = False, afdeling: dict | None = None,
-                  afdeling_toelichtingen: bool = True) -> str:
+                  heeft_afdelingen: bool, decision_unavailable: bool = False,
+                  afdeling: dict | None = None, afdeling_toelichtingen: bool = True) -> str:
     """Eén A4, los te printen. Voorgedrukt is alleen wat het rapport weet: de
     meting, het startpunt en het tweede punt. Al het andere is een lijn.
 
@@ -3888,6 +4428,9 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
     in het dashboard een ander tweede punt vast, dan geldt dat onderwerp.
     afdeling_toelichtingen volgt _toont_toelichtingen: zonder
     toelichtingverdeling in het rapport belooft de hint er geen.
+    heeft_afdelingen (polijstronde V14) volgt de afdelingstabel: de renderers
+    geven bool(segment_rows) mee, dezelfde voorwaarde waaronder _segment_block
+    de tabel toont. Zonder afdelingen noemt de terugkoppelingsregel ze niet.
     """
     agenda = _pref(LEIDRAAD_ANKERS["agenda"])
     if heeft_werkvragen:
@@ -3898,7 +4441,9 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
         intro = (f"Neem de uitkomst van ‘{WERKVRAGEN_EYEBROW}’ (pagina {werkvragen}) hier over. "
                  "Eén besluit dat iemand draagt is meer waard dan vijf voornemens.")
     elif scan_type == "onboarding":
-        intro = ("Loep Start meet nog geen richtingvraag; het besluit volgt uit jullie gesprek over "
+        # S2 (eindreview polijstronde): zelfde vorm als ONBOARDING_GEEN_VERDIEPING_NOTE,
+        # zonder "nog": een klantrapport kondigt geen volgende versie aan.
+        intro = ("Deze scan bevat geen richtingvraag; het besluit volgt uit jullie gesprek over "
                  f"het startpunt (pagina {agenda}). Eén besluit dat iemand draagt is meer waard "
                  "dan vijf voornemens.")
     else:
@@ -4030,7 +4575,7 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
   <div class="bl-blok">
     <div class="bl-lbl">Terugkoppeling aan medewerkers</div>
     {terugkoppeling}
-    <div class="bl-hint">{_h(BESLUIT_TERUGKOPPELING[scan_type])}</div>
+    <div class="bl-hint">{_h(besluit_terugkoppeling(scan_type, heeft_afdelingen))}</div>
   </div>
   <div class="bl-blok">
     {_bl_veld(BESLUIT_SLOTLABEL, succes)}
@@ -4094,40 +4639,29 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
         return ""
     st = direction_state(direction_agg[factor_key], factor_key, _shown(factor_score))
     n = st["n"]
-    # Dezelfde tellingsvorm (_telling) en hetzelfde noemerlabel (DIR_N_DIE_WIE)
-    # als de kaart op de gespreksagenda: n is het aantal beantwoorders, niet
-    # iedereen bij wie dit het laagst scoorde, en die twee lopen uiteen zodra
-    # iemand overslaat (codereview taak 10). "Wat er moet gebeuren volgens ..."
-    # in plaats van "Wat er volgens ... moet gebeuren": met de bijzin erin stond
-    # het werkwoord anders twaalf woorden van zijn onderwerp.
-    # Rust de telling op de veranderkeuzes (change_n != n: niets-stemmen, rijen
-    # zonder keuze of beide; spec 2026-10-07, taak 7), dan zegt het label dat:
-    # wie dit het laagst scoorde én om verandering vroeg. De niets-stemmen en de
-    # rijen zonder keuze volgen als eigen korte zinnen, zodat pagina twee nooit
-    # een telling toont die niet optelt.
-    if st["state"] in ("clear", "plurality") and _op_veranderkeuzes(st):
-        slot = (f"{direction_imperative(scan_type, factor_key, st['top_key'])}"
-                + (f" {_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft."
-                   if st["none_n"] else "")
-                + _zonder_keuze_p02(st))
+    # Huidige regels voor clear en plurality:
+    # - tellingsvorm en noemerlabel zoals de kaart (_telling, DIR_N_DIE_WIE),
+    #   maar zonder percentage (R18; de kaart houdt het);
+    # - rust de telling op de veranderkeuzes (change_n != n, spec 2026-10-07
+    #   taak 7), dan het label DIR_N_DIE_VERANDERING en daarachter de
+    #   niets-stemmen en de rijen zonder keuze, zodat de getallen optellen;
+    #   anders zijn none_n en de rijen zonder keuze 0 en blijven die staarten leeg;
+    # - bij de grootste groep eerst de opdracht, dan de noemer in een slotzin
+    #   (spec 2026-10-09 par. 5).
+    if st["state"] in ("clear", "plurality"):
+        imp = direction_imperative(scan_type, factor_key, st["top_key"])
+        telling = _richting_telling(st, pct=False)
+        wie = DIR_N_DIE_VERANDERING if _op_veranderkeuzes(st) else DIR_N_DIE_WIE
+        niets = (_tel(st["none_n"], "vindt", "vinden") + " dat hier niets hoeft"
+                 if st["none_n"] else "")
         if st["state"] == "clear":
-            return (f"Wat er moet gebeuren volgens {_richting_telling(st)} die dit het "
-                    f"laagst scoorden en om verandering vroegen: {slot}")
-        return (f"Wat er moet gebeuren volgens de grootste groep van wie dit het laagst "
-                f"scoorde en om verandering vroeg, {_richting_telling(st)}, zonder "
-                f"meerderheid: {slot}")
-    if st["state"] == "clear":
-        return (f"Wat er moet gebeuren volgens {_richting_telling(st)} "
-                f"{DIR_N_DIE_WIE}: "
-                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
-    if st["state"] == "plurality":
-        # Geen haakje om een telling die zelf een percentage tussen haakjes
-        # draagt: "(27 van de 62 (44%) die dit ..., zonder meerderheid)" zette
-        # twee haakjesniveaus in elkaar (taalronde, taak 13). Zelfde vorm als de
-        # clear-tak, met de nuance als bijstelling tussen komma's.
-        return (f"Wat er moet gebeuren volgens de grootste groep, "
-                f"{_richting_telling(st)} {DIR_N_DIE_WIE}, zonder meerderheid: "
-                f"{direction_imperative(scan_type, factor_key, st['top_key'])}")
+            return (f"Wat er moet gebeuren volgens {telling} {wie}: {imp}"
+                    + (" " + niets + "." if niets else "")
+                    + _zonder_keuze_p02(st))
+        return (f"Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: "
+                f"{imp} Dat zijn {telling} {wie}"
+                + ("; " + niets if niets else "")
+                + "." + _zonder_keuze_p02(st))
     if st["state"] == "split_none":
         texts = direction_option_texts(scan_type, factor_key)
         # Met noemer, zoals de drie andere takken: twee kale tellingen naast
@@ -4137,10 +4671,19 @@ def _direction_p02_line(direction_agg: dict, factor_key: str | None, scan_type: 
                 f"hier niets hoeft, {_tel(st['top_n'], 'vraagt', 'vragen')} om "
                 f"‘{texts[st['top_key']]}’.")
     if st["state"] == "divided":
+        if direction_none_at_least_top_shown(st):
+            # Spec 2026-10-09 par. 3: niets >= grootste richting; beide tellingen.
+            # De defectzin erachter, net als op de kaart en in de clear- en
+            # plurality-regels: pagina twee noemt tellingen, dus ook de rijen
+            # zonder vastgelegde keuze.
+            return (f"Over wat hier moet gebeuren zijn de {n} {DIR_N_DIE_WIE} verdeeld: "
+                    f"{_tel(st['none_n'], 'vindt', 'vinden')} dat hier niets hoeft, "
+                    f"tegen {st['change_top_n']} voor de grootste richting."
+                    + _zonder_keuze_p02(st))
         return (f"Over wat hier moet gebeuren zijn de {n} {DIR_N_DIE_WIE} "
                 "verdeeld. Zie de gespreksagenda.")
     if st["state"] == "none_needed":
-        return (f"{_telling(st['top_n'], n)} {DIR_N_DIE_WIE} zeggen: "
+        return (f"{_telling(st['top_n'], n, pct=False)} {DIR_N_DIE_WIE} zeggen: "
                 "hier hoeft niets.")
     return ""
 
@@ -4164,7 +4707,7 @@ OTHER_MIN_N = 2
 # drempel met dezelfde woorden; twee kopieën van deze zin kunnen stil uiteen
 # lopen, en dan legt de tabel iets anders uit dan het blok doet.
 ANDERS_TEKST_DREMPEL = (
-    f"De teksten tonen we pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen")
+    f"De teksten staan er pas vanaf {MIN_QUOTES_N}, om herleidbaarheid te voorkomen")
 
 # Precies wat backend.scoring.anonymize_text weghaalt (_PATTERNS: [NAAM],
 # [EMAIL], [TELEFOON], [POSTCODE]); geen "locaties", want plaatsnamen blijven
@@ -4234,9 +4777,16 @@ def _trigger_regel() -> str:
     Daarom "duidelijk laag" met de regel erbij, en de getallen uit de
     constanten die _is_triggered echt gebruikt."""
     cnt = _TELWOORD.get(TRIGGER_LOW_ITEM_COUNT, str(TRIGGER_LOW_ITEM_COUNT))
-    return (f"Duidelijk laag: gemiddeld {_komma(TRIGGER_AVG_MAX)} of lager op 1 tot 5, minstens "
-            f"{cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij gemiddeld "
-            f"hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}. Een andere regel dan ‘onder de 5’.")
+    # Polijstronde R25: dit is de enige plek in het rapport met de schaal van 1
+    # tot 5, dus de regel zegt welke schaal het is (de antwoordlabels van de
+    # stellingen, templates/survey/shared-org.html) en dat de rest van het
+    # rapport is omgerekend naar 1 tot 10. Dat vervangt "een andere regel dan
+    # onder de 5", dat de schaal niet uitlegde.
+    return (f"Duidelijk laag: op de antwoordschaal van de vragenlijst (1 is ‘helemaal "
+            f"niet’, 5 is ‘helemaal wel’) gemiddeld {_komma(TRIGGER_AVG_MAX)} of lager, "
+            f"minstens {cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij "
+            f"gemiddeld hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}. De andere scores per "
+            f"onderwerp in dit rapport zijn omgerekend naar 1 tot 10.")
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int,
@@ -4348,12 +4898,16 @@ def _toont_toelichtingen(deep_agg: dict) -> bool:
 
 
 def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int,
-                     met_regel: bool = True) -> str:
+                     met_regel: bool = True, anchor: str | None = None) -> str:
     """Toelichtingsblok onder een factor (spec 6.1 + 6.2), gestaffeld op n=answered.
 
     n_total is het aantal respondenten en is verplicht: de keten begint ermee
     (B14), en zonder dat getal staan de tellingen van dit blok los van de rest
-    van het rapport (H2)."""
+    van het rapport (H2).
+
+    anchor (R7/V7, polijstronde taak 5): id op het blok, zodat de richtingkaart
+    met een paginanummer naar deze toelichting kan verwijzen
+    (_verdieping_anker). De renderers geven het mee; elk onderwerp één keer."""
     if not agg.get("triggered"):
         return ""
     answered = agg.get("answered", 0)
@@ -4392,7 +4946,8 @@ def _deepening_block(agg: dict, scan_type: str, factor_key: str, n_total: int,
     # De "Daarnaast werden vooral X en Y genoemd"-samenvatting is bewust weg
     # (feedback 2026-07-16): de regel dupliceerde de tabel met aantallen die
     # er direct boven staat. secondary_counts blijft in de aggregatie bestaan.
-    return (f'<div class="card"><span class="eyebrow">Welke toelichting respondenten kozen</span>'
+    id_attr = f' id="{anchor}"' if anchor else ""
+    return (f'<div class="card"{id_attr}><span class="eyebrow">Welke toelichting respondenten kozen</span>'
             f'<p style="font-size:10px;margin:4px 0 0;">{_h(chain)}</p>'
             f'{body}</div>')
 
@@ -4556,8 +5111,10 @@ def _drempeltabel(scan_type: str, *, direction_active: bool = True,
              f"Lager dan de {_TELWOORD.get(MIN_SEGMENT_N, MIN_SEGMENT_N)} voor "
              "afdelingen, omdat niemand in de organisatie kan zien wie een onderwerp "
              f"als laagste had; bij {_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} of "
-             f"{_TELWOORD.get(DIRECTION_CAVEAT_MAX_N, DIRECTION_CAVEAT_MAX_N)} antwoorden "
-             "staat er een beperkte-basis-regel bij. Een duidelijke richting, of de "
+             f"{_TELWOORD.get(DIRECTION_CAVEAT_MAX_N, DIRECTION_CAVEAT_MAX_N)} antwoorden, "
+             f"en bij een richting die op minder dan {_tw(MIN_AGGREGATE_N)} "
+             "veranderkeuzes rust, staat er een beperkte-basis-regel bij. Een duidelijke "
+             "richting, of de "
              "richting van de grootste groep, noemt het rapport pas als minstens "
              f"{_TELWOORD.get(DIRECTION_MIN_N, DIRECTION_MIN_N)} mensen om verandering "
              "vroegen."))
@@ -4645,7 +5202,7 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
                  "beoordeling en geen voorspelling van uitval.")
         cells_r1 = [
             ("Groepsniveau",       "Alle scores zijn groepsgemiddelden van de instroomgroep. Geen individuele gegevens."),
-            ("Eén meetmoment",     "Dit is een enkel meetmoment (30/60/90). Een volgende meting bespreken we los van dit rapport."),
+            ("Eén meetmoment",     "Dit is een enkel meetmoment (30/60/90). Een volgende meting krijgt een eigen rapport."),
             ("Geen beoordeling",   "Scores duiden de ervaring van nieuwe medewerkers op groepsniveau. Geen prestatiebeoordeling van individuen of managers."),
         ]
         cells_r2 = [
@@ -4694,11 +5251,14 @@ def _trust_page(scan_type: str = "exit", opener_html: str = "",
              f"geeft de keuze van die respondenten weer, geen advies van Loep. "
              f"Wie ‘{_niets_tekst(scan_type)}’ koos, telt niet mee bij de vraag welke "
              "richting de grootste is; hoeveel mensen dat kozen, staat er apart bij. "
+             "Een richting heet pas duidelijk, of de grootste groep, als hij meer "
+             f"stemmen heeft dan ‘{_niets_tekst(scan_type)}’; anders heet het "
+             "onderwerp verdeeld. "
              "Kiest meer dan de helft niets, dan staat er dat hier volgens de meesten "
              "niets hoeft. Scoort het onderwerp onder de "
-             f"{_komma(DIRECTION_SPLIT_NONE_MAX_SCORE)} en is de groep die niets koos "
-             "even groot als de grootste richting, "
-             "groter, of maar één kleiner, dan heet het onderwerp verdeeld. De drempel van "
+             f"{_komma(DIRECTION_SPLIT_NONE_MAX_SCORE)}, dan heet het ook verdeeld als "
+             "de grootste richting maar één stem meer heeft dan de niets-groep. "
+             "De drempel van "
              f"{DIRECTION_MIN_N} staat in de drempeltabel op pagina",
              # Derde element: HTML die NIET door _h() gaat. "in de drempeltabel
              # hierboven" was een positieclaim die al breekt zodra de
@@ -4806,6 +5366,27 @@ _SEG_MONO = ("font-family:'JetBrains Mono', monospace;font-size:8px;"
 SEGMENT_START_MIN_DELTA = 0.3
 
 
+def _segment_cijfer_mag(row: dict) -> bool:
+    """Mag de score van deze afdeling (of restgroep) als cijfer in een zin? (S9)
+
+    De conclusie in het navy blok leunt niet op een precieze score van een
+    afdeling die te klein is om die te dragen. Dezelfde staffel als de kolom
+    met het laagste onderwerp (_segment_theme_cell): bij 5 tot 9 antwoorden
+    geen cijfer, vanaf MIN_DISTRIBUTION_N wel.
+    """
+    return row["n"] >= MIN_DISTRIBUTION_N
+
+
+def _naam_cijfer(row: dict, sc: float, met: bool) -> str:
+    """Afdelingsnaam, met haar score erachter als `met` (S9, zie _segment_cijfer_mag)."""
+    return _h(row["department"]) + (" " + _score_str(sc) if met else "")
+
+
+def _cijfer_tussen_haakjes(row: dict, sc: float) -> str:
+    """De score tussen haakjes, ' (x.x/10)', als die in een zin mag; anders leeg (S9)."""
+    return " (" + _score_str(sc) + ")" if _segment_cijfer_mag(row) else ""
+
+
 def _segment_theme_cell(row: dict, factor_rows: dict[str, dict] | None,
                         scan_type: str) -> str:
     """Inhoud van de kolom "Laagste thema" (spec 2026-07-16 §3.2).
@@ -4872,13 +5453,14 @@ def _segment_factor_subblocks(segment_rows: list[dict],
             omline = (f'<div style="{_SEG_MONO}margin-top:4px;">'
                       f'{_tel(info["omitted"], "onderwerp", "onderwerpen")} niet beoordeelbaar: '
                       f'te weinig antwoorden</div>')
-        subs.append(f'<div class="no-break" style="margin-top:10px;">'
+        subs.append(f'<div class="no-break seg-sub">'
                  f'<div style="font-family:\'Inter Tight\', sans-serif;font-weight:700;'
                  f'font-size:11px;margin-bottom:4px;">{_h(row["department"])} (n={row["n"]})</div>'
                  f'<table class="item-tbl seg-tbl">{frows}</table>{omline}</div>')
     if not subs:
         return ""
-    intro = ('<p style="font-size:10px;color:#64748B;margin:10px 0 0;">'
+    # Maten in .seg-sub-intro en .seg-sub (report_css.py, naast .seg-card).
+    intro = ('<p class="seg-sub-intro">'
              'Alle onderwerpen per afdeling: dezelfde vaste drempels als in het '
              'overzichtsprofiel (kwetsbaar onder 5,0, aandachtspunt 5,0 tot 6,5, '
              'relatief sterk vanaf 6,5).</p>')
@@ -5009,7 +5591,7 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
                 f"onderwerp.{rest_zin}")
     low_lbl = _fl(seg["low_fk"], scan_type)
     low_sc = _score_str(seg["low_avg"])
-    zwaar = _factor_label(seg["low_avg"]) != "Relatief sterk"
+    zwaar = _factor_level(seg["low_avg"]) != 2
     if seg["low_fk"] == startpunt_key:
         if zwaar:
             return f"Bij {dept} weegt {low_lbl} het zwaarst ({low_sc}); {ook_start}"
@@ -5100,8 +5682,8 @@ def _segment_start_note(segment_rows: list[dict],
                            f"uitgenodigd is niet volledig vastgelegd")
             samenstelling = f' ({_h(", ".join(leden))}{noemer})'
         rest_sentence = (
-            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} scoort lager '
-            f'({_shown(pooled["avg"]):.1f}/10), maar is samengesteld uit kleine '
+            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} scoort lager'
+            f'{_cijfer_tussen_haakjes(pooled, _shown(pooled["avg"]))}, maar is samengesteld uit kleine '
             f'afdelingen en wordt daarom niet als startpunt genoemd.')
 
     # Eén gate voor staat 3, gedeeld met de brugzin (_segment_startpunt).
@@ -5111,16 +5693,21 @@ def _segment_start_note(segment_rows: list[dict],
     aangewezen = _segment_startpunt(segment_rows, factor_rows)
 
     if aangewezen is None and delta < SEGMENT_START_MIN_DELTA:
+        # S9: is een van de twee klein, dan geen van beide cijfers. Eén cijfer
+        # laten staan zou bij "dezelfde score" en "dicht bij elkaar" het andere
+        # cijfer alsnog verraden.
+        met_cijfers = _segment_cijfer_mag(lowest) and _segment_cijfer_mag(runner_up)
         if low_sc == run_sc:
+            beide = ", beide " + _score_str(low_sc) if met_cijfers else ""
             vergelijking = (
                 f'De twee laagste afdelingen komen op dezelfde score uit '
-                f'({_h(lowest["department"])} en {_h(runner_up["department"])}, '
-                f'beide {low_sc:.1f}/10).')
+                f'({_h(lowest["department"])} en {_h(runner_up["department"])}'
+                f'{beide}).')
         else:
             vergelijking = (
                 f'De twee laagste afdelingen liggen dicht bij elkaar '
-                f'({_h(lowest["department"])} {low_sc:.1f}/10 en '
-                f'{_h(runner_up["department"])} {run_sc:.1f}/10).')
+                f'({_naam_cijfer(lowest, low_sc, met_cijfers)} en '
+                f'{_naam_cijfer(runner_up, run_sc, met_cijfers)}).')
         # "Geen eerste afdeling aan te wijzen", niet "geen afdeling vraagt
         # aandacht": vastgesteld is alleen dat de twee laagste niet van elkaar
         # te onderscheiden zijn. Bij 5,0 / 5,1 / 9,0 vragen die twee ten
@@ -5135,8 +5722,12 @@ def _segment_start_note(segment_rows: list[dict],
         # lager staan, en dan zou een kale "scoort het laagst" in dezelfde alinea
         # worden weerlegd door de restgroep-zin eronder. Zonder restgroep is de
         # toevoeging ook waar (elke getoonde afdeling staat apart in de tabel).
+        # Staat 2 heeft per definitie een laagste afdeling onder
+        # MIN_DISTRIBUTION_N, dus hier staat nooit een cijfer (S9). De
+        # controle blijft expliciet: zo hangt het cijfer aan dezelfde regel als
+        # elders in dit blok, ook als de gate van staat 2 ooit verandert.
         body = (f'{_h(lowest["department"])} scoort het laagst van de afdelingen die '
-                f'apart getoond worden ({low_sc:.1f}/10), maar '
+                f'apart getoond worden{_cijfer_tussen_haakjes(lowest, low_sc)}, maar '
                 f'heeft {lowest["n"]} antwoorden. Loep wijst een afdeling pas aan vanaf '
                 f'{MIN_DISTRIBUTION_N} antwoorden, zodat de conclusie niet op een handvol '
                 f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
@@ -5185,6 +5776,39 @@ def _segment_start_note(segment_rows: list[dict],
     return (f'<div class="navy-anchor">'
             f'<div class="navy-anchor-eyebrow">Waar het per afdeling begint</div>'
             f'<p>{body}{rest_sentence}</p></div>')
+
+
+# R14 (koude leesronde 8-10): de kolom heette overal "Score" en zei niet welke
+# score het was. Eén bron per product voor de kolomkop en de zin achter de
+# sectie-intro. De kolom blijft 8% breed: een bredere scorekolom gaat in
+# WeasyPrint ten koste van Band en Laagste onderwerp, die dan een regel extra
+# krijgen (gemeten: de uitsplitsing schoof in scenario 03 en 06 naar een eigen,
+# voor 21% gevulde pagina). Daarom zachte afbreekstreepjes in de kop: de kop
+# loopt over twee of drie regels ("WERK-/BEELD"), de rijen blijven gelijk.
+# Exit: de segmentrijen staan op de gezondheidsschaal (_signal_health, zie
+# _segment_input in build_report_data), dus per afdeling 11 min de frictiescore.
+# Alleen geldig voor exit, retention en onboarding: de drie renderers die
+# _segment_block aanroepen. Een ander scan_type geeft bewust een KeyError.
+_P02 = "pagina " + _pref("p02")
+SEGMENT_SCOREKOLOM = {
+    "retention": {"kop": "Werk&shy;beeld",
+                  "zin": "De kolom Werkbeeld is het werkbeeld van " + _P02 + ", per afdeling."},
+    "onboarding": {"kop": "Check&shy;point&shy;score",
+                   "zin": "De kolom Checkpointscore is de checkpointscore van " + _P02
+                          + ", per afdeling."},
+    "exit": {"kop": "Score",
+             "zin": "De kolom Score is per afdeling de frictiescore van " + _P02
+                    + ", maar omgedraaid: hier is hoger beter."},
+}
+
+
+def _segment_intro(scan_type: str) -> str:
+    """De sectie-intro van de afdelingstabel plus de scorekolomzin van dit product.
+
+    Alleen voor exit, retention en onboarding (zie SEGMENT_SCOREKOLOM).
+    """
+    return (f'<p class="sec-intro">{SECTION_INTROS["segmentanalyse"]} '
+            f'{SEGMENT_SCOREKOLOM[scan_type]["zin"]}</p>')
 
 
 # H7 (koude leesronde): de afdelingsmanager zegt "dat komt door de reorganisatie".
@@ -5300,7 +5924,8 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     # WeasyPrint hem op een vervolgpagina herhaalt.
     kop = ('<thead><tr><th style="width:17%">Afdeling</th>'
            '<th style="width:9%">Ingevuld / uitgenodigd</th>'
-           '<th style="width:8%">Score</th><th style="width:13%">Band</th>'
+           f'<th style="width:8%">{SEGMENT_SCOREKOLOM[scan_type]["kop"]}</th>'
+           '<th style="width:13%">Band</th>'
            '<th style="width:27%">Laagste onderwerp</th>'
            '<th style="width:26%">Spreiding</th></tr></thead>')
     # Alleen de verwijzing, geen tweede uitleg: de sectie-intro hierboven noemt de
@@ -5310,9 +5935,9 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
                     f'drempeltabel op pagina {_pref(LEIDRAAD_ANKERS["drempels"])}.</p>')
     return f"""<div class="pb sec">
   {opener_html or '<span class="slabel">Per afdeling</span>'}
-  {_intro("segmentanalyse")}
+  {_segment_intro(scan_type)}
   {drempelregel}
-  <div class="card">
+  <div class="card seg-card">
     <table class="item-tbl seg-tbl">{kop}{rows_html}</table>
     {hidden_note}
     {low_note}
@@ -5567,8 +6192,10 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
 
     _mode    = (camp.delivery_mode or "baseline").lower()
     mode_lbl = "Live" if _mode == "live" else "Baseline"
-    scan_lbl = scan_meta.get("report_title",
-        f"Loep Vertrek {mode_lbl}" if scan_type == "exit" else scan_meta["product_name"])
+    # V15 (polijstronde): ook bij Loep Vertrek alleen de productnaam op de
+    # cover, net als bij Behoud en Start. "Baseline" of "Live" zei de klant
+    # niets; delivery_mode blijft wel in de data.
+    scan_lbl = scan_meta.get("report_title", scan_meta["product_name"])
     now_str  = datetime.now(timezone.utc).strftime("%d-%m-%Y")
 
     respondents = camp.respondents
@@ -5839,6 +6466,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         # De volledige teller, niet alleen de top 5 van de tabel: de why-cel op
         # p.02 moet ook de telling van een reden kennen die buiten die top valt.
         exit_r_counts=dict(exit_r_cnt),
+        # V3 (polijstronde): de volledige telling van "speelde ook mee", uit
+        # dezelfde bron als cont_dist (dat alleen de top 5 is).
+        cont_counts=dict(cont_cnt),
         exit_months=exit_months,
         cont_dist=cont_dist,
         prev_dist=prev_dist, open_texts=open_texts,
@@ -5901,10 +6531,11 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     Het bandwoord is "kwetsbaar", zoals overal in het rapport, niet "kritisch".
     """
     ranked = sorted([(l, s) for l, s in profile_factors if s is not None], key=lambda x: x[1])
-    # Indeling via _factor_label: zelfde (afgeronde) drempels als de balken (B15).
-    kwetsbaar = [l for l, s in ranked if _factor_label(s) == "Kwetsbaar punt"]
-    aandacht  = [l for l, s in ranked if _factor_label(s) == "Aandachtspunt"]
-    sterk     = [l for l, s in ranked if _factor_label(s) == "Relatief sterk"]
+    # Indeling via _factor_level: zelfde (afgeronde) drempels als de balken (B15).
+    kwetsbaar = [l for l, s in ranked if _factor_level(s) == 0]
+    aandacht  = [l for l, s in ranked if _factor_level(s) == 1]
+    sterk     = [l for l, s in ranked if _factor_level(s) == 2]
+    sterk_sc  = [s for l, s in ranked if _factor_level(s) == 2]
     laag_sc = ranked[0][1] if ranked else None
     if ranked and len(laagste) == len(ranked) and len(ranked) > 1:
         laagste_zin = (f"{_alle_onderwerpen(len(ranked)).capitalize()} scoren "
@@ -5923,7 +6554,21 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
     else:
         laagste_zin = ""
     if kwetsbaar and sterk:
-        summary = f"{laagste_zin} {sterk[-1]} vormt een relatief sterke basis."
+        # R9 (polijstronde): delen meerdere sterke onderwerpen de hoogste
+        # getoonde score, dan noemt de zin ze allemaal. Eerder stond er alleen
+        # het onderwerp dat toevallig als laatste gesorteerd was, terwijl de
+        # balken eronder drie keer 7.1 lieten zien. Volgorde exact die van de
+        # band "sterk" die deze functie teruggeeft (hoogste eerst).
+        top_sc = _shown(sterk_sc[-1])
+        top = [l for l, s in reversed(list(zip(sterk, sterk_sc))) if _shown(s) == top_sc]
+        if len(top) > 1:
+            alle = "allebei" if len(top) == 2 else f"alle {_TELWOORD[len(top)]}"
+            sterk_zin = (f"{_TELWOORD[len(top)].capitalize()} onderwerpen vormen een "
+                         f"relatief sterke basis ({alle} {_score_str(top_sc)}): "
+                         f"{', '.join(top)}.")
+        else:
+            sterk_zin = f"{top[0]} vormt een relatief sterke basis."
+        summary = f"{laagste_zin} {sterk_zin}"
     elif kwetsbaar:
         summary = laagste_zin[:-1] + "; geen enkel onderwerp scoort relatief sterk."
     elif aandacht:
@@ -5961,10 +6606,7 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
     # verdieping-titels). Voorheen zei de legenda "aandachtspunt/gemengd" waar de
     # rijen "Kwetsbaar punt/Aandachtspunt" zeiden — drie labelsets voor dezelfde
     # drempels op één pagina.
-    legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
-              f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
-              f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
-              f'<span style="color:{RAG_LOW};">&#9632;</span> relatief sterk</p>')
+    legend = _band_legenda()
     summary_html = (
         f'<p style="font-size:11px;color:#374151;max-width:66ch;margin-bottom:18px;">{_h(summary)}</p>'
         if summary else ""
@@ -5991,20 +6633,85 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
         # daar is dit hoofdstuk 02 en volgt het direct op pagina twee, die op
         # één vel moet blijven en hoofdstuk 02 op pagina drie laat beginnen (H16).
         sec_cls = "sec flow" if stroom_zonder_profiel else "pb sec"
+    # Zonder balken geen kaart (Taak 11 polijstronde): een lege .card tekende
+    # alleen een losse verticale lijn en kostte 33pt, genoeg om bij Loep
+    # Vertrek met n < 10 het blok "04 Verdieping" naar een eigen vel van 12%
+    # te duwen (gemeten in het productie-image).
+    kaart = f'<div class="card">{rows}{legend}</div>' if rows else ""
     return f"""<div class="{sec_cls}">
   {opener_html or '<span class="slabel">Overzichtsprofiel</span>'}
   {intro_html}
   {summary_html}
-  <div class="card">{rows}{legend}</div>
+  {kaart}
 </div>"""
 
 
 # ─── Vertrekcontext (T7) ──────────────────────────────────────────────────────
 
+# V3 (polijstronde): een vertrekreden die vaak genoemd is terwijl het
+# onderwerp waar hij bij hoort relatief sterk scoort. Hoogstens twee zinnen,
+# zodat het blok een signaal blijft en geen tweede tabel wordt.
+REDEN_SCORE_MAX = 2
+
+
+def _redenen_tegen_scores(factor_avgs: dict[str, float | None] | None,
+                          reason_counts: dict[str, int] | None,
+                          cont_counts: dict[str, int] | None) -> list[str]:
+    """Zinnen voor redenen die "uit elkaar lopen met de scores" (V3).
+
+    Een reden telt als zijn code via FACTOR_EXIT_CODE bij een onderwerp hoort,
+    hij minstens MIN_SEGMENT_N keer genoemd is (hoofdreden en "speelde ook
+    mee" opgeteld) en dat
+    onderwerp op de getoonde score relatief sterk is (_factor_level 2, op
+    _shown, B15). Beschrijvend: geen verband, geen oorzaak, geen advies.
+    Volledige tellingen, niet de top 5 van de tabellen op de pagina.
+
+    Let op: de drempel telt vermeldingen, geen personen. Iemand die dezelfde
+    reden als hoofdreden én als meespelend opgaf, telt twee keer; daarom
+    zegt de zin "{n} keer genoemd" en nooit "{n} mensen".
+    """
+    factor_avgs = factor_avgs or {}
+    reason_counts = reason_counts or {}
+    cont_counts = cont_counts or {}
+    kandidaten = []
+    for fk, code in FACTOR_EXIT_CODE.items():
+        score = factor_avgs.get(fk)
+        if score is None or _factor_level(_shown(score)) != 2:
+            continue
+        h, m = reason_counts.get(code, 0), cont_counts.get(code, 0)
+        if h + m < MIN_SEGMENT_N:
+            continue
+        kandidaten.append({"code": code, "fk": fk, "h": h, "m": m, "score": score})
+    # Meeste vermeldingen eerst; bij gelijkstand op redencode, zodat de
+    # volgorde vastligt.
+    kandidaten.sort(key=lambda c: (-(c["h"] + c["m"]), c["code"]))
+    zinnen = []
+    for c in kandidaten[:REDEN_SCORE_MAX]:
+        code, fk, h, m, score = c["code"], c["fk"], c["h"], c["m"], c["score"]
+        label = EXIT_REASON_LABELS_NL.get(code, code)
+        if h and m:
+            wat = (f"{h + m} keer genoemd als reden ({h} keer als hoofdreden, "
+                   f"{m} keer als reden die meespeelde)")
+        elif h:
+            wat = f"{h} keer genoemd als hoofdreden"
+        else:
+            wat = f"{m} keer genoemd als reden die meespeelde"
+        # Het onderwerp bij naam: een redenlabel als "Gebrek aan groei" of
+        # "Werkdruk / stress" naast "scoort 7.0" las als de reden die hoog
+        # scoort, met de verkeerde kant op.
+        zinnen.append(f"{label} werd {wat}, maar het onderwerp {_lc(_fl(fk, 'exit'))} scoort "
+                      f"{_shown(score):.1f} ({_FACTOR_LABEL_WOORDEN[2].lower()}): hier lopen "
+                      "redenen en scores uit elkaar.")
+    return zinnen
+
+
 def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                     contributing: list[tuple[str, int]], n: int,
                     primary_factor_label: str, opener_html: str = "",
-                    has_profile: bool = True, enps_html: str = "") -> str:
+                    has_profile: bool = True, enps_html: str = "",
+                    factor_avgs: dict[str, float | None] | None = None,
+                    reason_counts: dict[str, int] | None = None,
+                    cont_counts: dict[str, int] | None = None) -> str:
     """has_profile volgt dezelfde schakelaar als de degraded p.02-alinea.
 
     Zonder factorprofiel verwijzen twee zinnen op deze pagina naar iets dat er
@@ -6050,12 +6757,17 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                f"belichten elk een eigen invalshoek. De onderwerpen die bovenaan de "
                f"rangorde staan, komen terug in de verdieping hierna.</p>")
 
+    # V3 (polijstronde): vóór de zin over de invalshoeken, waar redenen en
+    # scores uit elkaar lopen. Alleen met een profiel: zonder scores valt er
+    # niets naast elkaar te leggen (en staat de kaart er niet).
+    botsing = "".join(f"<p style='margin-bottom:6px;'>{_h(z)}</p>"
+                      for z in _redenen_tegen_scores(factor_avgs, reason_counts, cont_counts))
     rel_card = (f'<div class="card navy" style="background:#fff;">'
-                f'<h3>Relatie met het overzichtsprofiel</h3>{rel}</div>'
+                f'<h3>Relatie met het overzichtsprofiel</h3>{botsing}{rel}</div>'
                 ) if has_profile else ""
 
     return f"""<div class="pb sec">
-  {opener_html or '<span class="slabel">Vertrekcontext</span>'}
+  {opener_html or '<span class="slabel">Waarom mensen vertrokken</span>'}
   {_intro("vertrekcontext" if has_profile else "vertrekcontext_geen_profiel")}
   <div class="tcol">
     <div class="tc-l"><div class="card accent"><h3>Hoofdredenen van vertrek</h3>
@@ -6078,8 +6790,18 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
 
     Signalen staan bewust onder elkaar (niet naast elkaar in één balk): titel
     eerst, dan de uitleg van wat het meet, dan pas de score — anders valt de
-    uitleg weg onder de opvallende cijfers (feedback: Behoudssignaal en
+    uitleg weg onder de opvallende cijfers (feedback: het totaalsignaal en
     Blijfintentie waren zo nauwelijks te onderscheiden).
+
+    Labels (polijstronde R12): werkbeeld, blijfintentie en bevlogenheid krijgen
+    de _factor_label-woorden in kleine letters (kwetsbaar punt / aandachtspunt /
+    relatief sterk), op dezelfde ladder 5,0 / 6,5 als hun kleur; het werkbeeld
+    uit dezelfde band als zijn kleur (_RETENTION_BANDS). Vertrekintentie krijgt
+    weinig / veel vertrekgedachten met aandachtspunt in het midden, via
+    zone_index op dezelfde zones als de strook. De spreidingsstrook op de
+    vervolgpagina houdt zijn korte tellingnamen (Kwetsbaar / Aandacht / Sterk,
+    bij vertrekintentie Weinig / Aandacht / Veel vertrekgedachten) op dezelfde
+    zones, dus een label noemt nooit een andere zone dan kleur of strook.
     """
     rows = ""
     if retention_score is not None:
@@ -6089,17 +6811,18 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # ("onder de 5,0 kwetsbaar ... vanaf 6,5 relatief sterk") ontstaat.
         _k = _band_key(retention_score, "retention")
         col = _RETENTION_BANDS[_k][1]
-        note = {"HOOG": "onder druk", "MIDDEN": "vraagt aandacht", "LAAG": "sterk"}[_k]
-        rows += (f'<div class="sigrow"><div class="sigrow-title">Behoudssignaal</div>'
-                 f'<div class="sigrow-body">De zes onderwerpen over het werk en de werkbeleving samengebracht op groepsniveau.</div>'
+        note = _RETENTION_BANDS[_k][0].lower()
+        rows += (f'<div class="sigrow"><div class="sigrow-title">Werkbeeld</div>'
+                 f'<div class="sigrow-body">De zes onderwerpen over het werk en de werkbeleving samen, op groepsniveau. Geen meting van of mensen blijven.</div>'
                  f'<div><span class="sigrow-score" style="color:{col};">{retention_score:.1f}/10</span>'
                  f'<span class="sigrow-note">{note}</span></div></div>')
     if stay_intent is not None:
         scol = _rag_color(stay_intent)
         rows += (f'<div class="sigrow"><div class="sigrow-title">Blijfintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Als het aan mij ligt, werk ik over 12 maanden nog steeds hier.&rdquo; '
-                  f'Enkelvoudige richtingsvraag, indicatief.</div>'
-                  f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span></div></div>')
+                  f'E&eacute;n vraag; lees hem als indicatie.</div>'
+                  f'<div><span class="sigrow-score" style="color:{scol};">{stay_intent:.1f}/10</span>'
+                  f'<span class="sigrow-note">{_factor_label(stay_intent).lower()}</span></div></div>')
     if turnover is not None:
         _tv = _shown(turnover)  # note + kleur op de getoonde score (B15)
         # Kleur en note komen uit dezelfde zone-as als de spreidingsstrook op de
@@ -6108,14 +6831,11 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         # een amber rij boven een teal stip, dezelfde tegenspraak als de gespiegelde
         # getallen, alleen in kleur. De grenzen zijn daarom ZONE_LOW en ZONE_HIGH,
         # en strikt kleiner-dan: 5,0 zelf hoort in het midden, 6,5 zelf bovenin,
-        # precies zoals de strook de stip indeelt. De grens van 3,0 splitst binnen
-        # de laagste zone ("laag" of "beperkt", allebei weinig vertrekgedachten) en
-        # valt daarom niet samen met een zonegrens.
+        # precies zoals de strook de stip indeelt. De note (polijstronde R12)
+        # komt uit dezelfde zone_index, dus rij en strook noemen dezelfde zone.
         tcol = zone_color(_tv, invert_scale=True)
-        note = ("laag" if _tv <= 3.0 else
-                "beperkt" if _tv < ZONE_LOW else
-                "zichtbaar" if _tv < ZONE_HIGH else
-                "hoog: actief vertrekrisico")
+        note = ("weinig vertrekgedachten", _FACTOR_LABEL_WOORDEN[1].lower(),
+                "veel vertrekgedachten")[zone_index(_tv)]
         rows += (f'<div class="sigrow"><div class="sigrow-title">Vertrekintentie</div>'
                   f'<div class="sigrow-body">&ldquo;Ik denk er serieus over na te vertrekken&rdquo; + &ldquo;Ik zoek actief.&rdquo; '
                   f'Gemiddelde van 2 stellingen.</div>'
@@ -6123,13 +6843,11 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
                   f'<span class="sigrow-note">{note}</span></div></div>')
     if engagement is not None:
         ecol = _factor_color(engagement)
-        _ev = _shown(engagement)  # note op de getoonde score (B15)
-        note = ("hoog" if _ev >= 7.5 else
-                "gemiddeld" if _ev >= 6.0 else
-                "laag: geen buffer" if _ev >= 4.5 else
-                "zorgelijk laag")
+        # Polijstronde R12: geen eigen grenzen meer (was 7,5 / 6,0 / 4,5, terwijl
+        # de kleur op 5,0 / 6,5 lag); de note volgt nu de ladder van de kleur.
+        note = _factor_label(engagement).lower()
         rows += (f'<div class="sigrow"><div class="sigrow-title">Bevlogenheid</div>'
-                  f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan (UWES). Gemiddelde van 3 stellingen.</div>'
+                  f'<div class="sigrow-body">Energie &middot; Inspiratie &middot; Zin om te gaan. Gemiddelde van 3 stellingen.</div>'
                   f'<div><span class="sigrow-score" style="color:{ecol};">{engagement:.1f}/10</span>'
                   f'<span class="sigrow-note">{note}</span></div></div>')
 
@@ -6147,14 +6865,14 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         ("engagement", "Bevlogenheid", False),
     ):
         vals = [v for v in (intent_resp or {}).get(key, []) if v is not None]
-        blk = distribution_block(vals, width=660, height=52, dot_r=4.5, label_size=9,
+        blk = distribution_block(vals, width=STROOK_BREEDTE_VOL, height=52, dot_r=4.5, label_size=9,
                                  invert_scale=invert)
         if blk:
             strips += (f'<div style="margin-top:26px;"><div class="spread-title">'
                        f'{label}</div>{blk}</div>')
 
     page = f"""<div class="pb sec">
-  {opener_html or '<span class="slabel">Behoudscontext</span>'}
+  {opener_html or '<span class="slabel">Blijven en vertrekken</span>'}
   {_intro("behoudscontext")}
   {stat_rows}
   {enps_html}
@@ -6166,7 +6884,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
     # groot formaat, met een korte leesuitleg.
     if strips:
         page += f"""<div class="pb sec">
-  {_ChapterCounter.vervolg("Behoudscontext")}
+  {_ChapterCounter.vervolg("Blijven en vertrekken")}
   <h3>Spreiding per signaal</h3>
   <p class="sec-intro" style="margin-top:2px;">Elke stip is &eacute;&eacute;n respondent; de donkere lijn markeert het
     groepsgemiddelde. Zo zie je of een gemiddelde &eacute;&eacute;n gedeelde ervaring beschrijft
@@ -6209,23 +6927,39 @@ def _enps_str(score: int) -> str:
     return f"{score:+d}".replace("-", "−")
 
 
-def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
+ENPS_VERTREK_ZIN = ("Bij Loep Vertrek is dit het oordeel van mensen die vertrokken, niet van "
+                    "wie er nu werkt.")
+
+
+def _enps_block(enps_score: int | None, enps_detail: dict | None, scan_type: str) -> str:
     """Werkgeversaanbeveling als blok op de contextpagina (H13, spec par. 9 B9):
     de score met de tellingen erbij, zodat "+0" iets betekent. Leeg zonder
-    score. Geen eigen hoofdstuk meer."""
+    score. Geen eigen hoofdstuk meer.
+
+    V16 (polijstronde): bij Loep Vertrek direct na de intro van wie dit oordeel
+    is. De intro spreekt van "medewerkers", en een lage score van vertrekkers
+    las aan tafel als het oordeel van wie er nu werkt."""
     if enps_score is None or not enps_detail:
         return ""
+    # Taak 11 (polijstronde): de V16-zin sluit de intro-alinea af in plaats van
+    # een eigen alinea te openen. Een eigen alinea kostte 24pt (regel plus
+    # alineamarge) en duwde bij Loep Vertrek met n < 10 het korte blok "04
+    # Verdieping" van de contextpagina naar een eigen vel van 12%; in de
+    # alinea kost hij alleen de regel (gemeten in het productie-image).
+    vertrek = (" " + _h(ENPS_VERTREK_ZIN)) if scan_type == "exit" else ""
+    intro = _intro("werkgeversaanbeveling", extra=vertrek)
     ecol = _rag_color(10.0 if enps_score >= 20 else 6.0 if enps_score >= 0 else 4.0)
     n, p, d = enps_detail["n"], enps_detail["promoters"], enps_detail["detractors"]
     return (f'<div class="enps-inline no-break"><span class="eyebrow">Werkgeversaanbeveling</span>'
-            f'{_intro("werkgeversaanbeveling")}'
+            f'{intro}'
             f'<table class="sg"><tr><td><div class="sc-l">Aanbevelingsscore</div>'
             f'<div class="sc-v" style="color:{ecol};">{_enps_str(enps_score)}</div>'
             f'<div class="sc-b">{p} aanraders, {d} critici van {n} (eNPS, &minus;100 tot +100)</div></td>'
             f'</tr></table></div>')
 
 
-def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: str) -> str:
+def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: str,
+                          *, factor_avgs: dict | None = None) -> str:
     """Werkbeleving (SDT), één helper voor de drie renderers; voorheen drie keer
     dezelfde 40 regels.
 
@@ -6242,6 +6976,11 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     leest: met een hardcoded drietal zou een nieuwe dimensie wel de gate halen
     en niet in de sectie staan, en dan verwijst de leidraad naar een pagina die
     hem niet toont.
+
+    factor_avgs: de onderwerpscores van de meting. Alleen gebruikt voor de
+    R10-zin: "ook onder druk" mag er alleen staan als minstens een onderwerp
+    zelf onder 6,5 ligt (getoonde score). Zonder onderwerpscores, of als alle
+    onderwerpen relatief sterk zijn, staat er "onder druk" zonder "ook".
 
     Leeg zonder dimensiescores. De aanroeper gate't daarom op
     _heeft_werkbeleving, zodat ch.opener geen hoofdstuknummer opeist voor een
@@ -6284,9 +7023,43 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     balk = 44 if twee_kolommen else 80
     kaarten = [k for k in (_card(dim) for dim in dims) if k]
     overzichtskaart = f'<div class="card" style="margin-bottom:14px;">{overview}</div>'
+    # R10 (polijstronde): de intro zegt dat een lage onderwerpscore met een
+    # gezonde werkbeleving een ander gesprek vraagt dan wanneer beide onder druk
+    # staan, maar liet de lezer zelf uitzoeken welk geval hier geldt. Eén zin,
+    # alleen als het beeld eenduidig is en alle dimensies gemeten zijn; bij een
+    # gemengd beeld staat er niets (dat zie je aan de balken). Op het niveau van
+    # de getoonde score, dezelfde grens als de bandlabels ernaast.
+    niveaus = [_factor_level(sdt_a.get(dim)) for dim in dims]
+    duiding = ""
+    if len(dims) == len(SDT_LABELS) and len(dims) in _TELWOORD:
+        telw = _TELWOORD[len(dims)]
+        if all(niv < 2 for niv in niveaus):
+            # "zelf ook" verwijst naar onderwerpen die onder druk staan; dat
+            # klopt alleen als er minstens een onderwerp onder 6,5 ligt.
+            onderwerp_niveaus = [_factor_level(v) for fk, v in (factor_avgs or {}).items()
+                                 if fk in ORG_FACTOR_KEYS and v is not None]
+            ook = " zelf ook" if any(niv < 2 for niv in onderwerp_niveaus) else ""
+            duiding = (f"Hier staat de werkbeleving{ook} onder druk: geen van de "
+                       f"{telw} scoort relatief sterk.")
+        elif all(niv == 2 for niv in niveaus):
+            duiding = f"Hier scoort de werkbeleving op alle {telw} relatief sterk."
     if not twee_kolommen:
+        if duiding:
+            overzichtskaart += (f'<p style="font-size:11px;color:#374151;max-width:66ch;'
+                                f'margin:-4px 0 14px;">{_h(duiding)}</p>')
         inhoud = overzichtskaart + "".join(kaarten)
     else:
+        # Taak 11 (polijstronde): in twee kolommen staat de R10-zin onder de
+        # laatste kaart van de rechterkolom, niet tussen de balken en de
+        # kolommen. De rechterkolom draagt een kaart minder en eindigt dus
+        # hoger; daar kost de zin geen hoogte. Boven de kolommen duwde hij de
+        # sectie 21pt omlaag, en daarmee "Per afdeling" (Loep Vertrek zonder
+        # afdelingen) naar een eigen vel van 11% (gemeten in het
+        # productie-image). In leesvolgorde sluit de zin de drie kaarten af.
+        # Dat de rechterkolom korter is, geldt bij een oneven aantal kaarten
+        # (nu altijd drie: links twee, rechts een); bij een even aantal staat
+        # de zin onder een even lange kolom en kost hij wel een regel.
+        slot = f'<p class="wb-duiding">{_h(duiding)}</p>' if duiding else ""
         # De overzichtskaart staat over de volle breedte boven de kolommen, niet
         # in de linkerkolom. Daar was de balkenkaart (naam, balk, score en
         # bandlabel op een regel) breder dan een halve kolom: de linkercel
@@ -6299,13 +7072,77 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
         helft = (len(kaarten) + 1) // 2
         inhoud = (f'{overzichtskaart}<div class="tcol wb-cols">'
                   f'<div class="tc-l">{"".join(kaarten[:helft])}</div>'
-                  f'<div class="tc-r">{"".join(kaarten[helft:])}</div></div>')
+                  f'<div class="tc-r">{"".join(kaarten[helft:])}{slot}</div></div>')
     return f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}{inhoud}</div>'
+
+
+BIJLAGE_RICHTING_SLOT = "Dit zijn de keuzes van respondenten, geen advies van Loep."
+
+
+def _bijlage_richting_block(direction_agg: dict | None, agenda_keys: list[str],
+                            scan_type: str) -> str:
+    """V12 (polijstronde): de keuzes op de richtingvraag van wie een onderwerp
+    buiten de agenda als laagste had. De totaalregel op de gespreksagenda
+    noemt die mensen ("de overige 11 een ander onderwerp ... niet
+    uitgewerkt"); wat zij kozen, stond nergens.
+
+    Precies de onderwerpen die die regel als `rest` telt: buiten de agenda
+    (_agenda_sleutels) en lowest_n > 0. Onder DIRECTION_MIN_N beantwoorders
+    geen keuzes (dezelfde vloer als de richtingkaart), alleen dat het er te
+    weinig zijn. Anders de veranderopties op aantal (Anders meegeteld, als
+    "Anders": de toelichtingen zelf staan alleen op de kaarten, achter hun
+    eigen drempel), de niets-optie apart achteraan, opties met 0 weg. Geen
+    staat en geen opdrachtvorm: de bijlage weegt niet, hij telt.
+
+    Leeg zonder richtingdata, voor Loep Start (geen richtingvraag) en als
+    er buiten de agenda niemand is.
+    """
+    if not direction_agg or scan_type not in DIRECTION_SCAN_TYPES:
+        return ""
+    rest = _richting_overig(direction_agg, agenda_keys)
+    if not rest:
+        return ""
+    regels = []
+    for k, toont_keuzes in rest:
+        a = direction_agg[k]
+        label = _fl(k, scan_type)
+        if not toont_keuzes:
+            regels.append(f"{label}: {a['lowest_n']} "
+                          + _werkwoord(a["lowest_n"], "had", "hadden")
+                          + " dit als laagste onderwerp; te weinig antwoorden om iets "
+                          "over te zeggen.")
+            continue
+        texts = direction_option_texts(scan_type, k)
+
+        def _naam(key: str, texts: dict[str, str] = texts, k: str = k) -> str:
+            return ("Anders" if key.endswith("_other")
+                    else _richting_optie_tekst(texts, key, k, scan_type))
+        counts = {key: c for key, c in a["counts"].items() if c > 0}
+        verander = sorted(((key, c) for key, c in counts.items() if not key.endswith("_none")),
+                          key=lambda kc: (-kc[1], kc[0]))
+        niets = [(key, c) for key, c in counts.items() if key.endswith("_none")]
+        delen = ", ".join("‘" + _naam(key) + "’ " + str(c) for key, c in verander)
+        if niets:
+            niets_deel = "; ".join("‘" + _naam(key) + "’ " + str(c) for key, c in niets)
+            delen = delen + "; " + niets_deel if delen else niets_deel
+        regel = f"{label} ({a['answered']} antwoorden)"
+        regels.append(regel + (": " + delen + "." if delen else ": geen keuze vastgelegd."))
+    lijst = "".join(f'<p style="font-size:10px;color:#243247;margin:0 0 5px;">{_h(r)}</p>'
+                    for r in regels)
+    # Het anker op het blok zelf: de totaalregel op de gespreksagenda verwijst
+    # hierheen, en het nummer moet de pagina van dit blok zijn.
+    return (f'<div class="no-break" id="{LEIDRAAD_ANKERS["richting_overig"]}" '
+            f'style="margin-top:14px;">'
+            f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
+            f'{_h(BIJLAGE_RICHTING_KOP)}</div>{lijst}'
+            f'<p class="trustline">{_h(BIJLAGE_RICHTING_SLOT)}</p></div>')
 
 
 def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict, sdt_items: list,
                       scan_type: str, n: int, enps_score: int | None, enps_detail: dict | None,
-                      opener_html: str, sdt_title: str) -> str:
+                      opener_html: str, sdt_title: str,
+                      direction_agg: dict | None = None,
+                      agenda_keys: list[str] | None = None) -> str:
     """Appendix: één tabel per onderwerp onder elkaar, de SDT-tabel als laatste.
     Eén helper voor drie renderers; voorheen drie keer dezelfde 45 regels.
 
@@ -6321,6 +7158,12 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
     gerapporteerd is. Niet "niet gemeten": onder de rapportagedrempel is de
     vraag wel gesteld. Dat spiegelt de meetgegevens op pagina twee, die ook
     alleen "Niet in dit rapport" zeggen.
+
+    V12 (polijstronde): onderaan de keuzes op de richtingvraag bij de
+    onderwerpen buiten de agenda (_bijlage_richting_block), alleen bij Loep
+    Vertrek en Loep Behoud. Het blok draagt zelf het anker
+    LEIDRAAD_ANKERS["richting_overig"], want de totaalregel op de
+    gespreksagenda verwijst ernaar.
     """
     def _rows(items, avgs):
         return "".join(
@@ -6355,6 +7198,8 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
     # Vertrek). Hij breekt tussen de tabellen (elke tabel blijft heel); kop,
     # intro en eerste tabel blijven samen. Geen leidraadverwijzing wijst naar
     # dit hoofdstuk, dus een kop halverwege een pagina raakt geen verwijzing.
+    # (De totaalregel op de gespreksagenda verwijst sinds V12 naar het
+    # richtingblok onderaan, met een eigen anker op dat blok, niet naar de kop.)
     kop = (f'<div class="no-break">{opener_html}{_intro("appendix")}'
            f'<p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p>'
            f'{tabellen[0] if tabellen else ""}</div>')
@@ -6364,6 +7209,7 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
   {secties}
   {sdt_html}
   <p class="trustline">{_h(enps_line)}</p>
+  {_bijlage_richting_block(direction_agg, agenda_keys or [], scan_type)}
 </div>"""
 
 
@@ -6468,13 +7314,17 @@ def render_exit_report_html(data: dict) -> str:
                                         data.get("segment_factor_rows"))
     _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _tweede_key = _tweede_row["key"] if _tweede_row else None
+    # De aangewezen afdeling voor de besluitpagina, één keer bepaald: de
+    # leidraad (R21) noemt de afdelingsafspraak alleen als dit blok er staat.
+    _bl_afdeling = None if _geen_profiel else _besluit_afdeling(_seg_startpunt, "exit", _tweede_key)
     _indicatief = _respons_indicatief(data["n_completed"], data["n_invited"])
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, "exit",
                       tweede_key=_tweede_key, indicatief=_indicatief))
     # Het werkvragenblok wordt hier al gebouwd (fixronde 24-9): de leidraad op
     # pagina twee verwijst ernaar, en alleen als het er echt is.
-    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit")
+    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit",
+                                  uitstroom=_uitstroom_bereik(data.get("exit_months")))
 
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
@@ -6523,7 +7373,7 @@ def render_exit_report_html(data: dict) -> str:
     # kennen ze niet en vallen terug op de tabel en op n (plan-regel 12).
     _er_top = data.get("exit_r_top") or data["exit_r_dist"]
     _er_given = data.get("exit_r_given")
-    _er_zin = ((" " + _vertrekreden_zin(_er_top, n, gegeven=_er_given))
+    _er_zin = (_vertrekreden_zin(_er_top, n, gegeven=_er_given)
                if (exec_line and er_top) else "")
     _cijfers_html = _p02_cijfers_block([
         _vertrekreden_cell(_er_top, n, gegeven=_er_given),
@@ -6542,11 +7392,16 @@ def render_exit_report_html(data: dict) -> str:
         # niet, dus de frictiescore blijft hier staan in plaats van uit het
         # rapport te verdwijnen.
         exec_line = (f"De frictiescore van {rdsp} wijst op een {fl.lower()}." if avg_risk
-                     else "Zie de vertrekcontext en de meetgegevens voor wat dit rapport wel toont.")
+                     else "Zie de vertrekredenen en de meetgegevens voor wat dit rapport wel toont.")
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"],
-                                 verwijzing=_verwijst) + _er_zin
+                                 verwijzing=_verwijst)
+    # S3: direct achter de kernzin, vóór de vertrekredenzin (zie
+    # _p02_afdelingen_zin voor waarom dit pas na _p02_met_respons kan).
+    _afd_zin = _p02_afdelingen_zin(shape=_shape, labels=_raster_labels, primary_key=_primary,
+                                   segment_rows=data.get("segment_rows"),
+                                   segment_factor_rows=data.get("segment_factor_rows"))
 
     # ── Bestuurlijke read ─────────────────────────────────────────────────────
     # Build why_cells for the primary (lowest-scoring) factor
@@ -6647,6 +7502,8 @@ def render_exit_report_html(data: dict) -> str:
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
+        afdelingen_zin=_afd_zin,
+        kernzin_vervolg=_er_zin,
         primary_label=primary_label,
         why_cells_html=why_cells,
         mgmt_q=br_mgmt_q,
@@ -6660,7 +7517,8 @@ def render_exit_report_html(data: dict) -> str:
             "exit", data=data, deep_agg=deep_agg,
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
             geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block),
-            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows)),
+            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows),
+            has_afdeling_afspraak=_bl_afdeling is not None),
         direction_line=_direction_p02_line(direction_agg, _primary, "exit",
                                            factor_score=_primary_score),
         brug_zin=_brug,
@@ -6673,11 +7531,13 @@ def render_exit_report_html(data: dict) -> str:
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=_raster_primary_label,
-                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Vertrekcontext", anchor=LEIDRAAD_ANKERS["context"]),
+                         factor_avgs=fa, reason_counts=data.get("exit_r_counts"),
+                         cont_counts=data.get("cont_counts"),
+                         opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Waarom mensen vertrokken", anchor=LEIDRAAD_ANKERS["context"]),
                          has_profile=not _geen_profiel,
                          # eNPS staat bij de context i.p.v. op een eigen,
                          # vrijwel lege pagina (H13, B9).
-                         enps_html=_enps_block(_enps_score, _enps_detail))
+                         enps_html=_enps_block(_enps_score, _enps_detail, "exit"))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, "exit"), fa.get(fk))
@@ -6728,7 +7588,7 @@ def render_exit_report_html(data: dict) -> str:
         # ── Exit reason context block ──
         er_count = exit_code_counts.get(fk, 0)
         if er_count > 0:
-            er_context = f'<div class="card accent">{er_count}&times; als hoofdreden van vertrek genoemd; die telling staat ook in de vertrekcontext.</div>'
+            er_context = f'<div class="card accent">{er_count}&times; als hoofdreden van vertrek genoemd; die telling staat ook bij &lsquo;Waarom mensen vertrokken&rsquo;.</div>'
         else:
             er_context = ""
         # ── Lowest / highest item cards — alleen bij >3 items; bij 3 items zijn
@@ -6746,11 +7606,15 @@ def render_exit_report_html(data: dict) -> str:
         # NB: het statische "Eerste managementvraag"-navy-blok is hier bewust weg —
         # dezelfde template-vraag stond al op p.02 en 3x op de verdiepingspagina's;
         # de data (items + toelichting + quote) draagt deze pagina zelf.
-        deep_block = (_deepening_block(deep_agg[fk], "exit", fk, n, met_regel=_regel_nog[0])
+        deep_block = (_deepening_block(deep_agg[fk], "exit", fk, n, met_regel=_regel_nog[0],
+                                       anchor=_verdieping_anker(fk))
                       if fk in deep_agg else "")
         if deep_block:
             _regel_nog[0] = False
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
+            # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
+            # richtingkaart ernaar (_wat_moet_gebeuren_block).
+            _toelichting_n[fk] = deep_agg[fk]["answered"]
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=STROOK_BREEDTE_VOL)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
         # verdiepingen stromen door onder hun voorganger en verhuizen als geheel
         # zodra ze niet meer passen.
@@ -6778,6 +7642,9 @@ def render_exit_report_html(data: dict) -> str:
     # De triggerregel staat alleen achter de eerste verdiepingsketen die
     # rendert (_deepening_chain, met_regel); de closure zet hem daarna uit.
     _regel_nog = [True]
+    # Per onderwerp met een gerenderd toelichtingsblok: het aantal
+    # beantwoorde verdiepingsvragen (de closure vult het, R7/V7).
+    _toelichting_n: dict[str, int] = {}
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, "exit")
@@ -6800,7 +7667,8 @@ def render_exit_report_html(data: dict) -> str:
         s += _werkbeleving_section(
             sdt_a, sim, data["sdt_items"],
             ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
-                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]),
+            factor_avgs=fa)
 
     # Geen eigen eNPS-hoofdstuk meer (H13, B9): één score op een eigen vel was
     # de leegste pagina van het rapport. Het blok staat nu bij de context, met de
@@ -6831,7 +7699,13 @@ def render_exit_report_html(data: dict) -> str:
     # Het richtingblok wordt hier gebouwd, niet in _prioriteringsraster (bug
     # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
     # daadwerkelijk bevat in plaats van wat er aan data bestaat.
-    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n)
+    # V12 (polijstronde): één gatewaarde voor de appendix en voor de zin op de
+    # gespreksagenda die ernaar verwijst; hier berekend, beneden hergebruikt.
+    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
+    _toon_bijlage = _should_show_appendix(n, n_factors)
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n,
+                                          toelichting_n=_toelichting_n,
+                                          bijlage=_toon_bijlage)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -6857,14 +7731,14 @@ def render_exit_report_html(data: dict) -> str:
         tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint=BESLUIT_REVIEW_HINT["exit"],
         heeft_werkvragen=bool(_wq_block),
+        heeft_afdelingen=bool(_seg_rows),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
-        afdeling=None if _geen_profiel else _besluit_afdeling(_seg_startpunt, "exit", _tweede_key),
+        afdeling=_bl_afdeling,
         afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
-    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
-    if _should_show_appendix(n, n_factors):
+    if _toon_bijlage:
         # Twee kolommen via de gedeelde helper (B9): de onderwerpstabellen naast
         # elkaar in plaats van onder elkaar, zodat de appendix niet met een paar
         # regels op een tweede vel overloopt.
@@ -6873,7 +7747,8 @@ def render_exit_report_html(data: dict) -> str:
             sdt_items=data["sdt_items"], scan_type="exit", n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
-            sdt_title="Werkbeleving: alle stellingen")
+            sdt_title="Werkbeleving: alle stellingen",
+            direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -6896,7 +7771,7 @@ def render_retention_report_html(data: dict) -> str:
     avg_eng     = data["avg_eng"]
     avg_to      = data["avg_to"]
     avg_si      = data["avg_si"]
-    # Behoudssignaal op de gezondheidsschaal (B4): één omkering, hier, en
+    # Werkbeeld op de gezondheidsschaal (B4): één omkering, hier, en
     # daarna overal dezelfde waarde (band, kernzin, behoudscontext).
     signal      = _signal_health(avg_risk)
     band_lbl, band_col = _band(signal, ST)
@@ -6941,6 +7816,9 @@ def render_retention_report_html(data: dict) -> str:
                                         data.get("segment_factor_rows"))
     _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _tweede_key = _tweede_row["key"] if _tweede_row else None
+    # De aangewezen afdeling voor de besluitpagina, één keer bepaald: de
+    # leidraad (R21) noemt de afdelingsafspraak alleen als dit blok er staat.
+    _bl_afdeling = None if _geen_profiel else _besluit_afdeling(_seg_startpunt, ST, _tweede_key)
     _indicatief = _respons_indicatief(data["n_completed"], data["n_invited"])
     _brug = ("" if _geen_profiel else
              _brugzin(_raster_rows[0]["key"], _raster_primary_label, _seg_startpunt, ST,
@@ -7005,14 +7883,14 @@ def render_retention_report_html(data: dict) -> str:
             n,
             drempelzin=(f"Daarvoor zijn minimaal {MIN_AGGREGATE_N} antwoorden nodig; "
                         f"bij minder telt elk los antwoord te zwaar mee."),
-            wel=["de behoudscontext op de volgende pagina" if signal is not None else "",
+            wel=["de cijfers over blijven en vertrekken op de volgende pagina" if signal is not None else "",
                  "de werkbeleving" if sdt_a else "",
                  "de werkgeversaanbeveling" if _enps_score is not None else "",
                  "de meetgegevens onderaan deze pagina"],
         )
 
     # Kernzin (ronde 2, B17): volgt de vorm van het profiel, niet de band van
-    # het behoudssignaal. Dat getal volgde eerder als enige de openingszin,
+    # het werkbeeld. Dat getal volgde eerder als enige de openingszin,
     # waardoor "geen factor kwetsbaar" en "alle zes kwetsbaar" dezelfde zin
     # kregen; het staat nu met zijn band in de onderbouwingsrij eronder.
     _shape = profile_shape(fa)
@@ -7026,8 +7904,8 @@ def render_retention_report_html(data: dict) -> str:
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
         indicatief=_indicatief)
-    _signal_cell = _p02_signal_cell("Behoudssignaal", _score_str(signal) if signal else "",
-                                    band_lbl or "")
+    _signal_cell = _p02_signal_cell("Werkbeeld", _score_str(signal) if signal else "",
+                                    band_lbl or "", note=WERKBEELD_UITLEG)
     _stay_scores = (data.get("intent_resp") or {}).get("stay") or []
     _cijfers_html = _p02_cijfers_block([
         _blijfintentie_cell(avg_si, _stay_scores),
@@ -7051,19 +7929,23 @@ def render_retention_report_html(data: dict) -> str:
     _verwijst = not exec_line and not (signal and band_lbl)
     if not exec_line:
         # Geen factorprofiel (bug B2). De onderbouwingsrij rendert in die staat
-        # niet, dus het behoudssignaal blijft hier staan in plaats van uit het
-        # rapport te verdwijnen.
-        exec_line = (f"{band_lbl} (behoudssignaal {_score_str(signal)})."
+        # niet, dus het werkbeeld blijft hier staan in plaats van uit het
+        # rapport te verdwijnen. Polijstronde: een hele zin met dubbele punt,
+        # zie _werkbeeld_zin.
+        exec_line = (_werkbeeld_zin(signal)
                      if signal and band_lbl
-                     else "Zie de behoudscontext en de meetgegevens voor wat dit rapport wel toont.")
+                     else "Zie de cijfers over blijven en vertrekken en de meetgegevens voor wat dit rapport wel toont.")
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
+    # S3: direct achter de kernzin, zie _p02_afdelingen_zin.
+    _afd_zin = _p02_afdelingen_zin(shape=_shape, labels=_raster_labels, primary_key=_primary,
+                                   segment_rows=data.get("segment_rows"),
+                                   segment_factor_rows=data.get("segment_factor_rows"))
     # Kwetsbare blijfintentie hoort in de kop (B1): het rapport past zijn eigen
     # regel "onder 5,0 is kwetsbaar" toe op zijn slechtste getal. Niet in de
     # degraded staat: daar draagt de alinea van _geen_factorprofiel_note het verhaal.
-    if _si_kop and not _geen_profiel:
-        exec_line = f"{exec_line} {_si_kop}"
+    _kern_vervolg = _si_kop if (_si_kop and not _geen_profiel) else ""
 
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
@@ -7082,6 +7964,8 @@ def render_retention_report_html(data: dict) -> str:
 
     s += _bestuurlijke_read(
         kernzin=exec_line,
+        afdelingen_zin=_afd_zin,
+        kernzin_vervolg=_kern_vervolg,
         primary_label=primary_label,
         why_cells_html=why_cells,
         mgmt_q=br_mgmt_q,
@@ -7095,7 +7979,8 @@ def render_retention_report_html(data: dict) -> str:
             startpunt_fk=_primary, has_sdt=_heeft_werkbeleving(sdt_a),
             geen_profiel=_geen_profiel, has_werkvragen=bool(_wq_block),
             intentie_duiding=bool(_intentie_html),
-            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows)),
+            has_tweede_punt=any(r.get("agenda_role") == "tweede" for r in _raster_rows),
+            has_afdeling_afspraak=_bl_afdeling is not None),
         direction_line=_direction_p02_line(direction_agg, _primary, ST,
                                            factor_score=_primary_score),
         brug_zin=_brug,
@@ -7110,9 +7995,9 @@ def render_retention_report_html(data: dict) -> str:
         turnover=avg_to,
         engagement=avg_eng,
         intent_resp=data.get("intent_resp"),
-        opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Behoudscontext", anchor=LEIDRAAD_ANKERS["context"]),
+        opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Blijven en vertrekken", anchor=LEIDRAAD_ANKERS["context"]),
         # eNPS bij de context i.p.v. op een eigen, vrijwel lege pagina (H13, B9).
-        enps_html=_enps_block(_enps_score, _enps_detail),
+        enps_html=_enps_block(_enps_score, _enps_detail, ST),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -7169,11 +8054,15 @@ def render_retention_report_html(data: dict) -> str:
         # Statisch "Eerste managementvraag"-blok bewust verwijderd (template-taal;
         # stond ook al op p.02) — het toelichtingsblok draagt de duiding.
         # ── Toelichtingsblok verdiepingsvragen (spec 6.2) ──
-        deep_block = (_deepening_block(deep_agg[fk], ST, fk, n, met_regel=_regel_nog[0])
+        deep_block = (_deepening_block(deep_agg[fk], ST, fk, n, met_regel=_regel_nog[0],
+                                       anchor=_verdieping_anker(fk))
                       if fk in deep_agg else "")
         if deep_block:
             _regel_nog[0] = False
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
+            # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
+            # richtingkaart ernaar (_wat_moet_gebeuren_block).
+            _toelichting_n[fk] = deep_agg[fk]["answered"]
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=STROOK_BREEDTE_VOL)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
         # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
@@ -7196,8 +8085,10 @@ def render_retention_report_html(data: dict) -> str:
   {deep_block}
 </div>"""
 
-    # Zie de Vertrek-renderer: triggerregel alleen achter de eerste keten.
+    # Zie de Vertrek-renderer: triggerregel alleen achter de eerste keten,
+    # en _toelichting_n voor de verwijzing vanaf de richtingkaart.
     _regel_nog = [True]
+    _toelichting_n: dict[str, int] = {}
     if priority_fkeys:
         for _i, _pfk in enumerate(priority_fkeys):
             _lbl = _fl(_pfk, ST)
@@ -7219,7 +8110,8 @@ def render_retention_report_html(data: dict) -> str:
         s += _werkbeleving_section(
             sdt_a, sim, data["sdt_items"],
             ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
-                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]),
+            factor_avgs=fa)
 
     # Geen eigen eNPS-hoofdstuk meer (H13, B9): één score op een eigen vel was
     # de leegste pagina van het rapport. Het blok staat nu bij de context, met de
@@ -7247,7 +8139,12 @@ def render_retention_report_html(data: dict) -> str:
     # vóór de appendix) ────────────────────────────────────────────────────────
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
-    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n)
+    # V12: zie render_exit_report_html, één gatewaarde voor beide plekken.
+    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
+    _toon_bijlage = _should_show_appendix(n, n_factors)
+    _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n,
+                                          toelichting_n=_toelichting_n,
+                                          bijlage=_toon_bijlage)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,
@@ -7273,14 +8170,14 @@ def render_retention_report_html(data: dict) -> str:
         tweede_label=_tweede_row["label"] if _tweede_row else None,
         review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=bool(_wq_block),
+        heeft_afdelingen=bool(_seg_rows),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")),
-        afdeling=None if _geen_profiel else _besluit_afdeling(_seg_startpunt, ST, _tweede_key),
+        afdeling=_bl_afdeling,
         afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
-    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
-    if _should_show_appendix(n, n_factors):
+    if _toon_bijlage:
         # Twee kolommen via de gedeelde helper (B9): de onderwerpstabellen naast
         # elkaar in plaats van onder elkaar, zodat de appendix niet met een paar
         # regels op een tweede vel overloopt.
@@ -7289,7 +8186,8 @@ def render_retention_report_html(data: dict) -> str:
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
             opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
-            sdt_title="Werkbeleving: alle stellingen")
+            sdt_title="Werkbeleving: alle stellingen",
+            direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -7325,11 +8223,11 @@ def _checkpointoverzicht(checkpoints: list[tuple[str, float | None]], opener_htm
             f'<table class="sg"><tr>'
             f'<td><div class="sc-l">{_h(label)}</div>'
             f'<div class="sc-v" style="color:{_rag_color(score)};">{_score_str(score)}</div>'
-            f'<div class="sc-b">Enkelvoudig meetmoment</div></td>'
+            f'<div class="sc-b">Eén meetmoment</div></td>'
             f'</tr></table>'
             # Geen belofte over automatische fasevergelijking: geen code-pad aggregeert
             # meerdere checkpoints in één rapport (besluit C2, 2026-07-13 audit).
-            f'<p class="trustline">Dit rapport beslaat één meetmoment; een volgende meting bespreken we los.</p>'
+            f'<p class="trustline">Dit rapport beslaat één meetmoment; een volgende meting krijgt een eigen rapport.</p>'
         )
 
     return f"""<div class="pb sec">
@@ -7356,10 +8254,7 @@ def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
     # nergens op de pagina staan (zelfde correctie als in _overzichtsprofiel).
     legend = ""
     if rows:
-        legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
-                  f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
-                  f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
-                  f'<span style="color:{RAG_LOW};">&#9632;</span> goed geland</p>')
+        legend = _band_legenda()
     else:
         rows = ('<div class="empty-state">Voor deze meting zijn er geen scores '
                 'per domein berekend.</div>')
@@ -7509,6 +8404,10 @@ def render_onboarding_report_html(data: dict) -> str:
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"], verwijzing=_verwijst)
+    # S3: direct achter de kernzin, zie _p02_afdelingen_zin.
+    _afd_zin = _p02_afdelingen_zin(shape=_shape, labels=_raster_labels, primary_key=_primary,
+                                   segment_rows=data.get("segment_rows"),
+                                   segment_factor_rows=data.get("segment_factor_rows"))
 
     _responsbasis_band = _responsbasis(
         invited=data["n_invited"],
@@ -7535,6 +8434,7 @@ def render_onboarding_report_html(data: dict) -> str:
                                   geen_profiel=_geen_profiel)
     s += _bestuurlijke_read(
         kernzin=exec_line,
+        afdelingen_zin=_afd_zin,
         primary_label=primary_label,
         why_cells_html=why_cells,
         mgmt_q=br_mgmt_q,
@@ -7564,7 +8464,7 @@ def render_onboarding_report_html(data: dict) -> str:
                               opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht", anchor=LEIDRAAD_ANKERS["context"]),
                               # eNPS bij de context i.p.v. op een eigen,
                               # vrijwel lege pagina (H13, B9).
-                              enps_html=_enps_block(_enps_score, _enps_detail))
+                              enps_html=_enps_block(_enps_score, _enps_detail, ST))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
     domain_scores = [(_fl(fk, ST), fa.get(fk))
@@ -7611,7 +8511,7 @@ def render_onboarding_report_html(data: dict) -> str:
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []))
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=STROOK_BREEDTE_VOL)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
         # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
@@ -7660,7 +8560,8 @@ def render_onboarding_report_html(data: dict) -> str:
         s += _werkbeleving_section(
             sdt_a, sim, data["sdt_items"],
             ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
-                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]),
+            factor_avgs=fa)
 
     # eNPS heeft geen eigen hoofdstuk meer: het blok staat bij het
     # checkpointoverzicht (H13, B9), zie _enps_block.
@@ -7789,6 +8690,7 @@ def render_onboarding_report_html(data: dict) -> str:
         tweede_label=_fl(_ob_second_fk, ST) if _ob_second_fk and not _geen_profiel else None,
         review_hint=BESLUIT_REVIEW_HINT[ST],
         heeft_werkvragen=False,
+        heeft_afdelingen=bool(_seg_rows),
         decision=data.get("decision"),
         decision_unavailable=bool(data.get("decision_unavailable")))
 

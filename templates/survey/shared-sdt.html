@@ -1,7 +1,7 @@
 <div class="step {% if scan_type != "exit" %}active{% endif %}" data-step="{% if scan_type == "exit" %}2{% else %}1{% endif %}" data-label="Werkbeleving">
   <div class="card">
     <div class="card-title">
-      {% if scan_type == "exit" %}Stap 2{% else %}Stap 1{% endif %} — Werkbeleving
+      {% if scan_type == "exit" %}Stap 2{% else %}Stap 1{% endif %}: Werkbeleving
     </div>
     <p style="color:var(--muted);font-size:13px;margin-bottom:24px;">
       {{ scan.sdt_intro }}

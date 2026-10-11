@@ -4,10 +4,10 @@
 {% set step_dp = 4 if scan_type == "exit" else 3 %}
 <div class="step" data-step="{{ step_dp }}" data-label="Verduidelijking" id="deepening-step">
   <div class="card">
-    <div class="card-title">Stap {{ step_dp }} — Korte verduidelijking</div>
+    <div class="card-title">Stap {{ step_dp }}: Korte verduidelijking</div>
     <p style="color:var(--muted);font-size:13px;margin-bottom:24px;">
-      Soms stellen we een korte verduidelijkingsvraag bij enkele onderwerpen. Je antwoord wordt
-      niet individueel teruggekoppeld; we tonen alleen groepsuitkomsten bij voldoende antwoorden.
+      Bij enkele onderwerpen volgt een korte verduidelijkingsvraag. Je antwoord wordt niet
+      individueel teruggekoppeld; Loep toont alleen groepsuitkomsten bij voldoende antwoorden.
     </p>
     <div id="deepening-blocks"></div>
   </div>
@@ -28,10 +28,10 @@
 {% set step_dir = (4 if scan_type == "exit" else 3) + (1 if deepening_sets else 0) %}
 <div class="step" data-step="{{ step_dir }}" data-label="{% if scan_type == "exit" %}Wat had geholpen{% else %}Wat zou helpen{% endif %}" id="direction-step">
   <div class="card">
-    <div class="card-title">Stap {{ step_dir }} — {% if scan_type == "exit" %}Wat had geholpen?{% else %}Wat zou helpen?{% endif %}</div>
+    <div class="card-title">Stap {{ step_dir }}: {% if scan_type == "exit" %}Wat had geholpen?{% else %}Wat zou helpen?{% endif %}</div>
     <p style="color:var(--muted);font-size:13px;margin-bottom:8px;">
       Eén korte vraag over het onderwerp dat bij jou het laagst scoorde. Je antwoord wordt
-      niet individueel teruggekoppeld; we tonen alleen groepsuitkomsten.
+      niet individueel teruggekoppeld; Loep toont alleen groepsuitkomsten.
     </p>
     <p style="color:var(--muted);font-size:12px;margin-bottom:24px;">
       Dit helpt het gesprek te richten. Het is geen toezegging dat dit wordt uitgevoerd.

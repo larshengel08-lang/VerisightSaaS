@@ -34,6 +34,19 @@ def _weasyprint_can_render() -> bool:
         return False
 
 
+@pytest.fixture(scope="module")
+def stresstest_naar_tmp(tmp_path_factory):
+    """Stresstest-scenario's (scripts/stresstest_report.py) renderen naar een
+    tijdelijke map in plaats van docs/stresstest. Gebruik per testmodule met
+    `pytestmark = pytest.mark.usefixtures("stresstest_naar_tmp")`. Module-scope,
+    zodat een module-cache van gerenderde HTML binnen dezelfde map blijft."""
+    from scripts import stresstest_report as st
+    out = tmp_path_factory.mktemp("stresstest")
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(st, "OUT_DIR", out)
+        yield out
+
+
 requires_weasyprint = pytest.mark.skipif(
     not _weasyprint_can_render(),
     reason="WeasyPrint (GTK/Pango) kan hier niet renderen — valideer lokaal via "

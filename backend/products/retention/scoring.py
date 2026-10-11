@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import HTTPException
-
 from backend.products.shared.enps import build_enps_summary
 from backend.products.shared.org_factors import compute_org_scores
 from backend.products.shared.sdt import compute_sdt_scores, scale_to_ten
 from backend.scoring import get_recommendations
 from backend.scoring_config import ORG_FACTOR_KEYS, RETENTION_SCAN_WEIGHTS, RISK_HIGH, RISK_MEDIUM, SCORING_VERSION
+from backend.survey_messages import reject_incomplete
 
 
 def compute_retention_signal_profile(
@@ -102,18 +101,18 @@ def compute_retention_supplemental_scores(
 def validate_submission(payload: Any) -> None:
     expected_sdt = {f"B{i}" for i in range(1, 13)}
     if set(payload.sdt_raw.keys()) != expected_sdt:
-        raise HTTPException(status_code=422, detail="RetentieScan vereist alle 12 werkbelevingsitems.")
+        raise reject_incomplete("RetentieScan vereist alle 12 werkbelevingsitems.")
     expected_org = {f"{factor}_{index}" for factor in ORG_FACTOR_KEYS for index in range(1, 4)}
     if set(payload.org_raw.keys()) != expected_org:
-        raise HTTPException(status_code=422, detail="RetentieScan vereist alle standaard werkfactoritems.")
+        raise reject_incomplete("RetentieScan vereist alle standaard werkfactoritems.")
     if len(payload.uwes_raw) != 3:
-        raise HTTPException(status_code=422, detail="RetentieScan vereist 3 bevlogenheidsitems.")
+        raise reject_incomplete("RetentieScan vereist 3 bevlogenheidsitems.")
     if len(payload.turnover_intention_raw) != 2:
-        raise HTTPException(status_code=422, detail="RetentieScan vereist 2 vertrekintentie-items.")
+        raise reject_incomplete("RetentieScan vereist 2 vertrekintentie-items.")
     if payload.enps_score is None:
-        raise HTTPException(status_code=422, detail="RetentieScan vereist een eNPS-antwoord.")
+        raise reject_incomplete("RetentieScan vereist een eNPS-antwoord.")
     if payload.stay_intent_score is None:
-        raise HTTPException(status_code=422, detail="RetentieScan vereist een stay-intent antwoord.")
+        raise reject_incomplete("RetentieScan vereist een stay-intent antwoord.")
 
 
 def score_submission(

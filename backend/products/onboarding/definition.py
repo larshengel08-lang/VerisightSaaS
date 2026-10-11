@@ -6,6 +6,11 @@ from backend.products.shared.definitions import build_org_sections
 
 DEFAULT_ONBOARDING_MODULES = ["leadership", "role_clarity", "culture", "growth"]
 
+# Invultijd in minuten: een bron voor survey_intro, invite_duration en de
+# startpagina (spec 2026-10-09 par. 4). frontend/lib/campaign-setup.ts
+# SURVEY_MINUTES moet gelijk blijven (tests/test_polijstronde_respondent.py).
+SURVEY_MINUTES = 3
+
 SCAN_DEFINITION: dict[str, Any] = {
     "product_name": "Loep Start",
     "signal_label": "Onboardingsignaal",
@@ -34,10 +39,11 @@ SCAN_DEFINITION: dict[str, Any] = {
             "multi-checkpoint journey- of retentiemodel en ook geen client onboarding-route."
         ),
     },
+    "survey_minutes": SURVEY_MINUTES,
     "survey_intro": (
-        "Deze onboarding-scan is een korte check op hoe nieuwe medewerkers op dit moment landen in hun rol, team en "
-        "werkcontext. De uitkomst wordt alleen op groepsniveau gebruikt als managementread voor dit ene checkpoint. "
-        "Invullen kost circa 3 minuten."
+        "Deze vragenlijst over je eerste periode is een korte check op hoe je nu landt in je rol, je team en je "
+        "werk. De uitkomst wordt alleen per groep bekeken, als een groepsbeeld voor dit ene meetmoment. "
+        "Invullen kost ongeveer " + str(SURVEY_MINUTES) + " minuten."
     ),
     "survey_privacy_note": (
         "Je antwoorden worden vertrouwelijk verwerkt en alleen op groepsniveau gebruikt. Deze meting helpt de "
@@ -72,7 +78,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         "Je bent uitgenodigd voor een korte onboarding-check over hoe je nu landt in je rol, team en werkcontext. "
         "Deze compacte meting helpt de organisatie zien waar nieuwe medewerkers in deze fase steun of duidelijkheid nodig hebben."
     ),
-    "invite_duration": "3-5 minuten",
+    "invite_duration": "ongeveer " + str(SURVEY_MINUTES) + " minuten",
     "contact_subject": "Kennismakingsaanvraag Loep Start",
     "dashboard_signal_help": (
         "Onboardingsignaal 1-10: hoe nieuwe medewerkers hun eerste werkperiode ervaren, samengebracht tot een "

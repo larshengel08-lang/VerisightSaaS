@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from backend.email import EmailSendResult, send_contact_request_result
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.scoring import ORG_FACTOR_KEYS
+from backend.survey_messages import SURVEY_INCOMPLETE_MESSAGE
 from tests.conftest import requires_weasyprint
 
 
@@ -462,17 +463,18 @@ def test_survey_submit_rejects_duplicate_submission(client, db_session: Session)
     response = client.post("/survey/submit", json=_survey_payload(respondent.token))
 
     assert response.status_code == 409
-    assert response.json()["detail"] == "Survey al ingevuld."
+    assert response.json()["detail"] == "Je hebt deze vragenlijst al ingevuld."
 
 
 def test_survey_submit_rejects_unknown_token(client):
     response = client.post("/survey/submit", json=_survey_payload("missing-token"))
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Ongeldige token."
+    assert response.json()["detail"] == "Deze link naar de vragenlijst klopt niet."
 
 
-def test_exit_survey_submit_requires_signal_visibility_answer(client, db_session: Session):
+def test_exit_survey_submit_requires_signal_visibility_answer(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     org = _create_org(db_session, api_key="missing-signal-key")
     campaign = _create_campaign(db_session, org, name="Exit zonder signalering")
     respondent = _create_respondent(db_session, campaign)
@@ -482,10 +484,13 @@ def test_exit_survey_submit_requires_signal_visibility_answer(client, db_session
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert "eerdere signalering" in response.json()["detail"]
+    # Respondent leest welke stap hij moet nalopen; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_INCOMPLETE_MESSAGE
+    assert "ExitScan vereist een antwoord op eerdere signalering." in caplog.text
 
 
-def test_exit_survey_submit_requires_enps_answer(client, db_session: Session):
+def test_exit_survey_submit_requires_enps_answer(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     org = _create_org(db_session, api_key="missing-enps-key")
     campaign = _create_campaign(db_session, org, name="Exit zonder eNPS")
     respondent = _create_respondent(db_session, campaign)
@@ -495,7 +500,9 @@ def test_exit_survey_submit_requires_enps_answer(client, db_session: Session):
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert "eNPS" in response.json()["detail"]
+    # Respondent leest welke stap hij moet nalopen; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_INCOMPLETE_MESSAGE
+    assert "ExitScan vereist een eNPS-antwoord." in caplog.text
 
 
 def test_retention_survey_submit_persists_normalized_scores_and_summary(client, db_session: Session):
@@ -544,7 +551,8 @@ def test_retention_report_route_returns_pdf(client, db_session: Session):
     assert response.content.startswith(b"%PDF")
 
 
-def test_retention_survey_submit_rejects_incomplete_signal_blocks(client, db_session: Session):
+def test_retention_survey_submit_rejects_incomplete_signal_blocks(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     org = _create_org(db_session, api_key="retention-incomplete-key")
     campaign = _create_campaign(db_session, org, name="Retentie Incompleet", scan_type="retention")
     respondent = _create_respondent(db_session, campaign, email="retention-incomplete@example.com", department="People")
@@ -555,10 +563,13 @@ def test_retention_survey_submit_rejects_incomplete_signal_blocks(client, db_ses
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert "RetentieScan vereist" in response.json()["detail"]
+    # Respondent leest welke stap hij moet nalopen; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_INCOMPLETE_MESSAGE
+    assert "RetentieScan vereist 3 bevlogenheidsitems." in caplog.text
 
 
-def test_retention_survey_submit_requires_enps_answer(client, db_session: Session):
+def test_retention_survey_submit_requires_enps_answer(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     org = _create_org(db_session, api_key="retention-missing-enps-key")
     campaign = _create_campaign(db_session, org, name="Retentie zonder eNPS", scan_type="retention")
     respondent = _create_respondent(db_session, campaign, email="retention-missing-enps@example.com", department="People")
@@ -568,7 +579,9 @@ def test_retention_survey_submit_requires_enps_answer(client, db_session: Sessio
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert "eNPS" in response.json()["detail"]
+    # Respondent leest welke stap hij moet nalopen; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_INCOMPLETE_MESSAGE
+    assert "RetentieScan vereist een eNPS-antwoord." in caplog.text
 
 
 def test_pulse_survey_submit_persists_snapshot_summary(client, db_session: Session):

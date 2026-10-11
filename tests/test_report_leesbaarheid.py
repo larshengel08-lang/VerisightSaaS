@@ -93,7 +93,7 @@ def test_sectie_intros_aanwezig():
     d["sdt_items"] = [("B1", "Ik bepaal zelf hoe ik mijn werk indeel")]
     html = render_retention_report_html(d)
     for frase in [
-        "samenvattende groepsscore",          # behoudscontext: opbouw behoudssignaal
+        "samenvattende groepsscore",          # behoudscontext: opbouw werkbeeld
         "gemeten met drie stellingen",           # overzichtsprofiel: wat is een onderwerp
         "basisbehoeften",                       # werkbeleving/SDT: waarom gemeten
         "ontvangstvolgorde",                    # open toelichtingen: selectie

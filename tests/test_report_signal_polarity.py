@@ -42,12 +42,13 @@ def test_signal_health_inverts_risk():
 # ── _band: retention/onboarding op de gezondheidsladder, exit ongewijzigd ────
 
 def test_band_retention_follows_health_ladder():
-    assert _band(8.0, "retention")[0] == "Behoudsklimaat stabiel"
-    assert _band(6.5, "retention")[0] == "Behoudsklimaat stabiel"
-    assert _band(6.4, "retention")[0] == "Behoud vraagt aandacht"
-    assert _band(5.0, "retention")[0] == "Behoud vraagt aandacht"
-    assert _band(4.0, "retention")[0] == "Behoud onder druk"
-    assert _band(4.9, "retention")[0] == "Behoud onder druk"
+    # Polijstronde R12: de labels onder de tegel Werkbeeld zijn de p.03-set.
+    assert _band(8.0, "retention")[0] == "Relatief sterk"
+    assert _band(6.5, "retention")[0] == "Relatief sterk"
+    assert _band(6.4, "retention")[0] == "Aandachtspunt"
+    assert _band(5.0, "retention")[0] == "Aandachtspunt"
+    assert _band(4.0, "retention")[0] == "Kwetsbaar punt"
+    assert _band(4.9, "retention")[0] == "Kwetsbaar punt"
 
 
 def test_band_onboarding_follows_health_ladder():
@@ -58,42 +59,43 @@ def test_band_onboarding_follows_health_ladder():
 
 def test_band_exit_keeps_risk_polarity():
     assert _band(7.5, "exit")[0] == "Sterk frictiebeeld"
-    assert _band(5.0, "exit")[0] == "Gemengd vertrekbeeld"
+    assert _band(5.0, "exit")[0] == "Gemengd frictiebeeld"
     assert _band(3.0, "exit")[0] == "Laag frictiebeeld"
 
 
 # ── _behoudscontext: één ladder voor kleur en note ───────────────────────────
 
-def _sigrow_behoudssignaal(html: str) -> str:
+def _sigrow_werkbeeld(html: str) -> str:
     # Op de sigrow-titel geankerd en niet op het kale woord: sinds ronde 2
     # (taak 3) draagt ook de onderbouwingscel op p.02 het label
-    # "Behoudssignaal", en die staat eerder in het document.
-    start = html.index('<div class="sigrow-title">Behoudssignaal</div>')
+    # "Werkbeeld" (polijstronde: was "Behoudssignaal"), en die staat eerder
+    # in het document.
+    start = html.index('<div class="sigrow-title">Werkbeeld</div>')
     end = html.index('class="sigrow"', start) if 'class="sigrow"' in html[start:] else len(html)
     return html[start:end]
 
 
 def test_behoudscontext_strong_signal_is_teal_and_sterk():
     html = _behoudscontext(retention_score=8.0, stay_intent=None, turnover=None, engagement=None)
-    row = _sigrow_behoudssignaal(html)
+    row = _sigrow_werkbeeld(html)
     assert "8.0/10" in row
     assert "#3C8D8A" in row
-    assert '<span class="sigrow-note">sterk</span>' in row
+    assert '<span class="sigrow-note">relatief sterk</span>' in row
 
 
 def test_behoudscontext_weak_signal_is_red_and_onder_druk():
     html = _behoudscontext(retention_score=3.5, stay_intent=None, turnover=None, engagement=None)
-    row = _sigrow_behoudssignaal(html)
+    row = _sigrow_werkbeeld(html)
     assert "3.5/10" in row
     assert "#C0392B" in row
-    assert '<span class="sigrow-note">onder druk</span>' in row
+    assert '<span class="sigrow-note">kwetsbaar punt</span>' in row
 
 
 def test_behoudscontext_middle_signal_is_amber_and_vraagt_aandacht():
     html = _behoudscontext(retention_score=5.8, stay_intent=None, turnover=None, engagement=None)
-    row = _sigrow_behoudssignaal(html)
+    row = _sigrow_werkbeeld(html)
     assert "#C17C00" in row
-    assert '<span class="sigrow-note">vraagt aandacht</span>' in row
+    assert '<span class="sigrow-note">aandachtspunt</span>' in row
 
 
 def test_checkpointoverzicht_colour_follows_health_ladder():
@@ -173,14 +175,14 @@ def test_retention_kernzin_shows_health_value_and_matching_band():
     html = render_retention_report_html(_min_data("retention", 3.0))
     # De regex op "behoudssignaal 8.0/10" is vervallen: dat woord stond in de
     # kernzin, en het getal draagt zijn duiding nu via het cel-label hieronder.
-    cel = _signaalcel(html, "Behoudssignaal")
-    assert "8.0/10" in cel and "Behoudsklimaat stabiel" in cel
-    assert "3.0/10" not in _sigrow_behoudssignaal(html)
+    cel = _signaalcel(html, "Werkbeeld")
+    assert "8.0/10" in cel and "Relatief sterk" in cel
+    assert "3.0/10" not in _sigrow_werkbeeld(html)
 
     html_low = render_retention_report_html(_min_data("retention", 7.0))
-    cel_low = _signaalcel(html_low, "Behoudssignaal")
-    assert "4.0/10" in cel_low and "Behoud onder druk" in cel_low
-    assert '<span class="sigrow-note">onder druk</span>' in _sigrow_behoudssignaal(html_low)
+    cel_low = _signaalcel(html_low, "Werkbeeld")
+    assert "4.0/10" in cel_low and "Kwetsbaar punt" in cel_low
+    assert '<span class="sigrow-note">kwetsbaar punt</span>' in _sigrow_werkbeeld(html_low)
 
 
 def test_onboarding_kernzin_shows_health_value_and_matching_band():
@@ -277,13 +279,15 @@ def test_de_andere_twee_rijen_kleuren_ook_als_hun_stippen(signaal, v):
 
 
 @pytest.mark.parametrize("v,verwacht_note,verwacht_telling", [
-    (2.0, "laag", "Weinig vertrekgedachten"),
-    (3.0, "laag", "Weinig vertrekgedachten"),
-    (4.9, "beperkt", "Weinig vertrekgedachten"),
-    (5.0, "zichtbaar", "Aandacht"),          # ZONE_LOW zelf hoort in het midden
-    (6.4, "zichtbaar", "Aandacht"),
-    (6.5, "hoog: actief vertrekrisico", "Veel vertrekgedachten"),  # ZONE_HIGH zelf bovenin
-    (8.0, "hoog: actief vertrekrisico", "Veel vertrekgedachten"),
+    # Polijstronde R12: de note is de zonenaam van de strook zelf, met
+    # "aandachtspunt" voor het midden.
+    (2.0, "weinig vertrekgedachten", "Weinig vertrekgedachten"),
+    (3.0, "weinig vertrekgedachten", "Weinig vertrekgedachten"),
+    (4.9, "weinig vertrekgedachten", "Weinig vertrekgedachten"),
+    (5.0, "aandachtspunt", "Aandacht"),          # ZONE_LOW zelf hoort in het midden
+    (6.4, "aandachtspunt", "Aandacht"),
+    (6.5, "veel vertrekgedachten", "Veel vertrekgedachten"),  # ZONE_HIGH zelf bovenin
+    (8.0, "veel vertrekgedachten", "Veel vertrekgedachten"),
 ])
 def test_de_note_zegt_hetzelfde_als_de_zone_waar_de_stip_in_valt(v, verwacht_note,
                                                                  verwacht_telling):
@@ -308,7 +312,7 @@ def test_rij_kleurt_op_de_getoonde_score_en_de_stip_op_zijn_positie():
     html = _behoudscontext(retention_score=None, stay_intent=None, turnover=v,
                            engagement=None, intent_resp={"turnover": [v] * 12})
     assert '<span class="sigrow-score" style="color:#C17C00;">5.0/10</span>' in html
-    assert '<span class="sigrow-note">zichtbaar</span>' in html
+    assert '<span class="sigrow-note">aandachtspunt</span>' in html
     rij, stippen = _rij_en_stipkleur("turnover", v)
     assert rij == "#C17C00" and stippen == {"#3C8D8A"}
     # De telling volgt de stippen, dus die zegt hetzelfde als hun kleur.

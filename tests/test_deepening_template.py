@@ -23,7 +23,7 @@ def test_retention_survey_contains_deepening_step(client, db_session: Session):
     assert "__DEEPENING_SETS" in html
     # Retention-cap 2->3 per spec 2026-07-05 (gespreksrichting-ronde).
     assert "__DEEPENING_CAP = 3" in html
-    assert "Soms stellen we een korte verduidelijkingsvraag" in html
+    assert "Bij enkele onderwerpen volgt een korte verduidelijkingsvraag" in html
     # Scan-specifieke tekst (tegenwoordige tijd) meegeleverd in de JSON.
     assert "Welke omschrijving past het best bij jouw ervaring met werkbelasting?" in html
 

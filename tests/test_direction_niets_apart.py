@@ -9,7 +9,11 @@ naast een tabel met 3 niets-stemmen als een rekenfout.
 
 Zonder niets-stemmen (en zonder rijen zonder keuze) blijft elke zin byte-gelijk:
 BASELINE hieronder is de uitvoer van HEAD (a8db33a3) vóór deze wijziging,
-letterlijk overgenomen.
+letterlijk overgenomen; de */p02-regels zijn bijgewerkt na polijstronde taak 2
+(R18: geen percentage op pagina twee; bij de grootste groep eerst de opdracht,
+dan de noemer in een slotzin). Sinds polijstronde taak 5 komen op de kaart de
+niets-rij, de niet-gekozen-regel en zo nodig de beperkte-basis-regel erbij
+(TOEVOEGINGEN); de test haalt die eruit en vergelijkt de rest byte voor byte.
 """
 import itertools
 import logging
@@ -68,15 +72,15 @@ BASELINE = {
     'retention/clear0/card': '<td class="dir-card dir-clear"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><div class="dir-src">Volgens 6 van de 8; die 8 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij zijn</td><td class="is">6 van de 8</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">2 van de 8</td></tr></table><div class="dir-chain">8 van de 8 respondenten hadden dit als eigen laagste onderwerp; 8 van de 8 beantwoordden de vraag.</div></td>',
     'retention/clear0/p02': 'Wat er moet gebeuren volgens 6 van de 8 die dit het laagst scoorden en de vraag beantwoordden: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
     'retention/plur0/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij zijn’, zonder meerderheid.</div><div class="dir-src">3 van de 7 kozen die richting; 1 koos ‘Een concreter gesprek over mijn ontwikkeling’. Die 7 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij zijn</td><td class="is">3 van de 7</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei wordt bepaald</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">1 van de 7</td></tr></table><div class="dir-chain">7 van de 7 respondenten hadden dit als eigen laagste onderwerp; 7 van de 7 beantwoordden de vraag.</div></td>',
-    'retention/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'retention/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden.',
     'retention/plur0big/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij zijn’, zonder meerderheid.</div><div class="dir-src">8 van de 20 (40%) kozen die richting; 5 kozen ‘Een concreter gesprek over mijn ontwikkeling’. Die 20 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij zijn</td><td class="is">8 van de 20 (40%)</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">5 van de 20 (25%)</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">4 van de 20 (20%)</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei wordt bepaald</td><td class="is">3 van de 20 (15%)</td></tr></table><div class="dir-chain">20 van de 20 respondenten hadden dit als eigen laagste onderwerp; 20 van de 20 beantwoordden de vraag.</div></td>',
-    'retention/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, 8 van de 20 (40%) die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'retention/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 8 van de 20 die dit het laagst scoorden en de vraag beantwoordden.',
     'exit/clear0/card': '<td class="dir-card dir-clear"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><div class="dir-src">Volgens 6 van de 8; die 8 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij waren</td><td class="is">6 van de 8</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">2 van de 8</td></tr></table><div class="dir-chain">8 van de 8 respondenten hadden dit als eigen laagste onderwerp; 8 van de 8 beantwoordden de vraag.</div></td>',
     'exit/clear0/p02': 'Wat er moet gebeuren volgens 6 van de 8 die dit het laagst scoorden en de vraag beantwoordden: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
     'exit/plur0/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij waren’, zonder meerderheid.</div><div class="dir-src">3 van de 7 kozen die richting; 1 koos ‘Een concreter gesprek over mijn ontwikkeling’. Die 7 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij waren</td><td class="is">3 van de 7</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei werd bepaald</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkelafspraken concreter vastleggen en zichtbaar opvolgen</td><td class="is">1 van de 7</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">1 van de 7</td></tr></table><div class="dir-chain">7 van de 7 respondenten hadden dit als eigen laagste onderwerp; 7 van de 7 beantwoordden de vraag.</div></td>',
-    'exit/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'exit/plur0/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 3 van de 7 die dit het laagst scoorden en de vraag beantwoordden.',
     'exit/plur0big/card': '<td class="dir-card dir-plurality"><div class="dir-role">Startpunt: Groeiperspectief</div><div class="dir-head">De grootste groep kiest ‘Beter zicht op welke mogelijkheden er voor mij waren’, zonder meerderheid.</div><div class="dir-src">8 van de 20 (40%) kozen die richting; 5 kozen ‘Een concreter gesprek over mijn ontwikkeling’. Die 20 zijn de mensen bij wie groeiperspectief het laagst scoorde en die de vraag beantwoordden. Wat er volgens de grootste groep moet gebeuren: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.</div><table class="item-tbl dir-tbl"><tr><td class="iq">Beter zicht op welke mogelijkheden er voor mij waren</td><td class="is">8 van de 20 (40%)</td></tr><tr><td class="iq">Een concreter gesprek over mijn ontwikkeling</td><td class="is">5 van de 20 (25%)</td></tr><tr><td class="iq">Ontwikkeling beter inplannen naast het reguliere werk</td><td class="is">4 van de 20 (20%)</td></tr><tr><td class="iq">Duidelijkere criteria voor hoe doorgroei werd bepaald</td><td class="is">3 van de 20 (15%)</td></tr></table><div class="dir-chain">20 van de 20 respondenten hadden dit als eigen laagste onderwerp; 20 van de 20 beantwoordden de vraag.</div></td>',
-    'exit/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, 8 van de 20 (40%) die dit het laagst scoorden en de vraag beantwoordden, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn.',
+    'exit/plur0big/p02': 'Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: Maak zichtbaar welke mogelijkheden er voor medewerkers zijn. Dat zijn 8 van de 20 die dit het laagst scoorden en de vraag beantwoordden.',
 }
 # fmt: on
 
@@ -89,11 +93,46 @@ BASE_CASES = {
 }
 
 
+# Polijstronde taak 5 voegt aan de kaart toe: de niets-rij onder de richtingen
+# (R22, ook bij 0 stemmen), de regel met de niet gekozen richtingen (R19) en de
+# beperkte-basis-regel als de richting op minder dan tien veranderkeuzes rust
+# (V10). Per geval: de telling in de niets-rij, de niet gekozen opties en of de
+# beperkte-basis-regel erbij komt.
+TOEVOEGINGEN = {
+    "clear0": ("0 van de 8", ["grd_conversation", "grd_followthrough", "grd_criteria",
+                              "grd_nextstep"], True),
+    "plur0": ("0 van de 7", ["grd_nextstep"], True),
+    "plur0big": ("0 van de 20 (0%)", ["grd_followthrough", "grd_nextstep"], False),
+}
+
+
+def _zonder_toevoegingen(html):
+    html = re.sub(r'<tr class="dir-niets">.*?</tr>', "", html, count=1)
+    html = re.sub(r'<div class="dir-unchosen">.*?</div>', "", html, count=1)
+    return re.sub(r'<p class="dir-caveat">Beperkte basis.*?</p>', "", html, count=1)
+
+
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 @pytest.mark.parametrize("name", sorted(BASE_CASES))
 def test_zonder_niets_byte_gelijk(scan_type, name):
+    """Zonder niets-stemmen: alleen de niets-rij met 0, de niet-gekozen-regel
+    en (V10) de beperkte-basis-regel erbij; de rest van de kaart en pagina
+    twee blijven byte-gelijk aan BASELINE."""
     a = BASE_CASES[name]
-    assert card(a, scan_type) == BASELINE[f"{scan_type}/{name}/card"]
+    html = card(a, scan_type)
+    telling, niet_gekozen, voorbehoud = TOEVOEGINGEN[name]
+    teksten = direction_option_texts(scan_type, "growth")
+    assert (f'<tr class="dir-niets"><td class="iq">{NIETS[scan_type]}</td>'
+            f'<td class="is">{telling}</td></tr></table>') in html
+    # Taak 11 terugvaloptie 1: de korte vorm, alleen het aantal.
+    unchosen = html.split('class="dir-unchosen"')[1].split("</div>")[0]
+    for k in niet_gekozen:
+        assert teksten[k] not in unchosen
+    aantal = (f"{len(niet_gekozen)} andere richting" if len(niet_gekozen) == 1
+              else f"{len(niet_gekozen)} andere richtingen")
+    assert f'<div class="dir-unchosen">Niet gekozen: {aantal}.</div>' in html
+    assert ('<p class="dir-caveat">Beperkte basis' in html) is voorbehoud
+    assert _zonder_toevoegingen(html) == BASELINE[f"{scan_type}/{name}/card"]
     assert p02(a, scan_type) == BASELINE[f"{scan_type}/{name}/p02"]
 
 
@@ -103,6 +142,10 @@ CLEAR_NIETS = agg(8, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
 # zonder "van wie om verandering vroeg" zou letterlijk onwaar zijn.
 PLUR_NIETS = agg(20, {"grd_none": 8, "grd_visibility": 5, "grd_conversation": 3,
                       "grd_time": 2, "grd_criteria": 2})
+# Spec 2026-10-09 par. 3: met niets 8 > route 5 is PLUR_NIETS nu verdeeld. Deze
+# invoer bewijst de plurality-met-niets: niets (4) kleiner dan de route (5).
+PLUR_NIETS_KLEIN = agg(16, {"grd_none": 4, "grd_visibility": 5, "grd_conversation": 3,
+                            "grd_time": 2, "grd_criteria": 2})
 
 
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
@@ -124,21 +167,41 @@ def test_clear_p02_noemt_noemer_en_niets(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_plurality_kaart_met_niets(scan_type):
     html = card(PLUR_NIETS, scan_type)
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    assert "dir-card dir-divided" in html
+    assert head(html) == "Geen eenduidige richting."
+    assert src(html) == (
+        "De 20 die dit het laagst scoorden en de vraag beantwoordden zijn verdeeld: "
+        f"meer mensen kozen ‘{NIETS[scan_type]}’ (8) dan de grootste richting (5).")
+
+
+@pytest.mark.parametrize("scan_type", ["retention", "exit"])
+def test_plurality_p02_met_niets(scan_type):
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
+    assert p02(PLUR_NIETS, scan_type) == (
+        "Over wat hier moet gebeuren zijn de 20 die dit het laagst scoorden en de vraag "
+        "beantwoordden verdeeld: 8 vinden dat hier niets hoeft, tegen 5 voor de "
+        "grootste richting.")
+
+
+@pytest.mark.parametrize("scan_type", ["retention", "exit"])
+def test_plurality_kaart_met_niets_kleiner_dan_de_route(scan_type):
+    html = card(PLUR_NIETS_KLEIN, scan_type)
     assert "dir-card dir-plurality" in html
     assert head(html) == ("Van wie om verandering vroeg, kiest de grootste groep "
                           f"‘{OPT_VIS[scan_type]}’, zonder meerderheid.")
     assert src(html) == (
         "5 van de 12 (42%) die om verandering vroegen, kozen die richting; 3 kozen "
-        f"‘Een concreter gesprek over mijn ontwikkeling’; 8 kozen ‘{NIETS[scan_type]}’. "
-        f"Die 20 {NOEMER} Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
+        f"‘Een concreter gesprek over mijn ontwikkeling’; 4 kozen ‘{NIETS[scan_type]}’. "
+        f"Die 16 {NOEMER} Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
 
 
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
-def test_plurality_p02_met_niets(scan_type):
-    assert p02(PLUR_NIETS, scan_type) == (
-        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
-        f"en om verandering vroeg, 5 van de 12 (42%), zonder meerderheid: {IMP_VIS} "
-        "8 vinden dat hier niets hoeft.")
+def test_plurality_p02_met_niets_kleiner_dan_de_route(scan_type):
+    assert p02(PLUR_NIETS_KLEIN, scan_type) == (
+        "Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: "
+        f"{IMP_VIS} Dat zijn 5 van de 12 die dit het laagst scoorden en om "
+        "verandering vroegen; 4 vinden dat hier niets hoeft.")
 
 
 def test_enkelvoud_bij_een_niets_stem():
@@ -171,13 +234,17 @@ def test_rijen_zonder_keuze_krijgen_een_zin_en_alles_telt_op():
     # Eén rij zonder keuze: zelfde zin, geen enkelvoudsprobleem.
     d = agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3})
     assert src(card(d, "retention")).endswith("Bij 1 van hen is geen keuze vastgelegd.")
-    # Plurality: de slotzin hoort bij de noemer, vóór de opdrachtvorm.
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld. De
+    # defectzin staat ook daar direct achter de tellingen op de kaart.
     c = agg(23, {"grd_none": 8, "grd_visibility": 5, "grd_conversation": 3,
                  "grd_time": 2, "grd_criteria": 2})
-    assert (f"Die 23 {NOEMER} Bij 3 van hen is geen keuze vastgelegd. Wat er volgens "
-            "de grootste groep") in src(card(c, "retention"))
+    assert src(card(c, "retention")) == (
+        "De 23 die dit het laagst scoorden en de vraag beantwoordden zijn verdeeld: "
+        "meer mensen kozen ‘Niets, dit zit hier goed’ (8) dan de grootste richting (5). "
+        "Bij 3 van hen is geen keuze vastgelegd.")
     assert p02(c, "retention").endswith(
-        "8 vinden dat hier niets hoeft. Bij 3 antwoorden is geen keuze vastgelegd.")
+        "8 vinden dat hier niets hoeft, tegen 5 voor de grootste richting. "
+        "Bij 3 antwoorden is geen keuze vastgelegd.")
 
 
 def test_plurality_met_rijen_zonder_keuze_en_zonder_niets():
@@ -193,9 +260,9 @@ def test_plurality_met_rijen_zonder_keuze_en_zonder_niets():
         f"concreter gesprek over mijn ontwikkeling’. Die 10 {NOEMER} Bij 1 van hen is "
         f"geen keuze vastgelegd. Wat er volgens de grootste groep moet gebeuren: {IMP_VIS}")
     assert p02(a, "retention") == (
-        "Wat er moet gebeuren volgens de grootste groep van wie dit het laagst scoorde "
-        f"en om verandering vroeg, 4 van de 9, zonder meerderheid: {IMP_VIS} Bij 1 "
-        "antwoord is geen keuze vastgelegd.")
+        "Wat er moet gebeuren volgens de grootste groep, zonder meerderheid: "
+        f"{IMP_VIS} Dat zijn 4 van de 9 die dit het laagst scoorden en om "
+        "verandering vroegen. Bij 1 antwoord is geen keuze vastgelegd.")
 
 
 def test_plurality_tweede_is_nooit_de_niets_optie():
@@ -236,6 +303,7 @@ def test_getallen_tellen_op_in_clear_en_plurality():
             assert re.search(rf"van de {st['change_n']}( \(\d+%\))? die om verandering vroegen", s), s
             r = p02(a, "retention")
             assert "om verandering vroeg" in r, r
+            assert "%" not in r, r  # R18: pagina twee zonder percentage
             if st["none_n"]:
                 vorm = "koos" if st["none_n"] == 1 else "kozen"
                 assert f"{st['none_n']} {vorm} ‘Niets" in s, s
@@ -253,7 +321,7 @@ def test_getallen_tellen_op_in_clear_en_plurality():
 
 def _alle_teksten():
     for scan_type in ("retention", "exit"):
-        for a in [*BASE_CASES.values(), CLEAR_NIETS, PLUR_NIETS,
+        for a in [*BASE_CASES.values(), CLEAR_NIETS, PLUR_NIETS, PLUR_NIETS_KLEIN,
                   agg(10, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3}),
                   agg(8, {"grd_visibility": 3}),
                   agg(9, {"grd_visibility": 4, "grd_time": 1, "grd_none": 3}),
@@ -287,12 +355,14 @@ def test_niets_tekst_gelijk_over_factoren(scan_type):
 @pytest.mark.parametrize("scan_type", ["retention", "exit"])
 def test_methodiek_legt_uit_dat_niets_geen_richting_is(scan_type):
     html = _trust_page(scan_type, direction_active=True)
+    # Spec 2026-10-09 par. 3: niets >= grootste richting is verdeeld.
     zin = (f"Wie ‘{NIETS[scan_type]}’ koos, telt niet mee bij de vraag welke richting "
-           "de grootste is; hoeveel mensen dat kozen, staat er apart bij. Kiest meer dan "
+           "de grootste is; hoeveel mensen dat kozen, staat er apart bij. Een richting "
+           "heet pas duidelijk, of de grootste groep, als hij meer stemmen heeft dan "
+           f"‘{NIETS[scan_type]}’; anders heet het onderwerp verdeeld. Kiest meer dan "
            "de helft niets, dan staat er dat hier volgens de meesten niets hoeft. Scoort "
-           "het onderwerp onder de 5,0 en is de groep die niets koos even groot als de "
-           "grootste richting, groter, of maar één kleiner, dan heet het onderwerp "
-           "verdeeld.")
+           "het onderwerp onder de 5,0, dan heet het ook verdeeld als de grootste "
+           "richting maar één stem meer heeft dan de niets-groep.")
     assert f"geen advies van Loep. {zin}" in html
 
 

@@ -33,8 +33,10 @@ export const DECISION_LIMITS = { topic: 120, owner: 120, action: 240, text: 240 
 
 // Labels en hints van het blok "Besluit vastleggen". Dezelfde tekst als op de
 // besluitpagina van het rapport (fixronde 24-9, R4, R8, V4): BESLUIT_SLOTLABEL,
-// BESLUIT_PARKEERREGEL, BESLUIT_DATUM_HINT, BESLUIT_TERUGKOPPELING en
-// BESLUIT_REVIEW_HINT in backend/report_html.py.
+// BESLUIT_PARKEERREGEL, BESLUIT_DATUM_HINT, besluit_terugkoppeling en
+// BESLUIT_REVIEW_HINT in backend/report_html.py. De terugkoppelhint is de
+// volledige regel van besluit_terugkoppeling(scan, True): het dashboard weet
+// niet of het rapport afdelingen toont (polijstronde V14).
 // tests/test_report_leesronde_fixes.py leest dit bestand en houdt ze gelijk.
 export const DECISION_SUCCESS_LABEL = 'Waaraan zien we bij het startpunt dat het werkt'
 export const DECISION_SECOND_POINT_HINT =
@@ -45,13 +47,14 @@ const DECISION_FEEDBACK_HINTS: Partial<Record<ScanType, string>> = {
   retention:
     'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
   exit: 'Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de vertrekredenen doet. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
-  onboarding: 'Je mensen vulden in; ze horen wat het MT ermee doet.',
+  onboarding:
+    'Je mensen vulden in; ze horen wat het MT ermee doet. Deel het startpunt, het beeld van de hele groep en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
 }
 
 const DECISION_REVIEW_HINTS: Partial<Record<ScanType, string>> = {
   retention: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
   exit: 'Richtlijn: 45 tot 90 dagen na dit gesprek.',
-  onboarding: 'Richtlijn: rond het volgende checkpoint.',
+  onboarding: 'Richtlijn: rond het volgende checkpoint, ongeveer 30 dagen na dit gesprek.',
 }
 
 function hintForScan(hints: Partial<Record<ScanType, string>>, scanType: string | null | undefined): string | null {

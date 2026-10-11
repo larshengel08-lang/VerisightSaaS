@@ -82,9 +82,11 @@ from backend.survey_window import (
     SURVEY_CLOSED_HINT,
     SURVEY_CLOSED_MESSAGE,
     SURVEY_CLOSED_TITLE,
+    format_closes_at,
     is_survey_open,
     today_amsterdam,
 )
+from backend.survey_messages import reject_stale_answers
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
@@ -1157,8 +1159,8 @@ async def open_survey_intro(
         return _render_survey_status(
             request,
             status_code=404,
-            title="Survey-link ongeldig",
-            heading="Deze survey-link klopt niet",
+            title="Link ongeldig",
+            heading="Deze link naar de vragenlijst klopt niet",
             message="De link is ongeldig. Controleer of je de volledige link hebt geopend.",
             tone="warning",
         )
@@ -1180,7 +1182,14 @@ async def open_survey_intro(
         )
 
     scan = get_scan_definition(campaign.scan_type)
-    product_name = scan.get("product_name", "Survey") if scan else "Survey"
+    product_name = scan.get("product_name", "Vragenlijst") if scan else "Vragenlijst"
+    # Invultijd uit een bron (spec 2026-10-09 par. 4): survey_minutes in de
+    # productdefinitie. Ontbreekt die (niet-verkochte scans), dan laat de
+    # startpagina de tijdzin weg in plaats van een getal te verzinnen.
+    survey_minutes = scan.get("survey_minutes") if scan else None
+    # De startpagina noemt de afgedwongen sluitdag (survey_window.is_survey_open),
+    # in dezelfde vorm als de uitnodiging; zonder sluitdatum geen termijnzin.
+    closes_at_label = format_closes_at(campaign.closes_at) if campaign.closes_at else None
 
     from backend.segments import has_segments, resolve_department
 
@@ -1194,6 +1203,9 @@ async def open_survey_intro(
         "survey-intro.html",
         context={
             "product_name": product_name,
+            "scan_type": campaign.scan_type,
+            "survey_minutes": survey_minutes,
+            "closes_at_label": closes_at_label,
             "public_survey_token": public_survey_token,
             "afd_slug": afd_slug if resolved_label else "",
             "show_chooser": show_chooser,
@@ -1225,8 +1237,8 @@ async def open_survey_start(
         return _render_survey_status(
             request,
             status_code=404,
-            title="Survey-link ongeldig",
-            heading="Deze survey-link klopt niet",
+            title="Link ongeldig",
+            heading="Deze link naar de vragenlijst klopt niet",
             message="De link is ongeldig. Controleer of je de volledige link hebt geopend.",
             tone="warning",
         )
@@ -1275,8 +1287,8 @@ async def open_survey_start(
                 request,
                 status_code=409,
                 title="Al ingevuld",
-                heading="U heeft deze vragenlijst al ingevuld",
-                message="Bedankt — uw eerdere antwoorden zijn al meegenomen. Een tweede invulling is niet nodig.",
+                heading="Je hebt deze vragenlijst al ingevuld",
+                message="Bedankt, je eerdere antwoorden zijn al meegenomen. Een tweede keer invullen is niet nodig.",
                 tone="info",
             )
 
@@ -1316,10 +1328,10 @@ async def serve_survey(
         return _render_survey_status(
             request,
             status_code=404,
-            title="Survey-link ongeldig",
-            heading="Deze survey-link klopt niet",
+            title="Link ongeldig",
+            heading="Deze link naar de vragenlijst klopt niet",
             message="De link is ongeldig of niet meer actief. Controleer of je de volledige link hebt geopend.",
-            hint="Neem contact op met de HR-afdeling van je organisatie als je een nieuwe uitnodiging nodig hebt.",
+            hint="Neem contact op met wie je de link heeft gestuurd als je een nieuwe uitnodiging nodig hebt.",
             tone="warning",
         )
 
@@ -1335,10 +1347,10 @@ async def serve_survey(
             return _render_survey_status(
                 request,
                 status_code=410,
-                title="Survey-link verlopen",
-                heading="Deze survey-link is verlopen",
+                title="Link verlopen",
+                heading="Deze link naar de vragenlijst is verlopen",
                 message="Om privacy- en beveiligingsredenen is deze persoonlijke link niet meer geldig.",
-                hint="Neem contact op met de HR-afdeling van je organisatie als je de survey alsnog wilt invullen.",
+                hint="Neem contact op met wie je de link heeft gestuurd als je de vragenlijst alsnog wilt invullen.",
                 tone="warning",
             )
 
@@ -1408,9 +1420,9 @@ async def submit_survey(
     # Validate token
     respondent = _get_respondent_by_token(payload.token, db)
     if not respondent:
-        raise HTTPException(status_code=404, detail="Ongeldige token.")
+        raise HTTPException(status_code=404, detail="Deze link naar de vragenlijst klopt niet.")
     if respondent.completed:
-        raise HTTPException(status_code=409, detail="Survey al ingevuld.")
+        raise HTTPException(status_code=409, detail="Je hebt deze vragenlijst al ingevuld.")
     if not _campaign_is_open(respondent.campaign):
         raise HTTPException(status_code=410, detail=SURVEY_CLOSED_MESSAGE)
     if _is_placeholder_primary_route(respondent.campaign.scan_type):
@@ -1437,26 +1449,38 @@ async def submit_survey(
     # --- Verdiepingsvragen: server-side semantische validatie (client is untrusted) ---
     if payload.deepening_responses:
         if scan_type not in DEEPENING_SCAN_TYPES:
-            raise HTTPException(
-                status_code=422,
-                detail="Verdieping wordt niet ondersteund voor dit scantype.",
+            raise reject_stale_answers(
+                "Verdieping wordt niet ondersteund voor scantype " + str(scan_type) + ".",
+                campaign_id=respondent.campaign_id,
             )
         offered_factors = compute_deepening_offers(payload.org_raw, scan_type)
         deepening_sets = get_deepening_sets(scan_type)
         seen_factors: set[str] = set()
         for entry in payload.deepening_responses:
             if entry.factor_key not in offered_factors:
-                raise HTTPException(status_code=422, detail="Verdieping hoort niet bij deze inzending.")
+                raise reject_stale_answers(
+                    "Verdieping hoort niet bij deze inzending (factor " + str(entry.factor_key) + ").",
+                    campaign_id=respondent.campaign_id,
+                )
             if entry.factor_key in seen_factors:
-                raise HTTPException(status_code=422, detail="Dubbele verdieping voor dezelfde factor.")
+                raise reject_stale_answers(
+                    "Dubbele verdieping voor dezelfde factor (" + str(entry.factor_key) + ").",
+                    campaign_id=respondent.campaign_id,
+                )
             seen_factors.add(entry.factor_key)
             factor_set = deepening_sets[entry.factor_key]
             valid_option_keys = {option["key"] for option in factor_set["options"]}
             for choice in (entry.primary, entry.secondary):
                 if choice is not None and choice not in valid_option_keys:
-                    raise HTTPException(status_code=422, detail="Onbekende verdiepingsoptie.")
+                    raise reject_stale_answers(
+                        "Onbekende verdiepingsoptie (" + str(choice) + ").",
+                        campaign_id=respondent.campaign_id,
+                    )
             if entry.question_set_version != factor_set["question_set_version"]:
-                raise HTTPException(status_code=422, detail="Verouderde vragenset-versie.")
+                raise reject_stale_answers(
+                    "Verouderde vragenset-versie (" + str(entry.question_set_version) + ").",
+                    campaign_id=respondent.campaign_id,
+                )
 
     deepening_clean: list[dict] = []
     for entry in payload.deepening_responses:
@@ -1469,18 +1493,30 @@ async def submit_survey(
     direction_clean: dict | None = None
     if payload.direction_response is not None:
         if scan_type not in DIRECTION_SCAN_TYPES:
-            raise HTTPException(status_code=422, detail="Gespreksrichting wordt niet ondersteund voor dit scantype.")
+            raise reject_stale_answers(
+                "Gespreksrichting wordt niet ondersteund voor scantype " + str(scan_type) + ".",
+                campaign_id=respondent.campaign_id,
+            )
         dr = payload.direction_response
         if dr.factor_key != compute_direction_factor(payload.org_raw):
-            raise HTTPException(status_code=422, detail="Gespreksrichting hoort niet bij deze inzending.")
+            raise reject_stale_answers(
+                "Gespreksrichting hoort niet bij deze inzending (factor " + str(dr.factor_key) + ").",
+                campaign_id=respondent.campaign_id,
+            )
         # De factorcheck hierboven garandeert dat factor_key een bestaande factor is
         # (compute_direction_factor geeft altijd een key uit DEEPENING_FACTOR_KEYS terug),
         # dus deze lookup kan geen KeyError geven.
         direction_set = get_direction_sets(scan_type)[dr.factor_key]
         if dr.question_set_version != direction_set["question_set_version"]:
-            raise HTTPException(status_code=422, detail="Verouderde gespreksrichting-versie.")
+            raise reject_stale_answers(
+                "Verouderde gespreksrichting-versie (" + str(dr.question_set_version) + ").",
+                campaign_id=respondent.campaign_id,
+            )
         if dr.choice is not None and dr.choice not in {o["key"] for o in direction_set["options"]}:
-            raise HTTPException(status_code=422, detail="Onbekende gespreksrichting-optie.")
+            raise reject_stale_answers(
+                "Onbekende gespreksrichting-optie (" + str(dr.choice) + ").",
+                campaign_id=respondent.campaign_id,
+            )
         direction_clean = dr.model_dump()
         if direction_clean.get("other_text"):
             direction_clean["other_text"] = anonymize_text(direction_clean["other_text"])
@@ -1523,7 +1559,11 @@ async def submit_survey(
             "campaign_id": str(respondent.campaign_id),
             "flow": "survey_scoring",
         })
-        raise HTTPException(status_code=500, detail="Scoringsberekening mislukt. De survey is niet opgeslagen.")
+        raise HTTPException(status_code=500, detail=(
+            "Je antwoorden konden niet worden verwerkt en zijn niet opgeslagen. "
+            "Probeer het over een paar minuten opnieuw. Lukt het dan nog niet, "
+            "neem dan contact op met wie je de link heeft gestuurd."
+        ))
 
     # Open text — anonymise then optionally enrich
     open_text_clean: str | None = None
@@ -1582,7 +1622,7 @@ async def submit_survey(
             "campaign_id": str(respondent.campaign_id),
             "flow": "survey_persist",
         })
-        raise HTTPException(status_code=500, detail="Opslaan van survey-antwoorden mislukt. Probeer opnieuw.")
+        raise HTTPException(status_code=500, detail="Je antwoorden konden niet worden opgeslagen. Probeer het opnieuw.")
 
     campaign_obj = respondent.campaign
     org = campaign_obj.organization
@@ -1597,7 +1637,7 @@ async def submit_survey(
         total_invited=total_invited,
     )
 
-    return {"status": "ok", "message": "Bedankt voor het invullen van de survey."}
+    return {"status": "ok", "message": "Bedankt voor het invullen van de vragenlijst."}
 
 
 # ---------------------------------------------------------------------------

@@ -126,7 +126,7 @@ def test_behoudscontext_shows_stay_intent_and_signal():
     html = _behoudscontext(retention_score=6.4, stay_intent=7.2, turnover=1.8,
                            engagement=5.9)
     assert "7.2" in html
-    assert "behoud" in html.lower()
+    assert "Blijven en vertrekken" in html  # kicker, polijstronde R11 (was "Behoudscontext")
     # "Primaire behoudsfactor"-kaart verwijderd (feedback: dezelfde laagste-factor
     # claim stond al op p.02 — nu geen dubbele/onduidelijke herhaling meer).
     assert "Primaire behoudsfactor" not in html
@@ -140,10 +140,10 @@ def test_behoudscontext_signals_stacked_not_side_by_side():
                            engagement=6.4)
     assert html.count('class="sigrow"') == 4
     # Titel staat vóór de uitleg, uitleg vóór de score binnen elke rij.
-    behoudssignaal_idx = html.index("Behoudssignaal")
+    werkbeeld_idx = html.index("Werkbeeld")
     uitleg_idx = html.index("De zes onderwerpen over het werk en de werkbeleving")
     score_idx = html.index("4.7/10")
-    assert behoudssignaal_idx < uitleg_idx < score_idx
+    assert werkbeeld_idx < uitleg_idx < score_idx
 
 
 from backend.report_html import _checkpointoverzicht, _landingskwaliteit
