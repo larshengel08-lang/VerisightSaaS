@@ -153,5 +153,6 @@ def test_scenario_19_korte_niet_gekozen_regel():
 def test_p02_leidraad_korte_terugkoppelingszin_in_vertrek():
     html = _html("22_exit_uitstroom_rand")
     rij = re.search(r'<tr><td class="lt">31-45 min</td>.*?</tr>', html, re.S).group(0)
-    assert "vervolgmoment. Vul de terugkoppeling dan toch in. Het besluit leg je vast op pagina" in rij
+    assert "vervolgmoment. Vul de terugkoppeling altijd in. Het besluit leg je vast op pagina" in rij
     assert "als je het tweede punt parkeert" not in rij
+    assert "dan toch" not in rij

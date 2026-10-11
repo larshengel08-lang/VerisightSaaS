@@ -2070,12 +2070,14 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
         # rij 5 een regel langer en liet p.02 van Loep Vertrek overlopen
         # (08, 21, 22, voorbeeld; gemeten in het productie-image). De vaste
         # terugvaloptie uit het plan ("Vul op de besluitpagina ook ... in.")
-        # spaarde geen regel. "dan" verwijst naar het parkeren in de zin
-        # ervoor; de besluitpagina staat in de zin erna.
+        # spaarde geen regel. "altijd", niet "dan toch": direct na "tot het
+        # vervolgmoment" las "dan" als "op het vervolgmoment" (spec-review
+        # taak 11). De zin staat er alleen met een tweede punt, dus "altijd"
+        # klopt; de besluitpagina staat in de zin erna.
         vul = ("de afdelingsafspraak en de terugkoppeling" if has_afdeling_afspraak
                else "de terugkoppeling")
         tweede = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
-                  "vervolgmoment. Vul " + vul + " dan toch in. " if has_tweede_punt else "")
+                  "vervolgmoment. Vul " + vul + " altijd in. " if has_tweede_punt else "")
         slot = (f"De werkvragen (pagina {p(A['werkvragen'])}). Bij het startpunt sla je "
                 "Herkennen over, dat deden jullie al; neem wat eronder staat. "
                 + tweede + besluit)

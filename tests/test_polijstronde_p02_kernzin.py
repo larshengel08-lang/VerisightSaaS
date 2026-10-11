@@ -103,10 +103,11 @@ def test_r21_wie_en_wanneer_staan_een_keer_in_beide_hintvarianten():
 
 # Taak 11 (polijstronde): korte vorm. Met "op de besluitpagina ... als je het
 # tweede punt parkeert" liep de leidraad bij Loep Vertrek een regel langer en
-# p.02 over (gemeten in het productie-image); "dan" verwijst naar het parkeren
-# in de zin ervoor, de besluitpagina staat in de zin erna.
-VUL_TERUG = "Vul de terugkoppeling dan toch in."
-VUL_AFDELING = "Vul de afdelingsafspraak en de terugkoppeling dan toch in."
+# p.02 over (gemeten in het productie-image). "altijd", niet "dan toch": na
+# "tot het vervolgmoment" las "dan" als "op het vervolgmoment" (spec-review
+# taak 11); de besluitpagina staat in de zin erna.
+VUL_TERUG = "Vul de terugkoppeling altijd in."
+VUL_AFDELING = "Vul de afdelingsafspraak en de terugkoppeling altijd in."
 PARKEERZIN = ("Het tweede punt alleen als er tijd is, anders parkeren jullie het tot het "
               "vervolgmoment.")
 
