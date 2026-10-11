@@ -49,7 +49,7 @@ SCAN_DEFINITION: dict[str, Any] = {
     "open_text_label": "Wat had de organisatie volgens jou eerder moeten begrijpen, bespreken of zien rond je vertrek?",
     "open_text_placeholder": "Beschrijf wat voor management of HR eerder zichtbaar of bespreekbaar had mogen worden.",
     "open_text_help": "Je antwoord wordt geanonimiseerd opgeslagen. Noem bij voorkeur geen namen of direct herleidbare details.",
-    "invite_intro": "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen over jouw ervaringen binnen de organisatie. Dit helpt de organisatie concreet te verbeteren.",
+    "invite_intro": "De organisatie waar je werkt of werkte, nodigt je uit om een korte vragenlijst in te vullen over jouw ervaringen binnen die organisatie. Dit helpt de organisatie concreet te verbeteren.",
     "invite_duration": "ongeveer " + str(SURVEY_MINUTES) + " minuten",
     "contact_subject": "Kennismakingsaanvraag Loep Vertrek",
     "dashboard_signal_help": "Frictieschaal 1-10: hogere score = sterker signaal van ervaren werkfrictie rondom vertrek. Gebruik deze score als managementsamenvatting, niet als causale verklaring, en lees hem samen met signalen van werkfrictie.",

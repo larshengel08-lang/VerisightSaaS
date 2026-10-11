@@ -279,10 +279,45 @@ def test_onvolledige_inzending_toont_gewone_taal_en_logt_reden(client, db_sessio
 
 
 def test_scoringsfout_noemt_vervolgstap():
+    # Eindreview polijstronde: "de HR-afdeling van je organisatie" klopt niet
+    # voor wie vertrokken is; wie de link stuurde, kent iedere respondent.
     src = re.sub(r'"\s+"', "", (ROOT / "backend" / "main.py").read_text(encoding="utf-8"))
     assert ("Je antwoorden konden niet worden verwerkt en zijn niet opgeslagen. "
             "Probeer het over een paar minuten opnieuw. Lukt het dan nog niet, "
-            "neem contact op met de HR-afdeling van je organisatie.") in src
+            "neem dan contact op met wie je de link heeft gestuurd.") in src
+    assert "Lukt het dan nog niet, neem contact op met de HR-afdeling" not in src
+
+
+def test_exit_uitnodiging_spreekt_ook_vertrekkers_aan():
+    # Eindreview polijstronde: zelfde aanhef als de startpagina van Loep Vertrek.
+    intro = EXIT["invite_intro"]
+    assert intro.startswith("De organisatie waar je werkt of werkte, nodigt je uit")
+    assert "leidinggevende" not in intro.lower()
+    assert EM not in intro and EN not in intro
+
+
+def test_al_ingevuld_pagina_heeft_eigen_titel(client, db_session):
+    campaign = _make_campaign(db_session, "exit", "acme-al-ingevuld-titel")
+    start, respondent = _start(client, db_session, campaign)
+    respondent.completed = True
+    db_session.commit()
+    r = client.get(start.headers["location"])
+    assert "<title>Al ingevuld | Loep</title>" in r.text
+    assert "<title>Bedankt | Loep</title>" not in r.text
+    # De gewone bedankpagina houdt haar titel.
+    assert "<title>Bedankt | Loep</title>" in client.get("/survey/complete").text
+
+
+@pytest.mark.parametrize("pad", sorted((ROOT / "templates" / "emails").glob("*.html")),
+                         ids=lambda p: p.name)
+def test_geen_streepjes_in_mailtemplates(pad):
+    tekst = pad.read_text(encoding="utf-8")
+    assert EM not in tekst and EN not in tekst
+
+
+def test_reminderdag_kop_zonder_streepje():
+    tekst = (ROOT / "templates" / "emails" / "reminder_day.html").read_text(encoding="utf-8")
+    assert "Loep &bull; reminderdag" in tekst
 
 
 def test_respondentmeldingen_zonder_streepjes_en_technische_woorden():

@@ -1562,7 +1562,7 @@ async def submit_survey(
         raise HTTPException(status_code=500, detail=(
             "Je antwoorden konden niet worden verwerkt en zijn niet opgeslagen. "
             "Probeer het over een paar minuten opnieuw. Lukt het dan nog niet, "
-            "neem contact op met de HR-afdeling van je organisatie."
+            "neem dan contact op met wie je de link heeft gestuurd."
         ))
 
     # Open text — anonymise then optionally enrich
