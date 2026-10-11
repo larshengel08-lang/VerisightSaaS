@@ -97,6 +97,10 @@ export default function PrivacyPage() {
           Wat je via het contactformulier of in een kennismaking met Loep deelt, bewaart Loep tot uiterlijk twee jaar
           na het laatste contact. Volgt er een overeenkomst, dan gelden de termijnen hierboven.
         </p>
+        <p>
+          Technische gegevens over het gebruik van de beheeromgeving en interne aantekeningen van Loep over de
+          uitkomst bij een klant verwijdert Loep twee jaar na het aanmaken, als ze niet aan een meting hangen.
+        </p>
       </section>
 
       <section>

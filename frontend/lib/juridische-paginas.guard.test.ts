@@ -45,6 +45,15 @@ describe('juridische pagina’s volgen de dienst zoals hij is', () => {
     )
   })
 
+  it('privacy sectie 5 noemt de termijn voor gebruiksgegevens zonder meting (polijstronde)', () => {
+    // backend/data_retention.py: GEBRUIK_TABELLEN = suite_telemetry_events (gebruik van de
+    // beheeromgeving) en case_proof_registry (intern bewijsregister), rijen zonder campaign_id,
+    // GEBRUIK_TERMIJN_MAANDEN (24) na created_at.
+    expect(paginas.privacy).toMatch(
+      /Technische gegevens over het gebruik van de beheeromgeving en interne aantekeningen van Loep over de\s+uitkomst bij een klant verwijdert Loep twee jaar na het aanmaken, als ze niet aan een meting hangen\./
+    )
+  })
+
   it('privacy sectie 2 heeft een categorie voor contactpersonen (A4.3)', () => {
     expect(paginas.privacy).toMatch(
       /Contactpersonen:<\/strong> naam, zakelijk e-mailadres, organisatie en wat je in je bericht schrijft\./
