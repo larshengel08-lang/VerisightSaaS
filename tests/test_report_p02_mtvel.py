@@ -39,6 +39,15 @@ def test_blijfintentie_cel_toont_band_en_zones():
     assert "kwetsbaar punt:" not in cel
 
 
+def test_blijfintentie_cel_breekt_niet_voor_het_getal():
+    # Eindreview polijstronde: in het voorbeeld (en de hero op de homepage) viel
+    # de "5" alleen op een nieuwe regel. "onder de 5" blijft bij elkaar.
+    nbsp = chr(0xA0)
+    cel = _blijfintentie_cell(3.9, STAY_KWETSBAAR)
+    assert "zitten onder" + nbsp + "de" + nbsp + "5" in cel
+    assert "onder de 5" not in cel
+
+
 def test_blijfintentie_cel_relatief_sterk():
     cel = _tekst(_blijfintentie_cell(7.5, STAY_STERK))
     assert "Relatief sterk: 0 van de 39 zitten onder de 5" in cel

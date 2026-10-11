@@ -980,6 +980,10 @@ def _blijfintentie_cell(avg_si: float | None, stay_scores: list[float]) -> str:
     low, _mid, _high, n = _blijfintentie_zones(stay_scores)
     band = _factor_label(avg_si)
     zones = _onder_de_vijf(low, n) if n else "geen losse scores beschikbaar"
+    # "onder de 5" blijft bij elkaar: in de smalle cel viel de "5" anders
+    # alleen op een nieuwe regel (eindreview polijstronde, zichtbaar in de hero).
+    nbsp = chr(0xA0)  # vaste spatie
+    zones = zones.replace(" onder de 5", " onder" + nbsp + "de" + nbsp + "5")
     return (f'<td><div class="sc-l">Blijfintentie</div>'
             f'<div class="sc-v" style="color:{_factor_color(avg_si)};">{_score_str(avg_si)}</div>'
             f'<div class="sc-b">{_h(band)}: {_h(zones)}</div></td>')
