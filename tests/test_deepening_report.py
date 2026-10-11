@@ -132,8 +132,8 @@ def test_enrichment_none_when_no_answers():
 # spreiding erboven.
 REGEL = (" Duidelijk laag: op de antwoordschaal van de vragenlijst (1 is ‘helemaal niet’, "
          "5 is ‘helemaal wel’) gemiddeld 2,5 of lager, minstens twee stellingen op 2 of "
-         "lager, of een 1 bij gemiddeld hoogstens 3,5. De andere scores in dit rapport zijn "
-         "omgerekend naar 1 tot 10.")
+         "lager, of een 1 bij gemiddeld hoogstens 3,5. De andere scores per onderwerp in dit "
+         "rapport zijn omgerekend naar 1 tot 10.")
 
 
 def _chain_agg(triggered, offered, answered, skipped=None):

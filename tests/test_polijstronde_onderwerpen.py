@@ -60,10 +60,12 @@ def test_r9_drie_gelijke_sterke_onderwerpen():
 
 
 def test_r9_twee_gelijke_sterke_onderwerpen_heten_allebei():
-    summary, _ = _overzicht_summary_and_bands(
+    # Volgorde exact die van de band "sterk" (hoogste eerst, omgekeerde sortering).
+    summary, bands = _overzicht_summary_and_bands(
         [("A", 4.2), ("B", 6.9), ("C", 6.9)], laagste=["A"])
     assert summary.endswith("Twee onderwerpen vormen een relatief sterke basis "
-                            "(allebei 6.9/10): B, C.")
+                            f"(allebei 6.9/10): {', '.join(bands['sterk'])}.")
+    assert bands["sterk"] == ["C", "B"]
 
 
 def test_r9_unieke_hoogste_blijft_een_onderwerp():
@@ -74,32 +76,49 @@ def test_r9_unieke_hoogste_blijft_een_onderwerp():
 
 # ── R10: werkbeleving geduid na de drie dimensies ───────────────────────────
 
-def _wb(scores: dict[str, float]) -> str:
+# Onderwerpscores: een onder 6,5 (dan klopt "zelf ook"), of alle relatief sterk.
+MET_LAAG_ONDERWERP = {"growth": 4.7, "culture": 7.1}
+ALLE_ONDERWERPEN_STERK = {"growth": 6.8, "culture": 7.1, "autonomy": 4.0}  # SDT telt niet mee
+
+
+def _wb(scores: dict[str, float], factor_avgs: dict | None = None) -> str:
     sim, items = {}, []
     for dim, sc in scores.items():
         for ik in SDT_DIMENSION_ITEMS[dim]:
             sim[ik] = sc
             items.append((ik, f"stelling {ik}"))
-    return _plain(_werkbeleving_section(scores, sim, items, "<span>kop</span>"))
+    return _plain(_werkbeleving_section(scores, sim, items, "<span>kop</span>",
+                                        factor_avgs=factor_avgs))
 
 
 ONDER_DRUK = "Hier staat de werkbeleving zelf ook onder druk: geen van de drie scoort relatief sterk."
+ONDER_DRUK_ZONDER_OOK = "Hier staat de werkbeleving onder druk: geen van de drie scoort relatief sterk."
 ALLE_STERK = "Hier scoort de werkbeleving op alle drie relatief sterk."
+_LAAG = {"autonomy": 5.5, "competence": 6.4, "relatedness": 4.9}
 
 
 def test_r10_alle_drie_onder_65():
-    t = _wb({"autonomy": 5.5, "competence": 6.4, "relatedness": 4.9})
+    t = _wb(_LAAG, MET_LAAG_ONDERWERP)
     assert ONDER_DRUK in t and ALLE_STERK not in t
+
+
+def test_r10_zonder_laag_onderwerp_geen_ook():
+    # 6.46 toont als 6.5: relatief sterk. Een SDT-sleutel in factor_avgs telt
+    # niet als onderwerp (ORG_FACTOR_KEYS).
+    for fa in (ALLE_ONDERWERPEN_STERK, {"growth": 6.46}, None, {}):
+        t = _wb(_LAAG, fa)
+        assert ONDER_DRUK_ZONDER_OOK in t, fa
+        assert "zelf ook" not in t, fa
 
 
 def test_r10_alle_drie_vanaf_65_op_de_getoonde_score():
     # 6.46 toont als 6.5 en telt dus als relatief sterk (B15).
-    t = _wb({"autonomy": 6.46, "competence": 7.2, "relatedness": 8.0})
+    t = _wb({"autonomy": 6.46, "competence": 7.2, "relatedness": 8.0}, MET_LAAG_ONDERWERP)
     assert ALLE_STERK in t and ONDER_DRUK not in t
 
 
 def test_r10_gemengd_geen_zin():
-    t = _wb({"autonomy": 5.5, "competence": 7.2, "relatedness": 6.0})
+    t = _wb({"autonomy": 5.5, "competence": 7.2, "relatedness": 6.0}, MET_LAAG_ONDERWERP)
     assert ONDER_DRUK not in t and ALLE_STERK not in t
     assert "Hier staat de werkbeleving" not in t and "Hier scoort de werkbeleving" not in t
 
@@ -187,7 +206,7 @@ def test_r25_regel_legt_de_schaal_uit():
         "Duidelijk laag: op de antwoordschaal van de vragenlijst (1 is ‘helemaal "
         "niet’, 5 is ‘helemaal wel’) gemiddeld 2,5 of lager, minstens twee "
         "stellingen op 2 of lager, of een 1 bij gemiddeld hoogstens 3,5. De "
-        "andere scores in dit rapport zijn omgerekend naar 1 tot 10.")
+        "andere scores per onderwerp in dit rapport zijn omgerekend naar 1 tot 10.")
 
 
 def test_r25_antwoordlabels_kloppen_met_de_vragenlijst():
@@ -215,7 +234,7 @@ def test_r26_drie_gelijke_scores_een_zin():
         _row("role_clarity", "Rolhelderheid", 7.12, tie="culture"),
     ]
     t = _raster_tekst(ranked)
-    assert "Beloning, Cultuur en Rolhelderheid staan gelijk op 7.1." in t
+    assert "Drie onderwerpen staan gelijk op 7.1: Beloning, Cultuur, Rolhelderheid." in t
     assert "staat vrijwel gelijk aan" not in t
 
 
@@ -227,8 +246,8 @@ def test_r26_ongelijke_scores_heten_vrijwel_gelijk_met_bereik():
         _row("role_clarity", "Rolhelderheid", 7.1, tie="culture"),
     ]
     t = _raster_tekst(ranked)
-    assert ("Beloning, Cultuur en Rolhelderheid staan in de rangorde vrijwel "
-            "gelijk (6.9 tot 7.1).") in t
+    assert ("Drie onderwerpen staan in de rangorde vrijwel gelijk (6.9 tot 7.1): "
+            "Beloning, Cultuur, Rolhelderheid.") in t
 
 
 def test_r26_twee_groepen_twee_zinnen():
@@ -241,9 +260,9 @@ def test_r26_twee_groepen_twee_zinnen():
     # De tweede koppeling is synthetisch (7.1 tegen 6.2 haalt de marge niet);
     # het gaat hier om de groepering, die de regel uit near_tie_with leest.
     t = _raster_tekst(ranked)
-    assert ("Groeiperspectief en Werkdruk staan in de rangorde vrijwel gelijk "
-            "(5.1 tot 5.3). Leiderschap en Beloning staan in de rangorde vrijwel "
-            "gelijk (6.2 tot 7.1).") in t
+    assert ("Twee onderwerpen staan in de rangorde vrijwel gelijk (5.1 tot 5.3): "
+            "Groeiperspectief, Werkdruk. Twee onderwerpen staan in de rangorde "
+            "vrijwel gelijk (6.2 tot 7.1): Leiderschap, Beloning.") in t
 
 
 def test_r26_keten_breder_dan_de_marge_wordt_niet_een_groep():
@@ -257,8 +276,9 @@ def test_r26_keten_breder_dan_de_marge_wordt_niet_een_groep():
         _row("role_clarity", "Rolhelderheid", 7.2, tie="culture"),
     ]
     t = _raster_tekst(ranked)
-    assert ("Beloning en Cultuur staan in de rangorde vrijwel gelijk (6.8 tot 7.0). "
-            "Cultuur en Rolhelderheid staan in de rangorde vrijwel gelijk (7.0 tot 7.2).") in t
+    assert ("Twee onderwerpen staan in de rangorde vrijwel gelijk (6.8 tot 7.0): "
+            "Beloning, Cultuur. Twee onderwerpen staan in de rangorde vrijwel "
+            "gelijk (7.0 tot 7.2): Cultuur, Rolhelderheid.") in t
     assert "(6.8 tot 7.2)" not in t
 
 
@@ -303,3 +323,30 @@ def test_r11_gedegradeerde_p02_behoud_noemt_de_oude_naam_niet():
         assert "blijven en vertrekken" in t
         for naam in _OUDE_NAMEN:
             assert naam not in t, (risk, naam)
+
+
+def test_r26_groep_met_richtingwinnaar_vooraan_blijft_binnen_de_marge():
+    """Codereview taak 6: de groep werd alleen tegen zijn eerste rij getoetst.
+    Wint een rij op de vraag om verandering, dan staat hij vooraan zonder de
+    laagste te zijn. Echte rangorde: bases 6.95 / 7.2 / 7.24 / 7.45, Leiderschap
+    (7.2) wint op richting. Eerder: een zin "(7.0 tot 7.5)" over vier
+    onderwerpen, een bereik van een halve punt."""
+    from backend.report_priority import rank_factors
+    fa = {"workload": 6.95, "leadership": 7.2, "growth": 7.24, "culture": 7.45,
+          "role_clarity": 8.6, "compensation": 9.2}
+    labels = {"workload": "Werkdruk", "leadership": "Leiderschap", "growth": "Groei",
+              "culture": "Cultuur", "role_clarity": "Rol", "compensation": "Beloning"}
+    direction = {"leadership": {"answered": 6, "counts": {"ldr_change": 6}},
+                 "workload": {"answered": 6, "counts": {"wld_none": 5, "wld_peaks": 1}}}
+    ranked = rank_factors("retention", fa, {}, {}, labels=labels, direction_agg=direction)
+    assert [r["key"] for r in ranked][:4] == ["leadership", "workload", "growth", "culture"]
+    assert [r["near_tie_with"] for r in ranked][1:4] == ["leadership", "workload", "growth"]
+    from backend.report_html import _bijna_gelijk_zinnen
+    zinnen = _bijna_gelijk_zinnen(ranked)
+    assert zinnen == [
+        "Drie onderwerpen staan in de rangorde vrijwel gelijk (7.0 tot 7.2): "
+        "Leiderschap, Werkdruk, Groei.",
+        "Twee onderwerpen staan in de rangorde vrijwel gelijk (7.2 tot 7.5): "
+        "Groei, Cultuur.",
+    ]
+    assert not any("(7.0 tot 7.5)" in z for z in zinnen)

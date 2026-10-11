@@ -34,6 +34,7 @@ from backend.report_distribution import (
     ZONE_HIGH,
     ZONE_LOW,
     distribution_block,
+    STROOK_BREEDTE_VOL,
     score_distribution,
     shown as _shown,
     zone_color,
@@ -1359,7 +1360,7 @@ def _p02_met_respons(zin: str, *, completed: int, invited: int | None,
     aan hangt.
 
     `verwijzing=True` voor de ene terugval die geen uitspraak doet maar alleen
-    doorverwijst ("Zie de vertrekcontext ... voor wat dit rapport wel toont").
+    doorverwijst ("Zie de vertrekredenen ... voor wat dit rapport wel toont").
     Daar hoort de responsbasis als eigen mededeling vóór de verwijzing, niet als
     haakje erachter: een haakje relativeert een claim, en die staat er niet.
     """
@@ -2764,8 +2765,11 @@ def _bijna_gelijk_zinnen(ranked: list[dict]) -> list[str]:
     Vertrek ook de vertrekredenen weegt: de scores zelf kunnen dan verder uit
     elkaar liggen dan de marge.
 
-    Een groep groeit alleen zolang de nieuwe rij binnen de marge van de
-    eerste rij van de groep ligt. near_tie_with vergelijkt telkens twee buren,
+    Een groep groeit alleen zolang de hele groep, met de nieuwe rij erbij,
+    binnen de marge blijft (hoogste min laagste base). Vergelijken met alleen
+    de eerste rij is niet genoeg: wint een rij op de vraag om verandering, dan
+    staat hij vooraan zonder de laagste te zijn, en dan kon een groep tot
+    bijna twee keer de marge beslaan. near_tie_with vergelijkt telkens twee buren,
     dus een keten van koppelingen kan samen verder uit elkaar liggen dan de
     marge (6.8, 7.0, 7.2, 7.5): die vier "vrijwel gelijk" noemen zou meer
     beweren dan de rangschikking deed. Valt een rij buiten de marge van de
@@ -2782,8 +2786,8 @@ def _bijna_gelijk_zinnen(ranked: list[dict]) -> list[str]:
         return x.get("base", x.get("score"))
 
     def _binnen_marge(groep: list[dict], r: dict) -> bool:
-        a, b = _base(groep[0]), _base(r)
-        return a is not None and b is not None and abs(b - a) < PRIORITY_TIE_MARGIN
+        bs = [_base(x) for x in groep] + [_base(r)]
+        return None not in bs and max(bs) - min(bs) < PRIORITY_TIE_MARGIN
 
     groepen: list[list[dict]] = []
     vorige: dict | None = None
@@ -2798,17 +2802,22 @@ def _bijna_gelijk_zinnen(ranked: list[dict]) -> list[str]:
                             {"key": ref, "label": ref, "score": None})
                 groepen.append([doel, r])
         vorige = r
+    # Zelfde vorm als de sterke-basiszin in het overzichtsprofiel (R9): telwoord
+    # vooraan, namen achter een dubbele punt met komma's. Met "A, B en C" las
+    # het niet, omdat de onderwerpnamen zelf "en" bevatten ("Werkdruk en
+    # herstelruimte en Leiderschap en vertrouwen staan ...").
     zinnen = []
     for g in groepen:
-        namen = _opsomming([x["label"] for x in g])
+        aantal = _TELWOORD.get(len(g), str(len(g))).capitalize()
+        namen = ", ".join(x["label"] for x in g)
         scores = [_shown(x["score"]) for x in g if x.get("score") is not None]
         if scores and min(scores) == max(scores) and len(scores) == len(g):
-            zinnen.append(f"{namen} staan gelijk op {scores[0]:.1f}.")
+            zinnen.append(f"{aantal} onderwerpen staan gelijk op {scores[0]:.1f}: {namen}.")
         elif scores:
-            zinnen.append(f"{namen} staan in de rangorde vrijwel gelijk "
-                          f"({min(scores):.1f} tot {max(scores):.1f}).")
+            zinnen.append(f"{aantal} onderwerpen staan in de rangorde vrijwel gelijk "
+                          f"({min(scores):.1f} tot {max(scores):.1f}): {namen}.")
         else:
-            zinnen.append(f"{namen} staan in de rangorde vrijwel gelijk.")
+            zinnen.append(f"{aantal} onderwerpen staan in de rangorde vrijwel gelijk: {namen}.")
     return zinnen
 
 
@@ -4586,8 +4595,8 @@ def _trigger_regel() -> str:
     return (f"Duidelijk laag: op de antwoordschaal van de vragenlijst (1 is ‘helemaal "
             f"niet’, 5 is ‘helemaal wel’) gemiddeld {_komma(TRIGGER_AVG_MAX)} of lager, "
             f"minstens {cnt} stellingen op {TRIGGER_LOW_ITEM_MAX} of lager, of een 1 bij "
-            f"gemiddeld hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}. De andere scores in "
-            f"dit rapport zijn omgerekend naar 1 tot 10.")
+            f"gemiddeld hoogstens {_komma(TRIGGER_WITH_ONE_AVG_MAX)}. De andere scores per "
+            f"onderwerp in dit rapport zijn omgerekend naar 1 tot 10.")
 
 
 def _deepening_chain(agg: dict, scan_type: str, factor_key: str, n_total: int,
@@ -6288,18 +6297,17 @@ def _overzicht_summary_and_bands(profile_factors: list[tuple[str, float | None]]
         # R9 (polijstronde): delen meerdere sterke onderwerpen de hoogste
         # getoonde score, dan noemt de zin ze allemaal. Eerder stond er alleen
         # het onderwerp dat toevallig als laatste gesorteerd was, terwijl de
-        # balken eronder drie keer 7.1 lieten zien. Hoogste eerst, net als de
-        # band-indeling hieronder.
+        # balken eronder drie keer 7.1 lieten zien. Volgorde exact die van de
+        # band "sterk" die deze functie teruggeeft (hoogste eerst).
         top_sc = _shown(sterk_sc[-1])
-        top = [l for l, s in sorted(zip(sterk, sterk_sc), key=lambda x: -x[1])
-               if _shown(s) == top_sc]
+        top = [l for l, s in reversed(list(zip(sterk, sterk_sc))) if _shown(s) == top_sc]
         if len(top) > 1:
             alle = "allebei" if len(top) == 2 else f"alle {_TELWOORD[len(top)]}"
             sterk_zin = (f"{_TELWOORD[len(top)].capitalize()} onderwerpen vormen een "
                          f"relatief sterke basis ({alle} {_score_str(top_sc)}): "
                          f"{', '.join(top)}.")
         else:
-            sterk_zin = f"{sterk[-1]} vormt een relatief sterke basis."
+            sterk_zin = f"{top[0]} vormt een relatief sterke basis."
         summary = f"{laagste_zin} {sterk_zin}"
     elif kwetsbaar:
         summary = laagste_zin[:-1] + "; geen enkel onderwerp scoort relatief sterk."
@@ -6530,7 +6538,7 @@ def _behoudscontext(*, retention_score: float | None, stay_intent: float | None,
         ("engagement", "Bevlogenheid", False),
     ):
         vals = [v for v in (intent_resp or {}).get(key, []) if v is not None]
-        blk = distribution_block(vals, width=660, height=52, dot_r=4.5, label_size=9,
+        blk = distribution_block(vals, width=STROOK_BREEDTE_VOL, height=52, dot_r=4.5, label_size=9,
                                  invert_scale=invert)
         if blk:
             strips += (f'<div style="margin-top:26px;"><div class="spread-title">'
@@ -6608,7 +6616,8 @@ def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
             f'</tr></table></div>')
 
 
-def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: str) -> str:
+def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: str,
+                          *, factor_avgs: dict | None = None) -> str:
     """Werkbeleving (SDT), één helper voor de drie renderers; voorheen drie keer
     dezelfde 40 regels.
 
@@ -6625,6 +6634,11 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     leest: met een hardcoded drietal zou een nieuwe dimensie wel de gate halen
     en niet in de sectie staan, en dan verwijst de leidraad naar een pagina die
     hem niet toont.
+
+    factor_avgs: de onderwerpscores van de meting. Alleen gebruikt voor de
+    R10-zin: "ook onder druk" mag er alleen staan als minstens een onderwerp
+    zelf onder 6,5 ligt (getoonde score). Zonder onderwerpscores, of als alle
+    onderwerpen relatief sterk zijn, staat er "onder druk" zonder "ook".
 
     Leeg zonder dimensiescores. De aanroeper gate't daarom op
     _heeft_werkbeleving, zodat ch.opener geen hoofdstuknummer opeist voor een
@@ -6678,7 +6692,12 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     if len(dims) == len(SDT_LABELS) and len(dims) in _TELWOORD:
         telw = _TELWOORD[len(dims)]
         if all(niv < 2 for niv in niveaus):
-            duiding = (f"Hier staat de werkbeleving zelf ook onder druk: geen van de "
+            # "zelf ook" verwijst naar onderwerpen die onder druk staan; dat
+            # klopt alleen als er minstens een onderwerp onder 6,5 ligt.
+            onderwerp_niveaus = [_factor_level(v) for fk, v in (factor_avgs or {}).items()
+                                 if fk in ORG_FACTOR_KEYS and v is not None]
+            ook = " zelf ook" if any(niv < 2 for niv in onderwerp_niveaus) else ""
+            duiding = (f"Hier staat de werkbeleving{ook} onder druk: geen van de "
                        f"{telw} scoort relatief sterk.")
         elif all(niv == 2 for niv in niveaus):
             duiding = f"Hier scoort de werkbeleving op alle {telw} relatief sterk."
@@ -7166,7 +7185,7 @@ def render_exit_report_html(data: dict) -> str:
             # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
             # richtingkaart ernaar (_wat_moet_gebeuren_block).
             _toelichting_n[fk] = deep_agg[fk]["answered"]
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=660)
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=STROOK_BREEDTE_VOL)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9): de volgende
         # verdiepingen stromen door onder hun voorganger en verhuizen als geheel
         # zodra ze niet meer passen.
@@ -7219,7 +7238,8 @@ def render_exit_report_html(data: dict) -> str:
         s += _werkbeleving_section(
             sdt_a, sim, data["sdt_items"],
             ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
-                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]),
+            factor_avgs=fa)
 
     # Geen eigen eNPS-hoofdstuk meer (H13, B9): één score op een eigen vel was
     # de leegste pagina van het rapport. Het blok staat nu bij de context, met de
@@ -7607,7 +7627,7 @@ def render_retention_report_html(data: dict) -> str:
             # R7/V7: het toelichtingsblok staat er; alleen dan verwijst de
             # richtingkaart ernaar (_wat_moet_gebeuren_block).
             _toelichting_n[fk] = deep_agg[fk]["answered"]
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=660)
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=STROOK_BREEDTE_VOL)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
         # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
@@ -7655,7 +7675,8 @@ def render_retention_report_html(data: dict) -> str:
         s += _werkbeleving_section(
             sdt_a, sim, data["sdt_items"],
             ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
-                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]),
+            factor_avgs=fa)
 
     # Geen eigen eNPS-hoofdstuk meer (H13, B9): één score op een eigen vel was
     # de leegste pagina van het rapport. Het blok staat nu bij de context, met de
@@ -8053,7 +8074,7 @@ def render_onboarding_report_html(data: dict) -> str:
                      f'<p>{_h(high_i[1])}</p>'
                      f'<strong style="color:{_factor_color(high_i[2])};">{high_i[2]:.1f}/10</strong></div>'
                      if show_cards and high_i else "")
-        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=660)
+        spread = distribution_block(data.get("factor_resp_scores", {}).get(fk, []), width=STROOK_BREEDTE_VOL)
         # Alleen het eerste onderwerp opent een nieuwe pagina (B9), zie
         # _factor_detail in de Vertrek-renderer.
         # Ook het eerste onderwerp stroomt (fixronde 2 na plan 3a): het hoofdstuk
@@ -8102,7 +8123,8 @@ def render_onboarding_report_html(data: dict) -> str:
         s += _werkbeleving_section(
             sdt_a, sim, data["sdt_items"],
             ch.opener("Werkbeleving", kicker="Autonomie, competentie &amp; verbondenheid",
-                      anchor=LEIDRAAD_ANKERS["werkbeleving"]))
+                      anchor=LEIDRAAD_ANKERS["werkbeleving"]),
+            factor_avgs=fa)
 
     # eNPS heeft geen eigen hoofdstuk meer: het blok staat bij het
     # checkpointoverzicht (H13, B9), zie _enps_block.

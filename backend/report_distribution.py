@@ -10,6 +10,11 @@ from backend.report_css import RAG_HIGH, RAG_LOW, RAG_MID
 ZONE_LOW = 5.0   # < ZONE_LOW  -> kwetsbaar punt (laagste zone)
 ZONE_HIGH = 6.5  # < ZONE_HIGH -> aandachtspunt; >= ZONE_HIGH -> relatief sterk
 
+# Breedte van een spreidingsstrook over de volle tekstbreedte (A4 min 2 x 16 mm
+# kantlijn is ongeveer 673 px). Eén bron voor de behoudscontext en de
+# onderwerppagina's (polijstronde R24); de compacte 440 blijft de default.
+STROOK_BREEDTE_VOL = 660
+
 # Polarisatie: beide buitenzones >= 25% en samen >= 60% van de respondenten,
 # en de middengroep kleiner dan elk van beide buitengroepen (polijstronde R17).
 _POL_EACH = 0.25

@@ -29,8 +29,8 @@ LOW_GROWTH = {f"growth_{i}": 1 for i in (1, 2, 3)} | {f"{fk}_{i}": 5 for fk in
 
 REGEL = (" Duidelijk laag: op de antwoordschaal van de vragenlijst (1 is ‘helemaal niet’, "
          "5 is ‘helemaal wel’) gemiddeld 2,5 of lager, minstens twee stellingen op 2 of "
-         "lager, of een 1 bij gemiddeld hoogstens 3,5. De andere scores in dit rapport zijn "
-         "omgerekend naar 1 tot 10.")
+         "lager, of een 1 bij gemiddeld hoogstens 3,5. De andere scores per onderwerp in dit "
+         "rapport zijn omgerekend naar 1 tot 10.")
 
 ANON_LABEL = ("Automatisch geanonimiseerd: herkende namen, e-mailadressen, telefoonnummers "
               "en postcodes verwijderd")

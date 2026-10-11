@@ -233,8 +233,8 @@ def test_vrijwel_gelijk_staat_onder_de_tabel_niet_in_de_agendakolom():
     tabel_einde = html.index("</table>")
     i = html.index("staan in de rangorde vrijwel gelijk")
     assert i > tabel_einde
-    assert ("Werkdruk en herstelruimte en Leiderschap staan in de rangorde vrijwel "
-            "gelijk (5.4 tot 5.6).") in html
+    assert ("Twee onderwerpen staan in de rangorde vrijwel gelijk (5.4 tot 5.6): "
+            "Werkdruk en herstelruimte, Leiderschap.") in html
 
 
 def test_ranglijst_en_afdelingen_verwijzen_naar_de_drempeltabel():
