@@ -48,9 +48,9 @@ describe('homepage na besluit A', () => {
     // Loep Start mist het prioriteringsraster: daar is de rangorde puur de
     // score (backend/report_html.py), dus "je ziet waarom dit bovenaan staat"
     // is voor Loep Start niet waar. Sinds de polijstronde (Taak 13b) hangt de
-    // homepagekaart de ranglijst met het waarom daarom aan de twee scans met
-    // een raster; voor elke scan belooft hij alleen wat laag scoort en waar je begint.
-    expect(bron()).toContain('Bij Loep Vertrek en Loep Behoud komt daar één ranglijst bij, dit eerst en waarom,')
+    // homepagekaart het waarom daarom aan de twee scans met een raster; voor
+    // elke scan belooft hij alleen wat laag scoort en waar je begint.
+    expect(bron()).toContain('Bij Loep Vertrek en Loep Behoud zie je ook waarom iets bovenaan staat,')
     // De ontkenningen dekken ook SuitePreviewSection en suiteFlowPoints. Die
     // staan wel in dit bestand maar hangen niet in de renderboom, dus daar
     // wordt bewust geen zin vastgepind: verdwijnt dat dode blok ooit, dan hoort

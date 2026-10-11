@@ -117,7 +117,16 @@ const problemSignalPoints = [
 
 // Invultijd uit dezelfde bron als de vragenlijst zelf (SURVEY_MINUTES), zodat de
 // homepage niet iets anders belooft dan de respondent leest.
-const surveyMinutes = Object.values(SURVEY_MINUTES).filter((m): m is number => typeof m === 'number')
+// De drie scans die de homepage aanbiedt worden expliciet genoemd: ontbreekt er
+// een, dan faalt de pagina zichtbaar in plaats van een verkeerd bereik te tonen.
+function surveyMinutesFor(scan: 'exit' | 'retention' | 'onboarding'): number {
+  const minutes = SURVEY_MINUTES[scan]
+  if (typeof minutes !== 'number') {
+    throw new Error(`SURVEY_MINUTES mist de invultijd voor ${scan}`)
+  }
+  return minutes
+}
+const surveyMinutes = [surveyMinutesFor('exit'), surveyMinutesFor('retention'), surveyMinutesFor('onboarding')]
 const minSurveyMinutes = Math.min(...surveyMinutes)
 const maxSurveyMinutes = Math.max(...surveyMinutes)
 
@@ -132,7 +141,7 @@ const managementFlowSteps = [
     step: '2',
     label: 'Begrijpen',
     title: 'Loep levert een rapport met een antwoord',
-    body: 'Een rapport dat laat zien wat laag scoort en waar je begint. Bij Loep Vertrek en Loep Behoud komt daar één ranglijst bij, dit eerst en waarom, plus wat je mensen zelf als reden kozen en wat er volgens hen moet gebeuren.',
+    body: 'Een rapport dat laat zien wat laag scoort en waar je begint. Bij Loep Vertrek en Loep Behoud zie je ook waarom iets bovenaan staat, wat je mensen zelf als reden kozen en wat er volgens hen moet gebeuren.',
   },
   {
     step: '3',
@@ -868,22 +877,25 @@ function HeroSection() {
                     src="/images/voorbeeld-loep-behoud-p02.webp"
                     alt="Voorbeeld van pagina twee uit een Loep Behoud-rapport: de kernzin, het werkbeeld en de cijfers over blijven en vertrekken."
                     width={1489}
-                    height={1137}
-                    sizes="(max-width: 1120px) 100vw, 480px"
+                    height={1037}
+                    sizes="(max-width: 520px) 100vw, 480px"
                     priority
                     style={{ width: '100%', height: 'auto', display: 'block' }}
                   />
+                  {/* Rechtsboven: de afbeelding begint direct bij de paginakop, die
+                      links staat; rechts naast de kop is het vlak leeg. */}
                   <span
+                    aria-hidden
                     style={{
                       background: '#0d1b2a',
                       color: '#f4ece0',
                       fontFamily: bodyFont,
                       fontSize: 10,
                       fontWeight: 700,
-                      left: 0,
                       letterSpacing: '.18em',
                       padding: '7px 11px',
                       position: 'absolute',
+                      right: 0,
                       textTransform: 'uppercase',
                       top: 0,
                     }}

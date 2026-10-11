@@ -3,9 +3,16 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const bron = readFileSync(join(__dirname, '..', 'components', 'marketing', 'home-page-content.tsx'), 'utf8')
-const live = bron.slice(0, bron.indexOf('function SuitePreviewSection'))
+const grens = bron.indexOf('function SuitePreviewSection')
+const live = bron.slice(0, grens)
 
 describe('homepage polijstronde (spec par. 7)', () => {
+  it('meet het live deel van de homepage, niet een lege of volledige bron', () => {
+    // Verdwijnt het gearchiveerde blok, dan zou slice(0, -1) stilletjes bijna
+    // alles meten; dan moet deze test de grens opnieuw kiezen.
+    expect(grens).toBeGreaterThan(0)
+  })
+
   it('hero zegt niets meer wat het rapport niet zegt', () => {
     for (const oud of ['veruit het laagst', 'Eerste managementvraag', 'Waardering en erkenning', 'Illustratief voorbeeld']) {
       expect(live).not.toContain(oud)
@@ -13,19 +20,23 @@ describe('homepage polijstronde (spec par. 7)', () => {
   })
 
   it('hero toont de echte rapportafbeelding met label en alt-tekst', () => {
-    expect(live).toContain('/images/voorbeeld-loep-behoud-p02.')
+    const src = live.match(/src="(\/images\/voorbeeld-loep-behoud-p02\.[a-z]+)"/)?.[1]
+    expect(src).toBeTruthy()
     expect(live).toContain('Voorbeeld van pagina twee uit een Loep Behoud-rapport')
     expect(live).toMatch(/>\s*Voorbeeld\s*</)
-    const pad = join(__dirname, '..', 'public', 'images')
-    const bestand = ['voorbeeld-loep-behoud-p02.webp', 'voorbeeld-loep-behoud-p02.png']
-      .map((n) => join(pad, n)).find((p) => { try { return statSync(p).isFile() } catch { return false } })
-    expect(bestand).toBeTruthy()
-    expect(statSync(bestand!).size).toBeLessThan(250 * 1024)
+    // Precies het bestand dat de component laadt, niet een van twee mogelijke.
+    const bestand = join(__dirname, '..', 'public', ...src!.split('/').filter(Boolean))
+    expect(statSync(bestand).isFile()).toBe(true)
+    expect(statSync(bestand).size).toBeLessThan(250 * 1024)
   })
 
   it('invultijd komt uit SURVEY_MINUTES, niet uit vaste tekst', () => {
     expect(live).not.toContain('tien minuten')
-    expect(live).toContain('SURVEY_MINUTES')
+    expect(live).toContain("import { SURVEY_MINUTES } from '@/lib/campaign-setup'")
+    for (const scan of ['exit', 'retention', 'onboarding']) {
+      expect(live).toContain(`surveyMinutesFor('${scan}')`)
+    }
+    expect(live).toContain('in ${minSurveyMinutes} tot ${maxSurveyMinutes} minuten ingevuld')
   })
 
   it('kaartteksten rond 40 woorden', () => {
