@@ -194,12 +194,32 @@ describe('Loep Behoud als MTO-alternatief: copyregels', () => {
     expect(faq).toContain('Is Loep Behoud een MTO?')
   })
 
+  /**
+   * Regel 4.4: "kort" alleen naast de echte invultijd. INVULTIJD is de letterlijke
+   * waarde uit de bron van Taak 0 stap 5 (bijvoorbeeld '± 8 minuten');
+   * INVULTIJD_IDENT is de naam van de constante als die in de frontend wordt
+   * geïmporteerd (Taak 2 stap 5). Een bestand is in orde als het een van beide bevat.
+   */
+  const INVULTIJD = '<letterlijke waarde uit Taak 0 stap 5>'
+  const INVULTIJD_IDENT = 'BEHOUD_INVULTIJD'
+
+  it('elk bestand met "korte medewerkersonderzoek" noemt ook de invultijd', () => {
+    const metKort = RENDERED_FILES.filter((rel) => /korte medewerkersonderzoek/i.test(read(rel)))
+    expect(metKort.length).toBeGreaterThan(0)
+    for (const rel of metKort) {
+      const text = read(rel)
+      expect(text.includes(INVULTIJD) || text.includes(INVULTIJD_IDENT), `invultijd ontbreekt in ${rel}`).toBe(true)
+    }
+  })
+
   it('de keuzehulp noemt grootte niet als reden voor een groot MTO', () => {
     const producten = read('components/marketing/producten-content.tsx')
     expect(producten).not.toMatch(/1\.000 of meer medewerkers[^']{0,40}MTO|MTO[^']{0,80}1\.000/i)
   })
 })
 ```
+
+Vul `INVULTIJD` in met de letterlijke waarde uit Taak 0 stap 5, precies zoals hij in de bron staat. Laat de placeholder niet staan.
 
 - [ ] **Stap 2: Draai de guard en zie hem falen**
 
@@ -231,7 +251,7 @@ In `faqs` in `site-content.ts` wordt het paar `'Is Loep Behoud gewoon een MTO?'`
 ```ts
   [
     'Is Loep Behoud een MTO?',
-    'Het is een alternatief voor het grote jaarlijkse MTO. Een groot MTO meet alles en eindigt vaak in een rapport waar niemand mee verder komt. Loep Behoud meet wat telt voor of mensen blijven, laat zien wat je mensen daar zelf over zeggen, en zegt waar je begint. Wil je je scores vergelijken met andere organisaties, dan past een groot MTO beter.',
+    'Het is een alternatief voor het grote jaarlijkse MTO. Een groot MTO meet veel en eindigt vaak in een rapport waar niemand mee verder komt. Loep Behoud meet wat telt voor of mensen blijven, laat zien wat je mensen daar zelf over zeggen, en zegt waar je begint. Wil je je scores vergelijken met andere organisaties, dan past een groot MTO beter.',
   ],
 ```
 De FAQPage-JSON-LD (`faqSchema`) wordt uit `faqs` opgebouwd. Controleer dat met `grep -n "faqSchema" -A10 frontend/components/marketing/site-content.ts`. Is hij los geschreven, pas hem dan ook aan.
@@ -266,7 +286,7 @@ In `MtoComparisonSection`:
 ```tsx
   const mtoFits = [
     'Je wilt je scores vergelijken met andere organisaties of je branche (een benchmark)',
-    'Je wilt onderwerpen meten die Loep Behoud niet meet, zoals communicatie en informatie, arbeidsomstandigheden of ongewenst gedrag',
+    'Je wilt onderwerpen meten die Loep Behoud niet meet, zoals communicatie als eigen onderwerp, arbeidsomstandigheden of ongewenst gedrag',
     'Je wilt een vast meetritme dat een intern team zelf beheert in een eigen platform',
   ] as const
   const loepFits = [
@@ -283,26 +303,46 @@ Kop: `Wanneer past een groot MTO beter?`. Intro (vervangt "Een Loep-scan vervang
 ```
 Kop van de rechterkolom: `Kies Loep Behoud als`.
 
-**Controle tegen de vragenlijst (spec par. 5):** de onderwerpen in `mtoFits` mogen niet in de vragenlijst zitten. Draai:
+**Controle tegen de vragenlijst (spec par. 5):** de onderwerpen in `mtoFits` mogen niet als stelling in de vragenlijst zitten, en een verdiepings- of richtingoptie mag er niet tegen ingaan. Controleer drie bronnen: de Behoud-definitie (stellingen), `backend/scoring_config.py` (factoren en adviesteksten) en `backend/products/shared/deepening.py` (verdiepings- en richtingopties):
 
 ```bash
 /c/Users/larsh/Desktop/Business/Verisight/.venv/Scripts/python.exe -c "
+import json
+from pathlib import Path
 from backend.products.retention.definition import get_definition
-d=get_definition(); import json
-txt=json.dumps(d, ensure_ascii=False).lower()
-for w in ['communicatie','informatie','arbeidsomstandigheden','ongewenst','intimidatie','pesten']: print(w, w in txt)
+bronnen = {
+    'definitie (stellingen)': json.dumps(get_definition(), ensure_ascii=False),
+    'scoring_config.py': Path('backend/scoring_config.py').read_text(encoding='utf-8'),
+    'deepening.py': Path('backend/products/shared/deepening.py').read_text(encoding='utf-8'),
+}
+for w in ['communic', 'informatie', 'arbeidsomstandig', 'ongewenst', 'intimid', 'pesten']:
+    for naam, txt in bronnen.items():
+        for regel in txt.splitlines():
+            if w in regel.lower():
+                print(w.ljust(16), naam.ljust(24), regel.strip()[:110])
 "
 ```
-Verwacht: alles `False`. Is iets `True`, haal dat onderwerp dan uit `mtoFits` en noem het in het verslag.
+Beslisregel per treffer:
+- **In een stelling van Behoud:** het onderwerp wordt wel gemeten. Haal het uit `mtoFits` en noem het in het verslag.
+- **Alleen in een verdiepings- of richtingoptie** (bijvoorbeeld "Ik mis informatie, context of overdracht"): het is geen eigen onderwerp, maar het komt wel voor. Formuleer dan precies, zoals "communicatie als eigen onderwerp". Noem nooit "informatie" als iets wat Loep Behoud niet meet.
+- **Alleen in een adviestekst in `scoring_config.py`** (bijvoorbeeld "Communiceer transparant over beloningsstructuur"): geen meting, geen gevolg.
+
+Bekend op main `6b5d3b7f`: "informatie" staat in een verdiepingsoptie (`deepening.py` r. ~378) en in een richtingoptie (r. ~591). Daarom zegt `mtoFits` "communicatie als eigen onderwerp" en niet "communicatie en informatie".
 
 - [ ] **Stap 5: Homepage, scankaart Loep Behoud**
 
-In `routeCards` blijft `eyebrow: 'Behoud onder druk'`, omdat de drie eyebrows één set probleemlabels vormen. De `body` wordt:
+In `routeCards` blijft `eyebrow: 'Behoud onder druk'`, omdat de drie eyebrows één set probleemlabels vormen. "Kort" mag alleen naast de echte invultijd staan (spec 4.4). Daarom krijgt de `body` de invultijd uit de bron van Taak 0 stap 5:
 
-```ts
-    body: 'Het korte medewerkersonderzoek: waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Een alternatief voor het grote jaarlijkse MTO.',
-```
-De h1 en de paginatitel blijven.
+- **Voorkeur: één bron in de frontend.** Is de bron een geëxporteerde constante, importeer die dan. Staat de waarde nu alleen als literal in het `loep-behoud`-object van `producten-content.tsx`, exporteer hem daar dan als `export const BEHOUD_INVULTIJD = '<waarde uit Taak 0 stap 5>'`, gebruik hem in dat object (`duration: BEHOUD_INVULTIJD`) en importeer hem op de homepage:
+  ```ts
+      body: `Het korte medewerkersonderzoek, in ${BEHOUD_INVULTIJD} ingevuld: waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Een alternatief voor het grote jaarlijkse MTO.`,
+  ```
+  Heeft de constante al een andere naam, gebruik die dan, en pas `INVULTIJD_IDENT` in de guard aan.
+- **Kan dat niet zonder een importcyclus of zonder een server/client-grens te breken?** Laat "korte" dan weg op de homepagekaart:
+  ```ts
+      body: 'Het medewerkersonderzoek dat zegt waar je begint: waar het wringt bij de mensen die je wilt houden en waarom volgens henzelf. Een alternatief voor het grote jaarlijkse MTO.',
+  ```
+Noem in het verslag welke vorm het is geworden. De h1 en de paginatitel blijven.
 
 - [ ] **Stap 6: Guard en bestaande tests**
 
@@ -395,7 +435,7 @@ def test_report_html_bron_noemt_geen_mto():
 
 def test_backendbron_zegt_geen_breed_mto_met_benchmark():
     tekst = get_definition()["trust_contract"]["what_it_is_not"]
-    assert "geen brede MTO" not in tekst.lower()
+    assert "geen brede mto" not in tekst.lower()
     assert tekst.startswith("Geen breed MTO met benchmark")
     bron = Path(report_content.__file__).read_text(encoding="utf-8")
     assert "geen brede MTO" not in bron
@@ -796,6 +836,14 @@ Start de dev-server van de worktree (een `launch.json`-entry op poort 3100 met `
 - Console zonder fouten.
 
 - [ ] **Stap 3: Browsercheck (dashboard)**
+
+**Testvalkuil (8-10):** in het verborgen browserpaneel vuurt `requestAnimationFrame` niet, waardoor gestreamde Next-pagina's op "Je meting wordt geladen" blijven hangen. Dat is geen productfout. De omweg, via `javascript_tool` na het laden van de pagina:
+```js
+window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16)
+window.$RV && window.$RB && window.$RV(window.$RB)
+```
+Lees de pagina daarna met `read_page` of `get_page_text`. Dit geldt ook voor de publieke pagina's van stap 2 als die blijven hangen.
+
 
 Volg `docs/testklant.md` (inloggen via `scripts/seed_test_tenant.py --login-link`). Open de campagnepagina van testklant A. De methodiekkaart zegt "geen breed MTO met benchmark" en "Loep maakt zichtbaar", zonder "Verisight". Dit draait tegen de lokale frontend met de productie-Supabase van de testklant. Raak geen data aan.
 

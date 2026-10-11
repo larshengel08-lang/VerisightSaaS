@@ -28,7 +28,7 @@ Voorbeeld van de kernregel: "Loep Behoud · het korte medewerkersonderzoek. Een 
 
 ## 3. Positionering
 
-- **Belofte:** een groot MTO meet alles en eindigt vaak in een rapport zonder vervolg. Loep Behoud meet wat telt voor of mensen blijven, en zegt waar je begint. Die belofte wordt gedragen door wat het rapport echt doet: verdieping, richtingvraag, werkvragen en besluitpagina. Geen belofte die het rapport niet waarmaakt.
+- **Belofte:** een groot MTO meet veel en eindigt vaak in een rapport zonder vervolg. Loep Behoud meet wat telt voor of mensen blijven, en zegt waar je begint. Die belofte wordt gedragen door wat het rapport echt doet: verdieping, richtingvraag, werkvragen en besluitpagina. Geen belofte die het rapport niet waarmaakt.
 - **Alleen Loep Behoud.** Loep Vertrek en Loep Start krijgen geen MTO-claim. Loep Start wordt nog niet actief verkocht (polijstronde par. 6).
 - **Blijft gelijk:** de homepage-h1 ("Wacht niet tot vertrek het signaal is"), de prijsstaffel, de propositie zonder bespreking (besluit A) en "Werkbeeld" als naam van de totaalscore (polijstronde par. 2).
 
@@ -45,11 +45,11 @@ Voorbeeld van de kernregel: "Loep Behoud · het korte medewerkersonderzoek. Een 
 
 Het bestaande blok "Wanneer past een breed MTO beter?" op `/producten` blijft, en wordt herschreven tot een eerlijke keuzehulp. Kies een groot MTO als je:
 - een **benchmark** met andere organisaties of je branche nodig hebt;
-- onderwerpen wilt meten die Loep Behoud niet meet, zoals **communicatie en informatie, arbeidsomstandigheden of ongewenst gedrag**.
+- onderwerpen wilt meten die Loep Behoud niet meet, zoals **communicatie als eigen onderwerp, arbeidsomstandigheden of ongewenst gedrag**. Niet "informatie": die komt in Behoud voor als verdiepingsoptie ("Ik mis informatie, context of overdracht") en als richtingoptie (`deepening.py`).
 
 Organisatiegrootte is geen reden: de staffel biedt 1.000 of meer medewerkers op aanvraag aan.
 
-Deze lijst moet kloppen met de vragenlijst. Controleer bij de bouw dat geen genoemd onderwerp er toch in zit en dat geen gemeten onderwerp als "ontbreekt" wordt genoemd.
+Deze lijst moet kloppen met de vragenlijst. Controleer bij de bouw dat geen genoemd onderwerp er toch in zit en dat geen gemeten onderwerp als "ontbreekt" wordt genoemd: tegen de stellingen, `backend/scoring_config.py` en de verdiepings- en richtingopties in `deepening.py`.
 
 ## 6. Surfaces
 
