@@ -45,8 +45,9 @@ Voorbeeld van de kernregel: "Loep Behoud · het korte medewerkersonderzoek. Een 
 
 Het bestaande blok "Wanneer past een breed MTO beter?" op `/producten` blijft, en wordt herschreven tot een eerlijke keuzehulp. Kies een groot MTO als je:
 - een **benchmark** met andere organisaties of je branche nodig hebt;
-- onderwerpen wilt meten die Loep Behoud niet meet, zoals **communicatie en informatie, arbeidsomstandigheden of ongewenst gedrag**;
-- **1.000 of meer medewerkers** hebt (buiten de staffel).
+- onderwerpen wilt meten die Loep Behoud niet meet, zoals **communicatie en informatie, arbeidsomstandigheden of ongewenst gedrag**.
+
+Organisatiegrootte is geen reden: de staffel biedt 1.000 of meer medewerkers op aanvraag aan.
 
 Deze lijst moet kloppen met de vragenlijst. Controleer bij de bouw dat geen genoemd onderwerp er toch in zit en dat geen gemeten onderwerp als "ontbreekt" wordt genoemd.
 
@@ -131,4 +132,5 @@ Na de merge komt er een entry in `C:\Users\larsh\CLAUDE.md` met: de route (a) al
    - de contact-funnel-inferentie: een brede cultuurvraag landt op Loep Behoud.
 5. **Rapport:** de drie voorbeeldrapporten opnieuw genereren en renderen in het productie-image (`docker build -t loep-backend:test .`). 0 warnings, 0 em-dashes in de tekstlaag, `scripts/check_pdf_report.py` OK.
 6. **Browsercheck** van home, `/producten` (desktop en 375 px) en de redirect, volgens `docs/testklant.md`. Dit is een publieke wijziging, de testklant hoeft niet.
-7. **Niet mergen of pushen** zonder akkoord van Lars.
+7. **Backendversie:** de rapportcopy uit 6.2 is pas live na een Railway-deploy van de service "Loep main" (Vercel deployt alleen de frontend). De go-live-check draait op die backendversie: controleer vooraf met `GET /api/health` dat de live git-sha de merge-commit van deze ronde bevat.
+8. **Niet mergen of pushen** zonder akkoord van Lars.
