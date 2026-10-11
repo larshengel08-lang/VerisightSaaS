@@ -2,13 +2,13 @@
 
 Spec: `docs/superpowers/specs/2026-10-09-polijstronde.md` (inclusief par. 7 Homepage, toegevoegd 10-10). Plan: `docs/superpowers/plans/2026-10-09-polijstronde.md`. Bron van de 39 codes: `docs/rapport-koude-leesronde-2026-10-08.md`, sectie 5.
 
-Uitgevoerd van 9 tot en met 11 oktober in worktree `.worktrees/polijstronde`, branch `feature/polijstronde`, vanaf main `6b5d3b7f`. Werkwijze: per taak één implementer, daarna een spec-review en een codekwaliteitsreview, herreview tot beide akkoord waren. **Alle taken (0 tot en met 14, plus 13b) zijn gebouwd en door de reviews gekomen, daarna een eindreview over de hele branch en een laatste fixronde (11-10). 34 van de 39 leesronde-codes zijn dicht, 4 deels (met een beslispunt voor Lars), 1 bewust niet (S1, spec). Niet gemerged, niet gepusht.**
+Uitgevoerd van 9 tot en met 11 oktober in worktree `.worktrees/polijstronde`, branch `feature/polijstronde`, vanaf main `6b5d3b7f`. Werkwijze: per taak één implementer, daarna een spec-review en een codekwaliteitsreview, herreview tot beide akkoord waren. **Alle taken (0 tot en met 14, plus 13b) zijn gebouwd en door de reviews gekomen, daarna een eindreview over de hele branch en een laatste fixronde (11-10). 33 van de 39 leesronde-codes zijn dicht, 5 deels (met een beslispunt voor Lars), 1 bewust niet (S1, spec). Niet gemerged, niet gepusht.**
 
 ## Baselines
 
 | | Voor (main `6b5d3b7f`, 9-10) | Na (HEAD, 11-10) |
 |---|---|---|
-| Backend `pytest tests` | 24 failed / 1972 passed / 11 skipped | 24 failed / 2309 passed / 11 skipped (Taak 14); na de laatste fixronde 24 failed / 2321 passed / 11 skipped |
+| Backend `pytest tests` | 24 failed / 1972 passed / 11 skipped | 24 failed / 2309 passed / 11 skipped (Taak 14); na de laatste fixronde 24 failed / 2336 passed / 11 skipped |
 | Backend-faalset | `polijstronde-backend-baseline-fails.txt` | identiek per testnaam (`GEEN_REGRESSIES`) |
 | Python 3.11-guard | groen | groen (70 passed, venv 3.11.9), ook na de laatste fixronde |
 | Frontend `tsc --noEmit` | 131 | 131 |
@@ -46,7 +46,7 @@ Bewijs is geciteerd uit de nieuwe voorbeeldrapporten (PDF uit het productie-imag
 | V3 | dicht | Benoemd waar redenen en scores uit elkaar lopen, met het onderwerp bij naam. | Vertrek p.3: "Beloning werd 18 keer genoemd als reden die meespeelde, maar het onderwerp beloning en voorwaarden scoort 7.0 (relatief sterk): hier lopen redenen en scores uit elkaar." |
 | V7 | dicht | Zoals R7. | Vertrek p.11: "Dit is een andere telling dan de 14 bij de toelichting op pagina 5: ..." |
 | V10 | dicht | Voorbehoud hangt nu aan het aantal veranderkeuzes (onder 10). | Vertrek p.11, kaart tweede punt: "Volgens 4 van de 5 die om verandering vroegen; 3 kozen ‘Niets, dit zat hier goed’." en "Beperkte basis: gebruik dit als gesprekshaakje, niet als conclusie (drempels: pagina 16)." Beslispunt 6. |
-| V11 | dicht | Eén anker in de woorden van p.02. | Vertrek p.12, beide werkvragen: "En in de uitstroomperiode (tussen oktober 2025 en maart 2026)?" Beslispunt 11 (tien andere werkvragen). |
+| V11 | deels | Eén anker in de woorden van p.02 voor de vijftien werkvragen met het anker "in de periode waar deze meting over gaat". Veertien andere Vertrek-werkvragen houden "een jaar geleden" (goedgekeurde content); zie beslispunt 11. | Vertrek p.12, beide werkvragen: "En in de uitstroomperiode (tussen oktober 2025 en maart 2026)?" Beslispunt 11 (veertien werkvragen met "een jaar geleden"). |
 | V12 | dicht | Regel met de verdeling in de appendix, alleen als het blok echte keuzes toont. | Vertrek p.15: "Werkdruk en balans (7 antwoorden): ‘Meer ruimte om te herstellen en werk goed af te ronden’ 3, ‘Duidelijkere keuzes over wat voorrang heeft en wat kan wachten’ 2, ..."; verwijzing p.11 "(pagina 15)". |
 | V13 | deels | Eigen grenzen gehouden en uitgelegd; label "Gemengd frictiebeeld". Gelijktrekken verandert wat de frictiescore betekent. | Vertrek p.2: "Deze grenzen horen bij de frictiescore en zijn niet dezelfde als de grenzen 5,0 en 6,5 bij de onderwerpen." Beslispunt 4. |
 | V14 | dicht | Afdelingsdeel weg als er geen afdelingen in het rapport staan. | Vertrek p.13: "Wie invulde, is vertrokken: koppel terug aan wie er nu werkt, over wat het MT met de vertrekredenen doet. Deel geen open antwoorden." |
@@ -64,7 +64,7 @@ Bewijs is geciteerd uit de nieuwe voorbeeldrapporten (PDF uit het productie-imag
 | S10 | dicht | Zelfde terugkoppelingsregel als Behoud, met grens 10. | Start p.10: "Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden." |
 | S11 | dicht | Open antwoorden in de leidraad, met de vraag van Vertrek. | Start p.2: "Het waarom staat in de open antwoorden (pagina 8); vraag: wat komt terug in meer dan één antwoord?" |
 
-Telling: 34 dicht, 4 deels (R14, R25, R27, V13), 1 bewust niet (S1). S2 ging in de laatste fixronde van deels naar dicht voor het rapport; de site-tekst blijft beslispunt 8.
+Telling: 33 dicht, 5 deels (R14, R25, R27, V13, V11), 1 bewust niet (S1). In de laatste fixronde ging S2 van deels naar dicht voor het rapport (de site-tekst blijft beslispunt 8) en V11 van dicht naar deels (veertien werkvragen houden "een jaar geleden", beslispunt 11).
 
 ## "Behoudssignaal" werd "Werkbeeld"
 
@@ -127,7 +127,7 @@ De nieuwe regel is dus een vangnet voor een geval dat de stresstest niet op een 
 | 13 | Privacyverklaring sectie 5 | `8d78966d`, `af70e7dd` |
 | 13b | Homepage (spec par. 7) | `451f1bc6`, `cfae4e82` |
 | 14 | Voorbeeldrapporten, eindmeting, browsercheck, verslag | `2580083e`, `2ba3b634` |
-| Eind | Laatste fixronde na de eindreview (A tot en met H, plus een regelbreuk in de hero) | `3c9aed92`, `b070dae0`, `95857e7e`, `b090a2f4`, `6bae8ace`, `f28b88c1` en de verslagcommit |
+| Eind | Laatste fixronde na de eindreview (A tot en met H, plus een regelbreuk in de hero en de overige respondenthints) | `3c9aed92`, `b070dae0`, `95857e7e`, `b090a2f4`, `6bae8ace`, `f28b88c1`, `9187698e`, `3826a479` en de verslagcommit |
 
 ## Wat de reviews vonden
 
@@ -254,11 +254,12 @@ De kleine bevindingen zijn in deze ronde opgelost, elk met een test (eerst rood,
 | F | Besluitpagina Loep Start (S2) | "Loep Start meet nog geen richtingvraag; het besluit volgt uit ..." | "Deze scan bevat geen richtingvraag; het besluit volgt uit jullie gesprek over het startpunt (pagina 9)." Grep op andere Start-teksten met "nog geen" over verdieping of richting: geen | `test_report_besluitpagina.py`: lockstep | `95857e7e` |
 | G | Titel al-ingevuld-pagina | "Bedankt \| Loep" | "Al ingevuld \| Loep"; de bedankpagina houdt "Bedankt \| Loep" | `test_al_ingevuld_pagina_heeft_eigen_titel` (nieuw) | `b090a2f4` |
 | H | Scoringsfout respondent | "... Lukt het dan nog niet, neem contact op met de HR-afdeling van je organisatie." | "... Lukt het dan nog niet, neem dan contact op met wie je de link heeft gestuurd." | `test_scoringsfout_noemt_vervolgstap`: lockstep | `b090a2f4` |
+| H2 | Overige respondenthints (na spec-review): ongeldige link en verlopen link (`main.py`), gesloten meting (`SURVEY_CLOSED_HINT`), al-ingevuld (`complete.html`) | "Neem contact op met de HR-afdeling van je organisatie ..." | "Neem contact op met wie je de link heeft gestuurd als je een nieuwe uitnodiging nodig hebt." / "... als je de vragenlijst alsnog wilt invullen." / "Heb je vragen? Neem dan contact op met wie je de link heeft gestuurd." / "Neem contact op met wie je de link heeft gestuurd." Afmeldregel in de mails (HR-kant) ongewijzigd | `test_respondentteksten_noemen_geen_hr_afdeling`, `test_respondenthints_in_neutrale_vorm`, `test_ongeldige_link_toont_neutrale_hint` (nieuw) | `3826a479` |
 | + | Regelbreuk blijfintentiecel (gevolg van A, zichtbaar in de hero) | de "5" van "onder de 5" alleen op een nieuwe regel | vaste spaties in "onder de 5", alleen in die cel | `test_blijfintentie_cel_breekt_niet_voor_het_getal` (nieuw) | `6bae8ace` |
 
 Daarna opnieuw gemeten:
 
-- **Backend-faalset:** `GEEN_REGRESSIES`, 24 failed / 2321 passed / 11 skipped op de eindstand. Eerder in de ronde, vóór de regelbreukfix, ook `GEEN_REGRESSIES` (24 / 2320 / 11). Python 3.11-guard groen.
+- **Backend-faalset:** `GEEN_REGRESSIES`, 24 failed / 2336 passed / 11 skipped op de eindstand (na `3826a479`). Eerder in de ronde ook `GEEN_REGRESSIES`: 24 / 2320 / 11 vóór de regelbreukfix, 24 / 2321 / 11 erna. Python 3.11-guard groen.
 - **Frontend:** alleen de hero-afbeelding veranderde (geen TSX). `tsc` 131; vitest 47 failed / 1948, aan de `<`-kant alleen de drie bekende wisselvallige namen, niets aan de `>`-kant. `lib/homepage-polijstronde.test.ts`: 6 passed.
 - **Renders** (`eind2.txt`, image opnieuw gebouwd, alles opnieuw gegenereerd, geen selectie): 34 bestanden, 4 met bevindingen, 0 warnings, 0 streepjes; per bestand gelijk aan `eind.txt`: 01 p.7 36% en p.13 39%, 09 p.7 26% en p.13 39%, 14 p.13 32%, 19 p.7 36%. Paginatallen ongewijzigd (voorbeelden Vertrek 17, Behoud 19, Start 13).
 - **Richtingstaten:** `diff staten-voor.txt staten-eind2.txt` leeg (65 regels).
@@ -279,7 +280,7 @@ Daarna opnieuw gemeten:
 11. **V11, veertien Vertrek-werkvragen eindigen nog op "een jaar geleden"** (`deepening.py` 660, 694, 716, 720, 728, 734, 738, 746, 750, 754, 764, 776, 786, 802; de eerdere telling van tien miste de laatste vier, gevonden in de eindreview). Vijftien andere dragen het anker "in de periode waar deze meting over gaat", dat het rapport vervangt door de uitstroomperiode. In het voorbeeld niet zichtbaar, maar bij een ander startpunt kunnen een startpunt en een tweede punt twee verschillende tijdsankers tonen. Goedgekeurde content, andere betekenis (verandering in de tijd tegenover de uitstroomperiode). *Advies:* gelijktrekken naar het uitstroomanker; het is de vorm die de leesronde vroeg. Een guardtest (`tests/test_werkvragen_tijdsanker_guard.py`) bewaakt sinds de laatste fixronde dat elke vraag met het anker precies de constante `WERKVRAGEN_TIJDSANKER` draagt.
 12. **Score van kleine afdelingen in de tabel.** De themakolom toont bij 5 tot 9 antwoorden alleen een label, de scorekolom wel een cijfer (Behoud: Marketing 5/8 "6.3"; Start: Sales 7/9 "6.0", Operations 5/9 "6.2"), terwijl het navy blok die cijfers weglaat (S9). *Advies:* de scorekolom bij 5 tot 9 antwoorden ook als label tonen; dat maakt R14 en S9 sluitend.
 13. **Werkvragenblok alleen op een pagina in 01, 09 en 14 (39 / 39 / 32%), tegenover R23.** Kop, uitleg en kaarten reizen samen; tekort 17, 33 en 170 pt. *Advies:* R23 houden (een kop zonder kaarten is erger dan een halfvolle pagina) en de uitzondering in de meetregel vastleggen.
-14. **Kleine teksten in de respondentflow** (zie Browsercheck). In de laatste fixronde gedaan: titel "Al ingevuld" op de al-ingevuld-pagina (G), de scoringsfout verwijst naar "wie je de link heeft gestuurd" (H), de Vertrek-uitnodiging begint als de startpagina (D). Nog open: "Neem contact op met de HR-afdeling van je organisatie" op de al-ingevuld-pagina (`complete.html:119`), in twee statusmeldingen (`main.py:1334`, `1353`), in `SURVEY_CLOSED_HINT` (`survey_window.py:27`) en in de afmeldregel van de mails; "helpt de organisatie gerichter te verbeteren" op de bedankpagina; "Verduidelijking" tegen "Korte verduidelijking"; "vertrouwelijk" tegen "anoniem". *Advies:* dezelfde vorm als H ("wie je de link heeft gestuurd") op al die plekken, in één kleine ronde.
+14. **Kleine teksten in de respondentflow** (zie Browsercheck). In de laatste fixronde gedaan: titel "Al ingevuld" op de al-ingevuld-pagina (G), de scoringsfout verwijst naar "wie je de link heeft gestuurd" (H), de Vertrek-uitnodiging begint als de startpagina (D). Ook gedaan (`3826a479`): de overige respondenthints met "de HR-afdeling van je organisatie" (al-ingevuld-pagina, ongeldige en verlopen link, gesloten meting) zeggen nu "wie je de link heeft gestuurd"; de afmeldregel in de uitnodigings- en herinneringsmail (HR-kant) bewust ongewijzigd. Nog open: "helpt de organisatie gerichter te verbeteren" op de bedankpagina; "Verduidelijking" tegen "Korte verduidelijking"; "vertrouwelijk" tegen "anoniem". *Advies:* in één kleine ronde gelijktrekken.
 15. **Taak 1: nieuwe werkvraagvariant `none_at_least_top` heet in de code CONCEPT, maar klanten zien hem** (`deepening.py` ~827, in elk rapport waar de niets-groep minstens zo groot is als de grootste richting en die richting minstens 2 stemmen heeft). De eindreview markeerde dit als beslispunt: de tekst is niet door Lars goedgekeurd zoals de andere vertaalvragen. Daarnaast het weglaten van de wegingsregel in die staat. "Beide kan kloppen" (ook in de goedgekeurde `split_none`-variant) is taalkundig "Beide kunnen kloppen". Vertrek p.02 zegt "vinden dat hier niets hoeft" in de tegenwoordige tijd (bestaand patroon). *Advies:* variant akkoord, "Beide kunnen kloppen" in beide varianten.
 16. **`BESLUIT_AFDELING_SAMEN`**: "Dit onderwerp is ook het tweede punt. Maak deze afspraak ook als jullie het tweede punt parkeren. Het rapport toont de toelichtingen alleen voor de hele organisatie." *Advies:* akkoord.
 17. **R21, korte vorm in de leidraad:** "Vul de afdelingsafspraak en de terugkoppeling altijd in." ("dan toch" las als "op het vervolgmoment"). *Advies:* akkoord.
@@ -299,7 +300,7 @@ Daarna opnieuw gemeten:
 
 ## Opruimwerk
 
-- Meetuitvoer en hulpbestanden in `C:\Users\larsh\AppData\Local\Temp\loep-polijst\` (niet in de repo): o.a. `nulmeting.txt`, `t7-na-render-full.txt`, `t11-start.txt`, `t11-eind.txt`, `eind.txt`, `staten-voor.txt`, `staten-na.txt`, `na-eind.txt`, `vitest-eind.txt`, en van de laatste fixronde `eind2.txt`, `staten-eind2.txt`, `na-eind2.txt`, `na-eind3.txt`, `vitest-eind2.txt`, `eind2-*.log`, `eind3-suite.log`, suite- en buildlogs, de PDF's in `out/`, `txt-*.txt` (tekst van de voorbeeld-PDF's), `seed_browsercheck.py`, `tokens.txt`, `browsercheck.db`, `launch.json.orig` en `launch.json.eind-orig`, plus de hulpscripts van eerdere taken.
+- Meetuitvoer en hulpbestanden in `C:\Users\larsh\AppData\Local\Temp\loep-polijst\` (niet in de repo): o.a. `nulmeting.txt`, `t7-na-render-full.txt`, `t11-start.txt`, `t11-eind.txt`, `eind.txt`, `staten-voor.txt`, `staten-na.txt`, `na-eind.txt`, `vitest-eind.txt`, en van de laatste fixronde `eind2.txt`, `staten-eind2.txt`, `na-eind2.txt`, `na-eind3.txt`, `na-eind4.txt`, `vitest-eind2.txt`, `eind2-*.log`, `eind3-suite.log`, `eind4-suite.log`, suite- en buildlogs, de PDF's in `out/`, `txt-*.txt` (tekst van de voorbeeld-PDF's), `seed_browsercheck.py`, `tokens.txt`, `browsercheck.db`, `launch.json.orig` en `launch.json.eind-orig`, plus de hulpscripts van eerdere taken.
 - De launch-configuratie in `C:\Users\larsh\Desktop\Business\.claude\launch.json` is na beide browserchecks byte-gelijk teruggezet.
 - Docker hing deze ronde niet; geen nieuwe hernoemde mappen. Wel staan er nog oude in `%LOCALAPPDATA%\Docker\` (`run.broken`, `run.broken2`, `run.old-*`, `run.stale-*`, `run_stale_*`); die kunnen weg.
 - `docs/stresstest/` is gitignored en bevat de eindmeting.
