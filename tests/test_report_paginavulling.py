@@ -34,22 +34,22 @@ def _body(html):
 
 
 def test_enps_block_toont_aanraders_en_critici():
-    html = _enps_block(8, {"n": 39, "promoters": 12, "detractors": 9})
+    html = _enps_block(8, {"n": 39, "promoters": 12, "detractors": 9}, "retention")
     t = re.sub(r"<[^>]+>", " ", html)
     assert "+8" in t and "12 aanraders" in t and "9 critici" in t and "van 39" in t
-    assert _enps_block(None, None) == ""
+    assert _enps_block(None, None, "exit") == ""
 
 
 def test_enps_negatief_krijgt_een_echt_minteken_en_een_woord_voor_critici():
     """Eindreview plan 3a punt 4: elders staat "−100" met een echt
     minteken, dus de score zelf ook; en één woord voor de groep (critici),
     niet daarnaast "criticasters" in de uitleg."""
-    html = _enps_block(-91, {"n": 39, "promoters": 1, "detractors": 36})
+    html = _enps_block(-91, {"n": 39, "promoters": 1, "detractors": 36}, "retention")
     t = re.sub(r"<[^>]+>", " ", html)
     assert "−91" in t and "-91" not in t
     assert "criticaster" not in html
     assert "critici" in html
-    assert "+8" in _enps_block(8, {"n": 39, "promoters": 12, "detractors": 9})
+    assert "+8" in _enps_block(8, {"n": 39, "promoters": 12, "detractors": 9}, "retention")
 
 
 def test_enps_heeft_geen_eigen_hoofdstuk_meer_en_staat_bij_de_context():

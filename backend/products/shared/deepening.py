@@ -705,7 +705,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
     "growth": {
         "grd_visibility": {
             "retention": "Waar ziet een medewerker bij jullie vandaag welke functies, opleidingen of projecten er zijn? En wie wijst een medewerker op wat er voor hem of haar tussen zit?",
-            "exit": "Waar ziet een medewerker vandaag welke functies, opleidingen of projecten er zijn, en wie wijst die erop? Stond dat er een jaar geleden ook?",
+            "exit": "Waar ziet een medewerker vandaag welke functies, opleidingen of projecten er zijn, en wie wijst die erop? En in de periode waar deze meting over gaat?",
         },
         "grd_conversation": {
             "retention": "Wat weet een medewerker bij jullie ná een ontwikkelgesprek dat die ervoor niet wist: welke stap, welke opleiding, welk ander werk? Wie voert dat gesprek, en hoe vaak?",

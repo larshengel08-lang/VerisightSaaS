@@ -59,7 +59,7 @@ def test_band_onboarding_follows_health_ladder():
 
 def test_band_exit_keeps_risk_polarity():
     assert _band(7.5, "exit")[0] == "Sterk frictiebeeld"
-    assert _band(5.0, "exit")[0] == "Gemengd vertrekbeeld"
+    assert _band(5.0, "exit")[0] == "Gemengd frictiebeeld"
     assert _band(3.0, "exit")[0] == "Laag frictiebeeld"
 
 

@@ -345,7 +345,8 @@ from backend.report_html import _frictie_duiding  # noqa: E402
 FRICTIE = ("Frictiescore: de zes onderwerpen en de werkbeleving van de vertrekkers samen in één "
            "getal. Hier is hoger slechter, anders dan bij de andere scores in dit rapport: vanaf "
            "7,0 is de frictie sterk, onder 4,5 laag. Het getal zegt hoe breed het wringt, niet "
-           "waar; dat laten de onderwerpen zien.")
+           "waar; dat laten de onderwerpen zien. Deze grenzen horen bij de frictiescore en "
+           "zijn niet dezelfde als de grenzen 5,0 en 6,5 bij de onderwerpen.")
 # Zonder factorprofiel (minder dan 10 antwoorden) toont het rapport geen
 # onderwerpen; de slotzin belooft dan niets wat niet rendert.
 FRICTIE_ZONDER_PROFIEL = ("Frictiescore: de zes onderwerpen en de werkbeleving van de "

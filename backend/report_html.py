@@ -148,7 +148,11 @@ def _fl(fk: str, scan_type: str = "exit") -> str:
 
 _EXIT_BANDS = {
     "HOOG":   ("Sterk frictiebeeld",       "#C0392B"),
-    "MIDDEN": ("Gemengd vertrekbeeld",      "#C17C00"),
+    # V13 (polijstronde): "frictiebeeld" zoals de twee andere banden; de
+    # grenzen zelf (RISK_HIGH/RISK_MEDIUM) bepalen ook de opgeslagen risk_band
+    # van alle producten en blijven dus gelijk. _frictie_duiding legt uit
+    # waarom ze niet de 5,0 en 6,5 van de onderwerpen zijn.
+    "MIDDEN": ("Gemengd frictiebeeld",      "#C17C00"),
     "LAAG":   ("Laag frictiebeeld",         "#3C8D8A"),
 }
 # De labelwoorden van de ladder 5,0 / 6,5 (gezondheidsschaal), van laag naar
@@ -1086,6 +1090,13 @@ def _frictie_duiding(avg_risk: float | None, *, met_onderwerpen: bool = True) ->
            "rapport: vanaf " + sterk + " is de frictie sterk, onder " + laag + " laag. Het "
            "getal zegt hoe breed het wringt, niet waar")
     zin += "; dat laten de onderwerpen zien." if met_onderwerpen else "."
+    # V13 (polijstronde): de frictiescore heeft eigen grenzen naast de vaste
+    # ladder van de onderwerpen. Alleen als het rapport onderwerpen toont: op
+    # een degraded pagina twee is er geen ladder om mee te vergelijken.
+    if met_onderwerpen:
+        zin += (" Deze grenzen horen bij de frictiescore en zijn niet dezelfde als de "
+                "grenzen " + f"{ZONE_LOW:.1f}".replace(".", ",") + " en "
+                + f"{ZONE_HIGH:.1f}".replace(".", ",") + " bij de onderwerpen.")
     return '<p class="p02-duiding">' + _h(zin) + "</p>"
 
 
@@ -1460,6 +1471,14 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     """
     maanden = sorted(m for m in (exit_months or []) if m)
     bekend = len(maanden)
+    bereik = _uitstroom_bereik(maanden)
+    if bereik is not None:
+        eerste, laatste = bereik
+        regel = ("Uitstroomperiode: vertrek in " + eerste if eerste == laatste
+                 else "Uitstroomperiode: vertrek tussen " + eerste + " en " + laatste)
+        if bekend < n:
+            regel += " (bij " + str(bekend) + " van de " + str(n) + " vastgelegd)"
+        return regel + ".", None
     if bekend == 0:
         if not heeft_meetperiode:
             return None, "de maand van vertrek (niet vastgelegd)"
@@ -1468,15 +1487,27 @@ def _uitstroomperiode(exit_months: list[str] | None, n: int, *,
     if bekend < MIN_SEGMENT_N:
         return None, ("de maand van vertrek (bij " + str(bekend) + " van de " + str(n)
                       + " vastgelegd, te weinig om een periode te noemen)")
+    # Wel genoeg bekende maanden, geen bereik: dan is een randmaand te klein.
+    return None, UITSTROOM_RAND_TE_KLEIN
+
+
+def _uitstroom_bereik(exit_months: list[str] | None) -> tuple[str, str] | None:
+    """(vroegste, laatste) maand als Nederlandse tekst, of None.
+
+    De enige plek die beslist of maanden in het rapport mogen staan: de regel
+    op pagina twee (_uitstroomperiode) en het tijdsanker in de werkvragen
+    (_werkvragen_block, V11) lezen allebei deze helper, zodat er nooit een
+    maand verschijnt die de gate niet haalde. Gate: minstens MIN_SEGMENT_N
+    bekende maanden en de vroegste en laatste maand elk door minstens
+    UITSTROOM_RAND_MIN mensen gekozen (zie _uitstroomperiode voor het waarom).
+    """
+    maanden = sorted(m for m in (exit_months or []) if m)
+    if len(maanden) < MIN_SEGMENT_N:
+        return None
     per_maand = Counter(maanden)
     if per_maand[maanden[0]] < UITSTROOM_RAND_MIN or per_maand[maanden[-1]] < UITSTROOM_RAND_MIN:
-        return None, UITSTROOM_RAND_TE_KLEIN
-    eerste, laatste = _maand_nl(maanden[0]), _maand_nl(maanden[-1])
-    regel = ("Uitstroomperiode: vertrek in " + eerste if eerste == laatste
-             else "Uitstroomperiode: vertrek tussen " + eerste + " en " + laatste)
-    if bekend < n:
-        regel += " (bij " + str(bekend) + " van de " + str(n) + " vastgelegd)"
-    return regel + ".", None
+        return None
+    return _maand_nl(maanden[0]), _maand_nl(maanden[-1])
 
 
 def _cover_respons_stat(completion_pct: float | None) -> tuple[str, str]:
@@ -1913,6 +1944,7 @@ LEIDRAAD_ANKERS = {
     "drempels": "sec-drempels",        # drempeltabel op de methodiekpagina (taak 11)
     "besluit": "sec-besluit",          # besluitpagina "Besluit van het MT" (plan 3b)
     "werkvragen": "sec-werkvragen",    # blok "Zo maak je er een besluit van" (N1, plan 3b eindreview)
+    "bijlage": "sec-bijlage",          # kop van de appendix (V12, polijstronde)
 }
 
 
@@ -3434,8 +3466,16 @@ def _direction_totals(direction_agg: dict) -> tuple[int, int, int]:
             sum(a["skipped"] for a in direction_agg.values()))
 
 
+# Plaatshouder voor de paginaverwijzing naar de bijlage in de (platte) tekst
+# van _direction_totals_line. Die tekst gaat door _h(); het anker (_pref) is
+# HTML en wordt pas daarna ingevoegd, in _wat_moet_gebeuren_block. _h laat
+# accolades staan, dus de plaatshouder overleeft het escapen.
+BIJLAGE_PAGINA = "{bijlage-pagina}"
+BIJLAGE_RICHTING_ZIN = " Wat zij kozen, staat in de bijlage (pagina " + BIJLAGE_PAGINA + ")."
+
+
 def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_type: str,
-                           n_total: int) -> str:
+                           n_total: int, *, bijlage: bool = False) -> str:
     """De sluitende richtingketen op de gespreksagenda (B14, H19): totaal
     gekregen/beantwoord/overgeslagen, wie het startpunt en het tweede punt als
     laagste had, en waar de rest is gebleven. Elke respondent krijgt precies één
@@ -3468,6 +3508,13 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     Alleen `toegewezen > n_total` blijft een harde fout: dat is rekenkundig
     onmogelijk (elke respondent draagt aan ten hoogste één onderwerp bij), dus
     geen drift maar een codebug of een inconsistente aanroep.
+
+    bijlage (V12, polijstronde): de renderer toont de bijlage (dezelfde
+    _should_show_appendix-waarde die de appendix rendert, van buiten
+    meegegeven). Dan staan de keuzes bij de onderwerpen buiten de agenda
+    daar (_bijlage_richting_block, voor precies de onderwerpen in `rest`
+    hieronder), en verwijst de zin "niet uitgewerkt" ernaar. De verwijzing
+    staat als BIJLAGE_PAGINA in de tekst; de aanroeper vult het anker in.
     """
     offered, answered, skipped = _direction_totals(direction_agg)
     if not offered:
@@ -3535,6 +3582,8 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
         if rest_antwoorden:
             zin += (" Die antwoorden gaan over onderwerpen die niet op de agenda staan "
                     "en zijn daarom niet uitgewerkt.")
+            if bijlage:
+                zin += BIJLAGE_RICHTING_ZIN
     elif delen2:
         zin += "."
     # Van de groep zonder aanbod op het eigen laagste onderwerp kan hoogstens het
@@ -3796,9 +3845,17 @@ def _direction_card_cell(role: str, *, label: str, agg: dict, scan_type: str,
             f'{telling_html}</td>')
 
 
+def _agenda_sleutels(ranked: list[dict]) -> list[str]:
+    """De onderwerpen op de agenda (startpunt en tweede punt), in rasterorde.
+    Eén definitie voor de totaalregel en de bijlage (V12), zodat "buiten de
+    agenda" op beide plekken dezelfde onderwerpen zijn."""
+    return [r["key"] for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
+
+
 def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
                              scan_type: str, n_total: int, *,
-                             toelichting_n: dict[str, int] | None = None) -> str:
+                             toelichting_n: dict[str, int] | None = None,
+                             bijlage: bool = False) -> str:
     """Twee kaarten (startpunt + tweede punt) onder het raster. Leeg zonder
     richtingdata (campagne-gate zit in build_report_data).
 
@@ -3838,9 +3895,13 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
     # deze regel verdwenen de antwoorden van wie een ander onderwerp als laagste
     # had spoorloos. De aparte totals_html-regel is bewust: een geneste f-string
     # met aanhalingstekens in de expressie is geen Python 3.11.
-    agenda_keys = [r["key"] for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
-    totals = _direction_totals_line(direction_agg, agenda_keys, scan_type, n_total)
-    totals_html = f'<p class="dir-chain dir-totals">{_h(totals)}</p>' if totals else ""
+    agenda_keys = _agenda_sleutels(ranked)
+    totals = _direction_totals_line(direction_agg, agenda_keys, scan_type, n_total,
+                                    bijlage=bijlage)
+    # V12: de paginaverwijzing pas na het escapen, anders wordt het anker tekst.
+    totals_html = ('<p class="dir-chain dir-totals">'
+                   + _h(totals).replace(BIJLAGE_PAGINA, _pref(LEIDRAAD_ANKERS["bijlage"]))
+                   + "</p>") if totals else ""
     return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
             f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
             f'{totals_html}'
@@ -3990,8 +4051,22 @@ def _richtingen_weging(st: dict, scan_type: str, factor_key: str) -> str:
     return zin
 
 
+WERKVRAGEN_TIJDSANKER = "in de periode waar deze meting over gaat"
+
+
+def _werkvraag_tijdsanker(tekst: str, uitstroom: tuple[str, str] | None) -> str:
+    """V11 (polijstronde): het tijdsanker van de Vertrek-werkvragen met het
+    woord van pagina twee. Alleen met een bereik uit _uitstroom_bereik (dus
+    alleen maanden die de randmaandgate haalden); anders de tekst zoals hij is."""
+    if not uitstroom:
+        return tekst
+    eerste, laatste = uitstroom
+    periode = eerste if eerste == laatste else eerste + " tot " + laatste
+    return tekst.replace(WERKVRAGEN_TIJDSANKER, "in de uitstroomperiode (" + periode + ")")
+
+
 def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
-                      scan_type: str) -> str:
+                      scan_type: str, *, uitstroom: tuple[str, str] | None = None) -> str:
     """Twee kaarten (startpunt en tweede punt) met elk twee of drie vragen.
 
     Leeg zonder gesprekspunten (geen factorprofiel). Zonder richtingdata rendert
@@ -4004,9 +4079,16 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
     regel over de leidinggevenden aan tafel. Alleen als er ook echt een
     vertaalvraag staat, alleen bij dat ene onderwerp, en sinds amendement 24-9
     (A2) alleen bij Loep Behoud.
+
+    uitstroom (V11, polijstronde): het bereik uit _uitstroom_bereik, alleen bij
+    Loep Vertrek. Met een bereik leest het tijdsanker "in de uitstroomperiode
+    (december 2025 tot maart 2026)", het woord van pagina twee; zonder bereik
+    blijft "in de periode waar deze meting over gaat" staan.
     """
     if scan_type not in DIRECTION_SCAN_TYPES:
         raise ValueError(f"_werkvragen_block: geen werkvragen voor scan_type {scan_type!r}")
+    if scan_type != "exit":
+        uitstroom = None
     punten = [r for r in ranked if r["agenda_role"] in ("startpunt", "tweede")]
     if not punten:
         return ""
@@ -4041,7 +4123,7 @@ def _werkvragen_block(ranked: list[dict], deep_agg: dict, direction_agg: dict,
             herken_html += _beperkte_basis_note()
         rijen = [("Herkennen", herken_html)]
         if vertaal:
-            vertaal_cel = _h(vertaal)
+            vertaal_cel = _h(_werkvraag_tijdsanker(vertaal, uitstroom))
             # R6/V9 (fixronde 24-9): onder de verdeeld-zin de tellingen van de
             # meest gekozen richtingen, met de niets-optie (en zo nodig Anders)
             # apart gewogen. Leeg in elke andere staat.
@@ -6023,8 +6105,10 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
 
     _mode    = (camp.delivery_mode or "baseline").lower()
     mode_lbl = "Live" if _mode == "live" else "Baseline"
-    scan_lbl = scan_meta.get("report_title",
-        f"Loep Vertrek {mode_lbl}" if scan_type == "exit" else scan_meta["product_name"])
+    # V15 (polijstronde): ook bij Loep Vertrek alleen de productnaam op de
+    # cover, net als bij Behoud en Start. "Baseline" of "Live" zei de klant
+    # niets; delivery_mode blijft wel in de data.
+    scan_lbl = scan_meta.get("report_title", scan_meta["product_name"])
     now_str  = datetime.now(timezone.utc).strftime("%d-%m-%Y")
 
     respondents = camp.respondents
@@ -6295,6 +6379,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
         # De volledige teller, niet alleen de top 5 van de tabel: de why-cel op
         # p.02 moet ook de telling van een reden kennen die buiten die top valt.
         exit_r_counts=dict(exit_r_cnt),
+        # V3 (polijstronde): de volledige telling van "speelde ook mee", uit
+        # dezelfde bron als cont_dist (dat alleen de top 5 is).
+        cont_counts=dict(cont_cnt),
         exit_months=exit_months,
         cont_dist=cont_dist,
         prev_dist=prev_dist, open_texts=open_texts,
@@ -6472,10 +6559,62 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
 
 # ─── Vertrekcontext (T7) ──────────────────────────────────────────────────────
 
+# V3 (polijstronde): een vertrekreden die vaak genoemd is terwijl het
+# onderwerp waar hij bij hoort relatief sterk scoort. Hoogstens twee zinnen,
+# zodat het blok een signaal blijft en geen tweede tabel wordt.
+REDEN_SCORE_MAX = 2
+
+
+def _redenen_tegen_scores(factor_avgs: dict[str, float | None] | None,
+                          reason_counts: dict[str, int] | None,
+                          cont_counts: dict[str, int] | None) -> list[str]:
+    """Zinnen voor redenen die "uit elkaar lopen met de scores" (V3).
+
+    Een reden telt als zijn code via FACTOR_EXIT_CODE bij een onderwerp hoort,
+    hij minstens MIN_SEGMENT_N keer genoemd is (hoofdreden en "speelde ook
+    mee" opgeteld; vermeldingen, geen personen, en zo staat het er ook) en dat
+    onderwerp op de getoonde score relatief sterk is (_factor_level 2, op
+    _shown, B15). Beschrijvend: geen verband, geen oorzaak, geen advies.
+    Volledige tellingen, niet de top 5 van de tabellen op de pagina.
+    """
+    factor_avgs = factor_avgs or {}
+    reason_counts = reason_counts or {}
+    cont_counts = cont_counts or {}
+    kandidaten = []
+    for fk, code in FACTOR_EXIT_CODE.items():
+        score = factor_avgs.get(fk)
+        if score is None or _factor_level(_shown(score)) != 2:
+            continue
+        h, m = reason_counts.get(code, 0), cont_counts.get(code, 0)
+        if h + m < MIN_SEGMENT_N:
+            continue
+        kandidaten.append((-(h + m), code, h, m, score, fk))
+    zinnen = []
+    for _neg, code, h, m, score, fk in sorted(kandidaten)[:REDEN_SCORE_MAX]:
+        label = EXIT_REASON_LABELS_NL.get(code, code)
+        if h and m:
+            wat = (f"{h + m} keer genoemd als reden ({h} keer als hoofdreden, "
+                   f"{m} keer als reden die meespeelde)")
+        elif h:
+            wat = f"{h} keer genoemd als hoofdreden"
+        else:
+            wat = f"{m} keer genoemd als reden die meespeelde"
+        # Het onderwerp bij naam: een redenlabel als "Gebrek aan groei" of
+        # "Werkdruk / stress" naast "scoort 7.0" las als de reden die hoog
+        # scoort, met de verkeerde kant op.
+        zinnen.append(f"{label} werd {wat}, maar het onderwerp {_lc(_fl(fk, 'exit'))} scoort "
+                      f"{_shown(score):.1f} ({_FACTOR_LABEL_WOORDEN[2].lower()}): hier lopen "
+                      "redenen en scores uit elkaar.")
+    return zinnen
+
+
 def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                     contributing: list[tuple[str, int]], n: int,
                     primary_factor_label: str, opener_html: str = "",
-                    has_profile: bool = True, enps_html: str = "") -> str:
+                    has_profile: bool = True, enps_html: str = "",
+                    factor_avgs: dict[str, float | None] | None = None,
+                    reason_counts: dict[str, int] | None = None,
+                    cont_counts: dict[str, int] | None = None) -> str:
     """has_profile volgt dezelfde schakelaar als de degraded p.02-alinea.
 
     Zonder factorprofiel verwijzen twee zinnen op deze pagina naar iets dat er
@@ -6521,8 +6660,13 @@ def _vertrekcontext(*, exit_reasons: list[tuple[str, int]],
                f"belichten elk een eigen invalshoek. De onderwerpen die bovenaan de "
                f"rangorde staan, komen terug in de verdieping hierna.</p>")
 
+    # V3 (polijstronde): vóór de zin over de invalshoeken, waar redenen en
+    # scores uit elkaar lopen. Alleen met een profiel: zonder scores valt er
+    # niets naast elkaar te leggen (en staat de kaart er niet).
+    botsing = "".join(f"<p style='margin-bottom:6px;'>{_h(z)}</p>"
+                      for z in _redenen_tegen_scores(factor_avgs, reason_counts, cont_counts))
     rel_card = (f'<div class="card navy" style="background:#fff;">'
-                f'<h3>Relatie met het overzichtsprofiel</h3>{rel}</div>'
+                f'<h3>Relatie met het overzichtsprofiel</h3>{botsing}{rel}</div>'
                 ) if has_profile else ""
 
     return f"""<div class="pb sec">
@@ -6686,16 +6830,26 @@ def _enps_str(score: int) -> str:
     return f"{score:+d}".replace("-", "−")
 
 
-def _enps_block(enps_score: int | None, enps_detail: dict | None) -> str:
+ENPS_VERTREK_ZIN = ("Bij Loep Vertrek is dit het oordeel van mensen die vertrokken, niet van "
+                    "wie er nu werkt.")
+
+
+def _enps_block(enps_score: int | None, enps_detail: dict | None, scan_type: str) -> str:
     """Werkgeversaanbeveling als blok op de contextpagina (H13, spec par. 9 B9):
     de score met de tellingen erbij, zodat "+0" iets betekent. Leeg zonder
-    score. Geen eigen hoofdstuk meer."""
+    score. Geen eigen hoofdstuk meer.
+
+    V16 (polijstronde): bij Loep Vertrek direct na de intro van wie dit oordeel
+    is. De intro spreekt van "medewerkers", en een lage score van vertrekkers
+    las aan tafel als het oordeel van wie er nu werkt."""
     if enps_score is None or not enps_detail:
         return ""
+    vertrek = (f'<p class="sec-intro">{_h(ENPS_VERTREK_ZIN)}</p>'
+               if scan_type == "exit" else "")
     ecol = _rag_color(10.0 if enps_score >= 20 else 6.0 if enps_score >= 0 else 4.0)
     n, p, d = enps_detail["n"], enps_detail["promoters"], enps_detail["detractors"]
     return (f'<div class="enps-inline no-break"><span class="eyebrow">Werkgeversaanbeveling</span>'
-            f'{_intro("werkgeversaanbeveling")}'
+            f'{_intro("werkgeversaanbeveling")}{vertrek}'
             f'<table class="sg"><tr><td><div class="sc-l">Aanbevelingsscore</div>'
             f'<div class="sc-v" style="color:{ecol};">{_enps_str(enps_score)}</div>'
             f'<div class="sc-b">{p} aanraders, {d} critici van {n} (eNPS, &minus;100 tot +100)</div></td>'
@@ -6809,9 +6963,77 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     return f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}{inhoud}</div>'
 
 
+BIJLAGE_RICHTING_KOP = "Richtingvraag bij de andere onderwerpen"
+BIJLAGE_RICHTING_SLOT = "Dit zijn de keuzes van respondenten, geen advies van Loep."
+
+
+def _bijlage_richting_block(direction_agg: dict | None, agenda_keys: list[str],
+                            scan_type: str) -> str:
+    """V12 (polijstronde): de keuzes op de richtingvraag van wie een onderwerp
+    buiten de agenda als laagste had. De totaalregel op de gespreksagenda
+    noemt die mensen ("de overige 11 een ander onderwerp ... niet
+    uitgewerkt"); wat zij kozen, stond nergens.
+
+    Precies de onderwerpen die die regel als `rest` telt: buiten de agenda
+    (_agenda_sleutels) en lowest_n > 0. Onder DIRECTION_MIN_N beantwoorders
+    geen keuzes (dezelfde vloer als de richtingkaart), alleen dat het er te
+    weinig zijn. Anders de veranderopties op aantal (Anders meegeteld, als
+    "Anders": de toelichtingen zelf staan alleen op de kaarten, achter hun
+    eigen drempel), de niets-optie apart achteraan, opties met 0 weg. Geen
+    staat en geen opdrachtvorm: de bijlage weegt niet, hij telt.
+
+    Leeg zonder richtingdata, voor Loep Start (geen richtingvraag) en als
+    er buiten de agenda niemand is.
+    """
+    if not direction_agg or scan_type not in DIRECTION_SCAN_TYPES:
+        return ""
+    rest = [k for k, a in direction_agg.items()
+            if k not in agenda_keys and a["lowest_n"] > 0]
+    if not rest:
+        return ""
+    regels = []
+    for k in sorted(rest, key=lambda fk: (-direction_agg[fk]["lowest_n"], fk)):
+        a = direction_agg[k]
+        label = _fl(k, scan_type)
+        if a["answered"] < DIRECTION_MIN_N:
+            regels.append(f"{label}: {a['lowest_n']} "
+                          + _werkwoord(a["lowest_n"], "had", "hadden")
+                          + " dit als laagste onderwerp; te weinig antwoorden om iets "
+                          "over te zeggen.")
+            continue
+        texts = direction_option_texts(scan_type, k)
+
+        def _naam(key: str, texts: dict[str, str] = texts, k: str = k) -> str:
+            # Een onbekende sleutel valt luid om, net als _opt op de kaart:
+            # nooit een rauwe sleutel in een klant-PDF.
+            if key.endswith("_other"):
+                return "Anders"
+            if key not in texts:
+                raise KeyError(f"direction: onbekende optiesleutel {key!r} voor {k!r} ({scan_type})")
+            return texts[key]
+        counts = {key: c for key, c in a["counts"].items() if c > 0}
+        verander = sorted(((key, c) for key, c in counts.items() if not key.endswith("_none")),
+                          key=lambda kc: (-kc[1], kc[0]))
+        niets = [(key, c) for key, c in counts.items() if key.endswith("_none")]
+        delen = ", ".join("‘" + _naam(key) + "’ " + str(c) for key, c in verander)
+        if niets:
+            niets_deel = "; ".join("‘" + _naam(key) + "’ " + str(c) for key, c in niets)
+            delen = delen + "; " + niets_deel if delen else niets_deel
+        regel = f"{label} ({a['answered']} antwoorden)"
+        regels.append(regel + (": " + delen + "." if delen else ": geen keuze vastgelegd."))
+    lijst = "".join(f'<p style="font-size:9.5px;color:#243247;margin:0 0 5px;">{_h(r)}</p>'
+                    for r in regels)
+    return (f'<div class="no-break" style="margin-top:14px;">'
+            f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
+            f'{_h(BIJLAGE_RICHTING_KOP)}</div>{lijst}'
+            f'<p class="trustline">{_h(BIJLAGE_RICHTING_SLOT)}</p></div>')
+
+
 def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict, sdt_items: list,
                       scan_type: str, n: int, enps_score: int | None, enps_detail: dict | None,
-                      opener_html: str, sdt_title: str) -> str:
+                      opener_html: str, sdt_title: str,
+                      direction_agg: dict | None = None,
+                      agenda_keys: list[str] | None = None) -> str:
     """Appendix: één tabel per onderwerp onder elkaar, de SDT-tabel als laatste.
     Eén helper voor drie renderers; voorheen drie keer dezelfde 45 regels.
 
@@ -6827,6 +7049,12 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
     gerapporteerd is. Niet "niet gemeten": onder de rapportagedrempel is de
     vraag wel gesteld. Dat spiegelt de meetgegevens op pagina twee, die ook
     alleen "Niet in dit rapport" zeggen.
+
+    V12 (polijstronde): onderaan de keuzes op de richtingvraag bij de
+    onderwerpen buiten de agenda (_bijlage_richting_block), alleen bij Loep
+    Vertrek en Loep Behoud. De opener draagt het anker LEIDRAAD_ANKERS["bijlage"]
+    (de renderer geeft het mee), want de totaalregel op de gespreksagenda
+    verwijst ernaar.
     """
     def _rows(items, avgs):
         return "".join(
@@ -6861,6 +7089,9 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
     # Vertrek). Hij breekt tussen de tabellen (elke tabel blijft heel); kop,
     # intro en eerste tabel blijven samen. Geen leidraadverwijzing wijst naar
     # dit hoofdstuk, dus een kop halverwege een pagina raakt geen verwijzing.
+    # Sinds V12 (polijstronde) verwijst de totaalregel op de gespreksagenda wel
+    # naar de kop (LEIDRAAD_ANKERS["bijlage"]): het nummer is de pagina waar de
+    # bijlage begint, ook als die halverwege een pagina staat.
     kop = (f'<div class="no-break">{opener_html}{_intro("appendix")}'
            f'<p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p>'
            f'{tabellen[0] if tabellen else ""}</div>')
@@ -6870,6 +7101,7 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
   {secties}
   {sdt_html}
   <p class="trustline">{_h(enps_line)}</p>
+  {_bijlage_richting_block(direction_agg, agenda_keys or [], scan_type)}
 </div>"""
 
 
@@ -6983,7 +7215,8 @@ def render_exit_report_html(data: dict) -> str:
                       tweede_key=_tweede_key, indicatief=_indicatief))
     # Het werkvragenblok wordt hier al gebouwd (fixronde 24-9): de leidraad op
     # pagina twee verwijst ernaar, en alleen als het er echt is.
-    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit")
+    _wq_block = _werkvragen_block(_raster_rows, deep_agg, direction_agg, "exit",
+                                  uitstroom=_uitstroom_bereik(data.get("exit_months")))
 
     # ── Cover ─────────────────────────────────────────────────────────────────
     opening_q = "Wat speelde mee bij vertrek?"
@@ -7190,11 +7423,13 @@ def render_exit_report_html(data: dict) -> str:
     contributing = [(r["label"], r["count"]) for r in data["cont_dist"]]
     s += _vertrekcontext(exit_reasons=exit_reasons, contributing=contributing,
                          n=n, primary_factor_label=_raster_primary_label,
+                         factor_avgs=fa, reason_counts=data.get("exit_r_counts"),
+                         cont_counts=data.get("cont_counts"),
                          opener_html=ch.opener("Wat speelde mee bij vertrek?", kicker="Waarom mensen vertrokken", anchor=LEIDRAAD_ANKERS["context"]),
                          has_profile=not _geen_profiel,
                          # eNPS staat bij de context i.p.v. op een eigen,
                          # vrijwel lege pagina (H13, B9).
-                         enps_html=_enps_block(_enps_score, _enps_detail))
+                         enps_html=_enps_block(_enps_score, _enps_detail, "exit"))
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
     profile_factors = [(_fl(fk, "exit"), fa.get(fk))
@@ -7356,8 +7591,13 @@ def render_exit_report_html(data: dict) -> str:
     # Het richtingblok wordt hier gebouwd, niet in _prioriteringsraster (bug
     # B3): alleen zo kan de methodiekpagina verderop beloven wat dit rapport
     # daadwerkelijk bevat in plaats van wat er aan data bestaat.
+    # V12 (polijstronde): één gatewaarde voor de appendix en voor de zin op de
+    # gespreksagenda die ernaar verwijst; hier berekend, beneden hergebruikt.
+    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
+    _toon_bijlage = _should_show_appendix(n, n_factors)
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, "exit", n,
-                                          toelichting_n=_toelichting_n)
+                                          toelichting_n=_toelichting_n,
+                                          bijlage=_toon_bijlage)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type="exit",
@@ -7390,8 +7630,7 @@ def render_exit_report_html(data: dict) -> str:
         afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
-    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
-    if _should_show_appendix(n, n_factors):
+    if _toon_bijlage:
         # Twee kolommen via de gedeelde helper (B9): de onderwerpstabellen naast
         # elkaar in plaats van onder elkaar, zodat de appendix niet met een paar
         # regels op een tweede vel overloopt.
@@ -7399,8 +7638,10 @@ def render_exit_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type="exit", n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
-            sdt_title="Werkbeleving: alle stellingen")
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten",
+                                  anchor=LEIDRAAD_ANKERS["bijlage"]),
+            sdt_title="Werkbeleving: alle stellingen",
+            direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page("exit", opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -7649,7 +7890,7 @@ def render_retention_report_html(data: dict) -> str:
         intent_resp=data.get("intent_resp"),
         opener_html=ch.opener("Waar staat behoud onder druk?", kicker="Blijven en vertrekken", anchor=LEIDRAAD_ANKERS["context"]),
         # eNPS bij de context i.p.v. op een eigen, vrijwel lege pagina (H13, B9).
-        enps_html=_enps_block(_enps_score, _enps_detail),
+        enps_html=_enps_block(_enps_score, _enps_detail, ST),
     )
 
     # ── Overzichtsprofiel (p.05) ──────────────────────────────────────────────
@@ -7791,8 +8032,12 @@ def render_retention_report_html(data: dict) -> str:
     # vóór de appendix) ────────────────────────────────────────────────────────
     _startpunt_fk = _raster_rows[0]["key"] if _raster_rows else None
     # Zie render_exit_report_html: blok eerst, methodiekpagina gate erop (B3).
+    # V12: zie render_exit_report_html, één gatewaarde voor beide plekken.
+    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
+    _toon_bijlage = _should_show_appendix(n, n_factors)
     _dir_block = _wat_moet_gebeuren_block(_raster_rows, direction_agg, ST, n,
-                                          toelichting_n=_toelichting_n)
+                                          toelichting_n=_toelichting_n,
+                                          bijlage=_toon_bijlage)
     s += _prioriteringsraster(
         ranked=_raster_rows,
         scan_type=ST,
@@ -7825,8 +8070,7 @@ def render_retention_report_html(data: dict) -> str:
         afdeling_toelichtingen=_toont_toelichtingen(deep_agg))
 
     # ── Appendix ─────────────────────────────────────────────────────────────
-    n_factors = len([fk for fk in ORG_FACTOR_KEYS if fa.get(fk) is not None])
-    if _should_show_appendix(n, n_factors):
+    if _toon_bijlage:
         # Twee kolommen via de gedeelde helper (B9): de onderwerpstabellen naast
         # elkaar in plaats van onder elkaar, zodat de appendix niet met een paar
         # regels op een tweede vel overloopt.
@@ -7834,8 +8078,10 @@ def render_retention_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
-            sdt_title="Werkbeleving: alle stellingen")
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten",
+                                  anchor=LEIDRAAD_ANKERS["bijlage"]),
+            sdt_title="Werkbeleving: alle stellingen",
+            direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
     s += _trust_page(ST, opener_html=ch.opener("Methodiek, privacy &amp; interpretatiegrenzen", anchor=LEIDRAAD_ANKERS["methodiek"]),
@@ -8115,7 +8361,7 @@ def render_onboarding_report_html(data: dict) -> str:
                               opener_html=ch.opener("Onboardingfases", kicker="Checkpointoverzicht", anchor=LEIDRAAD_ANKERS["context"]),
                               # eNPS bij de context i.p.v. op een eigen,
                               # vrijwel lege pagina (H13, B9).
-                              enps_html=_enps_block(_enps_score, _enps_detail))
+                              enps_html=_enps_block(_enps_score, _enps_detail, ST))
 
     # ── Landingskwaliteit per domein (onboarding-exclusive) ───────────────────
     domain_scores = [(_fl(fk, ST), fa.get(fk))
@@ -8355,7 +8601,8 @@ def render_onboarding_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten",
+                                  anchor=LEIDRAAD_ANKERS["bijlage"]),
             sdt_title="Werkbeleving: stellingen bij het checkpoint")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────
