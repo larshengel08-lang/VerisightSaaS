@@ -163,6 +163,19 @@ _EXIT_BANDS = {
 # vergelijkt met _factor_level, nooit met deze woorden.
 _FACTOR_LABEL_WOORDEN = ("Kwetsbaar punt", "Aandachtspunt", "Relatief sterk")
 
+
+def _band_legenda() -> str:
+    """Kleurlegenda onder de balken (overzichtsprofiel, landingskwaliteit).
+
+    De woorden komen uit _FACTOR_LABEL_WOORDEN, zodat legenda en rijlabels niet
+    uit elkaar kunnen lopen (leesronde 4, S5: "goed geland" naast "RELATIEF
+    STERK")."""
+    kwetsbaar, aandacht, sterk = (w.lower() for w in _FACTOR_LABEL_WOORDEN)
+    return (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
+            f'<span style="color:{RAG_HIGH};">&#9632;</span> ' + kwetsbaar + ' &nbsp; '
+            f'<span style="color:{RAG_MID};">&#9632;</span> ' + aandacht + ' &nbsp; '
+            f'<span style="color:{RAG_LOW};">&#9632;</span> ' + sterk + '</p>')
+
 _RETENTION_BANDS = {
     "HOOG":   (_FACTOR_LABEL_WOORDEN[0], "#C0392B"),
     "MIDDEN": (_FACTOR_LABEL_WOORDEN[1], "#C17C00"),
@@ -2572,13 +2585,13 @@ def _laagste_stelling_zin(factor_label: str, stelling: str, score: float,
     score is de score van de STELLING zelf (de aanroeper geeft het item uit
     data["org_item_avgs"] door, niet het factorgemiddelde), dus het getal staat direct
     achter de stelling (leesronde 4, S8). Een afsluitend leesteken van de
-    stelling valt weg, anders staat er een punt binnen de aanhalingstekens
-    midden in de zin.
+    stelling (. ? ! of het beletselteken …) valt weg, anders staat het
+    binnen de aanhalingstekens midden in de zin.
     """
     welke = ("de laagst scorende stelling" if uniek
              else "een van de laagst scorende stellingen")
     waar = "in het cijferbeeld" if laagste_van_alles else "van dit onderwerp"
-    stelling = stelling.strip().rstrip(".?!").rstrip()
+    stelling = stelling.strip().rstrip(".?!…").rstrip()
     return (f"Bespreek eerst de stelling ‘{stelling}’ ({score:.1f}/10), "
             f"binnen {factor_label.lower()}. Dat is {welke} {waar}.")
 
@@ -6570,10 +6583,7 @@ def _overzichtsprofiel(factors: list[tuple[str, float | None]],
     # verdieping-titels). Voorheen zei de legenda "aandachtspunt/gemengd" waar de
     # rijen "Kwetsbaar punt/Aandachtspunt" zeiden — drie labelsets voor dezelfde
     # drempels op één pagina.
-    legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
-              f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
-              f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
-              f'<span style="color:{RAG_LOW};">&#9632;</span> relatief sterk</p>')
+    legend = _band_legenda()
     summary_html = (
         f'<p style="font-size:11px;color:#374151;max-width:66ch;margin-bottom:18px;">{_h(summary)}</p>'
         if summary else ""
@@ -8200,11 +8210,7 @@ def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
     # nergens op de pagina staan (zelfde correctie als in _overzichtsprofiel).
     legend = ""
     if rows:
-        legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
-                  f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
-                  f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
-                  f'<span style="color:{RAG_LOW};">&#9632;</span> '
-                  + _FACTOR_LABEL_WOORDEN[2].lower() + '</p>')
+        legend = _band_legenda()
     else:
         rows = ('<div class="empty-state">Voor deze meting zijn er geen scores '
                 'per domein berekend.</div>')
