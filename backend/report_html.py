@@ -1944,7 +1944,7 @@ LEIDRAAD_ANKERS = {
     "drempels": "sec-drempels",        # drempeltabel op de methodiekpagina (taak 11)
     "besluit": "sec-besluit",          # besluitpagina "Besluit van het MT" (plan 3b)
     "werkvragen": "sec-werkvragen",    # blok "Zo maak je er een besluit van" (N1, plan 3b eindreview)
-    "bijlage": "sec-bijlage",          # kop van de appendix (V12, polijstronde)
+    "richting_overig": "sec-richting-overig",  # blok "Richtingvraag bij de andere onderwerpen" (V12)
 }
 
 
@@ -3466,12 +3466,19 @@ def _direction_totals(direction_agg: dict) -> tuple[int, int, int]:
             sum(a["skipped"] for a in direction_agg.values()))
 
 
-# Plaatshouder voor de paginaverwijzing naar de bijlage in de (platte) tekst
-# van _direction_totals_line. Die tekst gaat door _h(); het anker (_pref) is
-# HTML en wordt pas daarna ingevoegd, in _wat_moet_gebeuren_block. _h laat
+# V12 (polijstronde): de kop van het blok onderaan de appendix met de keuzes
+# bij de onderwerpen buiten de agenda. De totaalregel noemt het blok bij deze
+# naam (niet "de bijlage": de sectie heet Appendix), en de paginaverwijzing
+# landt op het blok zelf (LEIDRAAD_ANKERS["richting_overig"]), niet op de
+# appendixkop, die een pagina eerder kan staan.
+BIJLAGE_RICHTING_KOP = "Richtingvraag bij de andere onderwerpen"
+# Plaatshouder voor die paginaverwijzing in de (platte) tekst van
+# _direction_totals_line. Die tekst gaat door _h(); het anker (_pref) is HTML
+# en wordt pas daarna ingevoegd, in _wat_moet_gebeuren_block. _h laat
 # accolades staan, dus de plaatshouder overleeft het escapen.
-BIJLAGE_PAGINA = "{bijlage-pagina}"
-BIJLAGE_RICHTING_ZIN = " Wat zij kozen, staat in de bijlage (pagina " + BIJLAGE_PAGINA + ")."
+RICHTING_OVERIG_PAGINA = "{richting-overig-pagina}"
+BIJLAGE_RICHTING_ZIN = (" Wat zij kozen, staat bij ‘" + BIJLAGE_RICHTING_KOP + "’ (pagina "
+                        + RICHTING_OVERIG_PAGINA + ").")
 
 
 def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_type: str,
@@ -3514,7 +3521,8 @@ def _direction_totals_line(direction_agg: dict, agenda_keys: list[str], scan_typ
     meegegeven). Dan staan de keuzes bij de onderwerpen buiten de agenda
     daar (_bijlage_richting_block, voor precies de onderwerpen in `rest`
     hieronder), en verwijst de zin "niet uitgewerkt" ernaar. De verwijzing
-    staat als BIJLAGE_PAGINA in de tekst; de aanroeper vult het anker in.
+    staat als RICHTING_OVERIG_PAGINA in de tekst; de aanroeper vult het anker
+    in.
     """
     offered, answered, skipped = _direction_totals(direction_agg)
     if not offered:
@@ -3900,7 +3908,8 @@ def _wat_moet_gebeuren_block(ranked: list[dict], direction_agg: dict,
                                     bijlage=bijlage)
     # V12: de paginaverwijzing pas na het escapen, anders wordt het anker tekst.
     totals_html = ('<p class="dir-chain dir-totals">'
-                   + _h(totals).replace(BIJLAGE_PAGINA, _pref(LEIDRAAD_ANKERS["bijlage"]))
+                   + _h(totals).replace(RICHTING_OVERIG_PAGINA,
+                                        _pref(LEIDRAAD_ANKERS["richting_overig"]))
                    + "</p>") if totals else ""
     return (f'<div class="dir-block"><span class="eyebrow">{DIRECTION_BLOCK_EYEBROW}</span>'
             f'<p class="dir-intro">{DIRECTION_BLOCK_INTRO}</p>'
@@ -6963,7 +6972,6 @@ def _werkbeleving_section(sdt_a: dict, sim: dict, sdt_items: list, opener_html: 
     return f'<div class="pb sec">{opener_html}{_intro("werkbeleving")}{inhoud}</div>'
 
 
-BIJLAGE_RICHTING_KOP = "Richtingvraag bij de andere onderwerpen"
 BIJLAGE_RICHTING_SLOT = "Dit zijn de keuzes van respondenten, geen advies van Loep."
 
 
@@ -7023,7 +7031,10 @@ def _bijlage_richting_block(direction_agg: dict | None, agenda_keys: list[str],
         regels.append(regel + (": " + delen + "." if delen else ": geen keuze vastgelegd."))
     lijst = "".join(f'<p style="font-size:9.5px;color:#243247;margin:0 0 5px;">{_h(r)}</p>'
                     for r in regels)
-    return (f'<div class="no-break" style="margin-top:14px;">'
+    # Het anker op het blok zelf: de totaalregel op de gespreksagenda verwijst
+    # hierheen, en het nummer moet de pagina van dit blok zijn.
+    return (f'<div class="no-break" id="{LEIDRAAD_ANKERS["richting_overig"]}" '
+            f'style="margin-top:14px;">'
             f'<div style="font-size:9.5px;font-weight:700;color:#243247;margin-bottom:5px;">'
             f'{_h(BIJLAGE_RICHTING_KOP)}</div>{lijst}'
             f'<p class="trustline">{_h(BIJLAGE_RICHTING_SLOT)}</p></div>')
@@ -7052,9 +7063,9 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
 
     V12 (polijstronde): onderaan de keuzes op de richtingvraag bij de
     onderwerpen buiten de agenda (_bijlage_richting_block), alleen bij Loep
-    Vertrek en Loep Behoud. De opener draagt het anker LEIDRAAD_ANKERS["bijlage"]
-    (de renderer geeft het mee), want de totaalregel op de gespreksagenda
-    verwijst ernaar.
+    Vertrek en Loep Behoud. Het blok draagt zelf het anker
+    LEIDRAAD_ANKERS["richting_overig"], want de totaalregel op de
+    gespreksagenda verwijst ernaar.
     """
     def _rows(items, avgs):
         return "".join(
@@ -7089,9 +7100,8 @@ def _appendix_section(*, fa: dict, oim: dict, sim: dict, factor_items_map: dict,
     # Vertrek). Hij breekt tussen de tabellen (elke tabel blijft heel); kop,
     # intro en eerste tabel blijven samen. Geen leidraadverwijzing wijst naar
     # dit hoofdstuk, dus een kop halverwege een pagina raakt geen verwijzing.
-    # Sinds V12 (polijstronde) verwijst de totaalregel op de gespreksagenda wel
-    # naar de kop (LEIDRAAD_ANKERS["bijlage"]): het nummer is de pagina waar de
-    # bijlage begint, ook als die halverwege een pagina staat.
+    # (De totaalregel op de gespreksagenda verwijst sinds V12 naar het
+    # richtingblok onderaan, met een eigen anker op dat blok, niet naar de kop.)
     kop = (f'<div class="no-break">{opener_html}{_intro("appendix")}'
            f'<p style="font-size:9px;color:#94A3B8;margin-bottom:14px;">n={n}. &#x21a9;&nbsp;= omgekeerd gecodeerde stelling.</p>'
            f'{tabellen[0] if tabellen else ""}</div>')
@@ -7638,8 +7648,7 @@ def render_exit_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type="exit", n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten",
-                                  anchor=LEIDRAAD_ANKERS["bijlage"]),
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving: alle stellingen",
             direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
@@ -8078,8 +8087,7 @@ def render_retention_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten",
-                                  anchor=LEIDRAAD_ANKERS["bijlage"]),
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving: alle stellingen",
             direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
@@ -8601,8 +8609,7 @@ def render_onboarding_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten",
-                                  anchor=LEIDRAAD_ANKERS["bijlage"]),
+            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving: stellingen bij het checkpoint")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────

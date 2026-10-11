@@ -48,7 +48,7 @@ def _stresstest_naar_tmp(tmp_path_factory):
 # werkdruk ligt net boven leiderschap en groei, dus een deel van de
 # respondenten heeft werkdruk als eigen laagste onderwerp.
 VERTREK_BIJLAGE = st.Scenario(
-    "zz_vertrek_bijlage", "Vertrek, n=36, met bijlage",
+    "zz_vertrek_bijlage", "Vertrek, n=36, met appendix",
     "Polijstronde V12: keuzes buiten de agenda in de bijlage.",
     scan_type="exit", n=36, invited=50,
     factors=st.prof(leadership=(4.6, 1.2), growth=(4.8, 1.2), workload=(5.0, 1.2)),
@@ -308,17 +308,27 @@ def test_v12_totaalregel_verwijst_alleen_met_bijlage():
                    workload=_agg(9, 9, {"wld_none": 9}))
     zonder = _direction_totals_line(agg, ["leadership", "growth"], "exit", 27)
     met = _direction_totals_line(agg, ["leadership", "growth"], "exit", 27, bijlage=True)
-    assert "niet uitgewerkt." in zonder and "bijlage" not in zonder
-    assert "niet uitgewerkt. Wat zij kozen, staat in de bijlage (pagina " in met
+    assert "niet uitgewerkt." in zonder and "Wat zij kozen" not in zonder
+    assert ("niet uitgewerkt. Wat zij kozen, staat bij ‘Richtingvraag bij de andere "
+            "onderwerpen’ (pagina ") in met
+    assert "bijlage" not in met
+
+
+ZIN = "Wat zij kozen, staat bij ‘Richtingvraag bij de andere onderwerpen’ (pagina"
 
 
 def test_v12_vertrek_met_bijlage_gerenderd():
     html = _html(VERTREK_BIJLAGE.key)
     t = _plain(html)
     assert "Richtingvraag bij de andere onderwerpen" in t
-    assert "Wat zij kozen, staat in de bijlage (pagina" in t
-    assert 'href="#' + LEIDRAAD_ANKERS["bijlage"] + '"' in html
-    assert html.count('id="' + LEIDRAAD_ANKERS["bijlage"] + '"') == 1
+    assert ZIN in t
+    anker = LEIDRAAD_ANKERS["richting_overig"]
+    assert html.count('href="#' + anker + '"') == 1
+    assert html.count('id="' + anker + '"') == 1
+    # Het anker staat op het blok zelf, niet op de appendixkop.
+    i = html.index('id="' + anker + '"')
+    assert "Richtingvraag bij de andere onderwerpen" in html[i:i + 400]
+    assert "bijlage" not in t.lower()
     assert "Dit zijn de keuzes van respondenten, geen advies van Loep." in t
     _assert_ankers_bestaan(html)
 
@@ -327,7 +337,8 @@ def test_v12_behoud_met_bijlage_gerenderd():
     html = _html("02_een_lage_factor")
     t = _plain(html)
     assert "Richtingvraag bij de andere onderwerpen" in t
-    assert "Wat zij kozen, staat in de bijlage (pagina" in t
+    assert ZIN in t
+    assert html.count('id="' + LEIDRAAD_ANKERS["richting_overig"] + '"') == 1
     _assert_ankers_bestaan(html)
 
 
@@ -335,8 +346,8 @@ def test_v12_zonder_bijlage_geen_verwijzing():
     # Vertrek n=12: geen bijlage (n <= 20), dus ook geen verwijzing ernaar.
     html = _html("21_exit_uitstroom")
     assert "Richtingvraag bij de andere onderwerpen" not in html
-    assert "staat in de bijlage" not in html
-    assert LEIDRAAD_ANKERS["bijlage"] not in html
+    assert "Wat zij kozen" not in html
+    assert LEIDRAAD_ANKERS["richting_overig"] not in html
 
 
 # ── V13: eigen label en uitleg bij de frictiegrenzen ────────────────────────
