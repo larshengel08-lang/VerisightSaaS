@@ -99,7 +99,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           Technische gegevens over het gebruik van de beheeromgeving en interne aantekeningen van Loep over de
-          uitkomst bij een klant verwijdert Loep twee jaar na het aanmaken, als ze niet aan een meting hangen.
+          uitkomst bij een klant verwijdert Loep uiterlijk twee jaar na het aanmaken, als ze niet aan een meting hangen.
         </p>
       </section>
 

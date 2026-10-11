@@ -50,7 +50,7 @@ describe('juridische pagina’s volgen de dienst zoals hij is', () => {
     // beheeromgeving) en case_proof_registry (intern bewijsregister), rijen zonder campaign_id,
     // GEBRUIK_TERMIJN_MAANDEN (24) na created_at.
     expect(paginas.privacy).toMatch(
-      /Technische gegevens over het gebruik van de beheeromgeving en interne aantekeningen van Loep over de\s+uitkomst bij een klant verwijdert Loep twee jaar na het aanmaken, als ze niet aan een meting hangen\./
+      /Technische gegevens over het gebruik van de beheeromgeving en interne aantekeningen van Loep over de\s+uitkomst bij een klant verwijdert Loep uiterlijk twee jaar na het aanmaken, als ze niet aan een meting hangen\./
     )
   })
 
