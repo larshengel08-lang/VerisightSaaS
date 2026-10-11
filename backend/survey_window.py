@@ -24,7 +24,7 @@ AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 SURVEY_CLOSED_TITLE = "Meting gesloten"
 SURVEY_CLOSED_HEADING = "Deze meting is gesloten"
 SURVEY_CLOSED_MESSAGE = "Deze meting is gesloten. Bedankt voor je interesse."
-SURVEY_CLOSED_HINT = "Heb je vragen? Neem dan contact op met de HR-afdeling van je organisatie."
+SURVEY_CLOSED_HINT = "Heb je vragen? Neem dan contact op met wie je de link heeft gestuurd."
 
 
 def today_amsterdam(now: datetime | None = None) -> date:

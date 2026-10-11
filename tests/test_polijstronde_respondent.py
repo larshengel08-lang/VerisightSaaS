@@ -288,6 +288,34 @@ def test_scoringsfout_noemt_vervolgstap():
     assert "Lukt het dan nog niet, neem contact op met de HR-afdeling" not in src
 
 
+NEUTRAAL_CONTACT = "contact op met wie je de link heeft gestuurd"
+
+
+@pytest.mark.parametrize("pad", [ROOT / "backend" / "main.py", ROOT / "backend" / "survey_window.py"]
+                         + RESPONDENT, ids=lambda p: p.name)
+def test_respondentteksten_noemen_geen_hr_afdeling(pad):
+    # Eindreview polijstronde: ook vertrekkers lezen deze pagina's; zij hebben
+    # geen HR-afdeling meer. De afmeldregel in de mails (HR-kant) valt erbuiten.
+    assert "HR-afdeling van je organisatie" not in pad.read_text(encoding="utf-8")
+
+
+def test_respondenthints_in_neutrale_vorm():
+    from backend.survey_window import SURVEY_CLOSED_HINT
+
+    assert SURVEY_CLOSED_HINT == "Heb je vragen? Neem dan " + NEUTRAAL_CONTACT + "."
+    src = re.sub(r'"\s+"', "", (ROOT / "backend" / "main.py").read_text(encoding="utf-8"))
+    assert ("Neem " + NEUTRAAL_CONTACT + " als je een nieuwe uitnodiging nodig hebt.") in src
+    assert ("Neem " + NEUTRAAL_CONTACT + " als je de vragenlijst alsnog wilt invullen.") in src
+    complete = (ROOT / "templates" / "complete.html").read_text(encoding="utf-8")
+    assert "Neem " + NEUTRAAL_CONTACT + "." in complete
+
+
+def test_ongeldige_link_toont_neutrale_hint(client):
+    r = client.get("/survey/" + str(uuid.uuid4()))
+    tekst = _zichtbare_tekst(r.text)
+    assert "Neem " + NEUTRAAL_CONTACT + " als je een nieuwe uitnodiging nodig hebt." in tekst
+
+
 def test_exit_uitnodiging_spreekt_ook_vertrekkers_aan():
     # Eindreview polijstronde: zelfde aanhef als de startpagina van Loep Vertrek.
     intro = EXIT["invite_intro"]

@@ -1331,7 +1331,7 @@ async def serve_survey(
             title="Link ongeldig",
             heading="Deze link naar de vragenlijst klopt niet",
             message="De link is ongeldig of niet meer actief. Controleer of je de volledige link hebt geopend.",
-            hint="Neem contact op met de HR-afdeling van je organisatie als je een nieuwe uitnodiging nodig hebt.",
+            hint="Neem contact op met wie je de link heeft gestuurd als je een nieuwe uitnodiging nodig hebt.",
             tone="warning",
         )
 
@@ -1350,7 +1350,7 @@ async def serve_survey(
                 title="Link verlopen",
                 heading="Deze link naar de vragenlijst is verlopen",
                 message="Om privacy- en beveiligingsredenen is deze persoonlijke link niet meer geldig.",
-                hint="Neem contact op met de HR-afdeling van je organisatie als je de vragenlijst alsnog wilt invullen.",
+                hint="Neem contact op met wie je de link heeft gestuurd als je de vragenlijst alsnog wilt invullen.",
                 tone="warning",
             )
 
