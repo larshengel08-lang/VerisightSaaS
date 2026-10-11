@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import HTTPException
-
 from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
 from backend.products.shared.org_factors import compute_org_scores
 from backend.products.shared.sdt import compute_sdt_scores, scale_to_ten
 from backend.scoring import get_recommendations
 from backend.scoring_config import ORG_FACTOR_KEYS, RISK_HIGH, RISK_MEDIUM, SCORING_VERSION
+from backend.survey_messages import reject_incomplete, reject_stale_answers
 
 ONBOARDING_SDT_ITEMS = {"B1", "B5", "B9"}
 
@@ -26,16 +25,13 @@ def validate_submission(payload: Any) -> None:
     missing = ONBOARDING_SDT_ITEMS - keys
     extra = keys - ONBOARDING_SDT_ITEMS
     if missing:
-        raise HTTPException(status_code=422, detail="Onboarding vereist 3 vaste checkpoint-items.")
+        raise reject_incomplete("Onboarding vereist 3 vaste checkpoint-items.")
     if extra:
-        raise HTTPException(
-            status_code=422,
-            detail="Onboarding accepteert in deze wave alleen de compacte checkpoint-set.",
-        )
+        raise reject_stale_answers("Onboarding accepteert in deze wave alleen de compacte checkpoint-set.")
     if payload.stay_intent_score is None:
-        raise HTTPException(status_code=422, detail="Onboarding vereist een checkpoint-richtingsvraag.")
+        raise reject_incomplete("Onboarding vereist een checkpoint-richtingsvraag.")
     if not payload.org_raw:
-        raise HTTPException(status_code=422, detail="Onboarding vereist minimaal een actieve werkfactor.")
+        raise reject_incomplete("Onboarding vereist minimaal een actieve werkfactor.")
 
 
 def compute_onboarding_risk(

@@ -14,6 +14,8 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 
+from backend.exit_month import MAANDEN_NL
+
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 # Eén set copy voor de gesloten meting, voor de statuspagina (GET) en voor de
@@ -31,6 +33,15 @@ def today_amsterdam(now: datetime | None = None) -> date:
     if moment.tzinfo is None:
         moment = moment.replace(tzinfo=timezone.utc)
     return moment.astimezone(AMSTERDAM).date()
+
+
+def format_closes_at(closes_at: date) -> str:
+    """date(2026, 10, 8) -> "8 oktober 2026".
+
+    Dezelfde vorm als "Invullen kan tot en met ..." in de uitnodiging en
+    herinnering (frontend/lib/self-send-comms.ts), zodat de startpagina
+    dezelfde sluitdag noemt als de mail."""
+    return str(closes_at.day) + " " + MAANDEN_NL[closes_at.month - 1] + " " + str(closes_at.year)
 
 
 def is_survey_open(*, is_active: bool, closes_at: date | None, today: date | None = None) -> bool:

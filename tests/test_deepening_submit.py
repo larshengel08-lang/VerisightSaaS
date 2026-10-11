@@ -4,6 +4,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from backend.models import SurveyResponse
+from backend.survey_messages import SURVEY_RELOAD_MESSAGE
 from backend.scoring import ORG_FACTOR_KEYS
 
 from tests.test_api_flows import _create_campaign, _create_org, _create_respondent
@@ -87,7 +88,8 @@ def test_skipped_entry_persisted(client, db_session: Session):
     assert stored.deepening_responses[0]["status"] == "skipped"
 
 
-def test_entry_for_unoffered_factor_rejected(client, db_session: Session):
+def test_entry_for_unoffered_factor_rejected(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     respondent = _setup_retention(db_session)
     payload = _retention_payload(
         respondent.token,
@@ -103,10 +105,14 @@ def test_entry_for_unoffered_factor_rejected(client, db_session: Session):
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Verdieping hoort niet bij deze inzending."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Verdieping hoort niet bij deze inzending (factor growth)." in caplog.text
+    assert str(respondent.campaign_id) in caplog.text
 
 
-def test_duplicate_factor_rejected(client, db_session: Session):
+def test_duplicate_factor_rejected(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     respondent = _setup_retention(db_session)
     entry = {
         "factor_key": "workload",
@@ -123,10 +129,14 @@ def test_duplicate_factor_rejected(client, db_session: Session):
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Dubbele verdieping voor dezelfde factor."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Dubbele verdieping voor dezelfde factor (workload)." in caplog.text
+    assert str(respondent.campaign_id) in caplog.text
 
 
-def test_unknown_option_key_rejected(client, db_session: Session):
+def test_unknown_option_key_rejected(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     respondent = _setup_retention(db_session)
     payload = _retention_payload(
         respondent.token,
@@ -142,10 +152,14 @@ def test_unknown_option_key_rejected(client, db_session: Session):
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Onbekende verdiepingsoptie."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Onbekende verdiepingsoptie (wl_bestaat_niet)." in caplog.text
+    assert str(respondent.campaign_id) in caplog.text
 
 
-def test_stale_version_rejected(client, db_session: Session):
+def test_stale_version_rejected(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     respondent = _setup_retention(db_session)
     payload = _retention_payload(
         respondent.token,
@@ -161,7 +175,10 @@ def test_stale_version_rejected(client, db_session: Session):
     response = client.post("/survey/submit", json=payload)
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Verouderde vragenset-versie."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert response.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Verouderde vragenset-versie (retention_workload_v0)." in caplog.text
+    assert str(respondent.campaign_id) in caplog.text
 
 
 def test_other_text_is_anonymized(client, db_session: Session):

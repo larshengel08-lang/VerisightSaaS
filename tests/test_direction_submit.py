@@ -4,6 +4,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from backend.models import SurveyResponse
+from backend.survey_messages import SURVEY_RELOAD_MESSAGE
 from backend.scoring import ORG_FACTOR_KEYS
 
 from tests.test_api_flows import _create_campaign, _create_org, _create_respondent
@@ -104,38 +105,54 @@ def test_high_scorer_without_trigger_can_answer_direction(client, db_session: Se
     assert stored.direction_response["choice"] == "grd_none"
 
 
-def test_wrong_factor_422(client, db_session: Session):
+def test_wrong_factor_422(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     r = _setup(db_session)
     resp = client.post("/survey/submit", json=_retention_payload(
         r.token, org_raw=_org_raw({"workload": 2}), direction=_dr(fk="growth", choice="grd_time")))
     assert resp.status_code == 422
-    assert resp.json()["detail"] == "Gespreksrichting hoort niet bij deze inzending."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert resp.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Gespreksrichting hoort niet bij deze inzending (factor growth)." in caplog.text
+    assert str(r.campaign_id) in caplog.text
 
 
-def test_unknown_factor_key_422(client, db_session: Session):
+def test_unknown_factor_key_422(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     # Pint de volgorde: de factorcheck moet vóór de set-lookup staan, anders 500 i.p.v. 422.
     r = _setup(db_session)
     resp = client.post("/survey/submit", json=_retention_payload(
         r.token, org_raw=_org_raw({"workload": 2}), direction=_dr(fk="bestaat_niet")))
     assert resp.status_code == 422
-    assert resp.json()["detail"] == "Gespreksrichting hoort niet bij deze inzending."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert resp.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Gespreksrichting hoort niet bij deze inzending (factor bestaat_niet)." in caplog.text
+    assert str(r.campaign_id) in caplog.text
 
 
-def test_unknown_choice_422(client, db_session: Session):
+def test_unknown_choice_422(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     r = _setup(db_session)
     resp = client.post("/survey/submit", json=_retention_payload(
         r.token, org_raw=_org_raw({"workload": 2}), direction=_dr(choice="wld_bestaat_niet")))
     assert resp.status_code == 422
-    assert resp.json()["detail"] == "Onbekende gespreksrichting-optie."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert resp.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Onbekende gespreksrichting-optie (wld_bestaat_niet)." in caplog.text
+    assert str(r.campaign_id) in caplog.text
 
 
-def test_wrong_version_422(client, db_session: Session):
+def test_wrong_version_422(client, db_session: Session, caplog):
+    caplog.set_level("WARNING", logger="loep.survey")
     r = _setup(db_session)
     d = _dr(); d["question_set_version"] = "retention_workload_direction_v1"   # de juli-versie
     resp = client.post("/survey/submit", json=_retention_payload(
         r.token, org_raw=_org_raw({"workload": 2}), direction=d))
     assert resp.status_code == 422
-    assert resp.json()["detail"] == "Verouderde gespreksrichting-versie."
+    # Respondent leest een zin waar hij iets mee kan; de precieze reden staat in de log.
+    assert resp.json()["detail"] == SURVEY_RELOAD_MESSAGE
+    assert "Verouderde gespreksrichting-versie (retention_workload_direction_v1)." in caplog.text
+    assert str(r.campaign_id) in caplog.text
 
 
 def test_legacy_nested_direction_422(client, db_session: Session):

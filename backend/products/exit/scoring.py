@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import HTTPException
-
 from backend.products.shared.enps import build_enps_summary
 from backend.products.shared.org_factors import compute_org_scores
 from backend.products.shared.sdt import compute_sdt_scores
@@ -16,25 +14,26 @@ from backend.scoring_config import (
     RISK_MEDIUM,
     SCORING_VERSION,
 )
+from backend.survey_messages import reject_incomplete
 
 
 def validate_submission(payload: Any) -> None:
     expected_sdt = {f"B{i}" for i in range(1, 13)}
     if set(payload.sdt_raw.keys()) != expected_sdt:
-        raise HTTPException(status_code=422, detail="ExitScan vereist alle 12 werkbelevingsitems.")
+        raise reject_incomplete("ExitScan vereist alle 12 werkbelevingsitems.")
     expected_org = {f"{factor}_{index}" for factor in ORG_FACTOR_KEYS for index in range(1, 4)}
     if set(payload.org_raw.keys()) != expected_org:
-        raise HTTPException(status_code=422, detail="ExitScan vereist alle standaard werkfactoritems.")
+        raise reject_incomplete("ExitScan vereist alle standaard werkfactoritems.")
     if payload.tenure_years is None:
-        raise HTTPException(status_code=422, detail="ExitScan vereist een antwoord op diensttijd.")
+        raise reject_incomplete("ExitScan vereist een antwoord op diensttijd.")
     if payload.exit_reason_category is None:
-        raise HTTPException(status_code=422, detail="ExitScan vereist een hoofdreden voor vertrek.")
+        raise reject_incomplete("ExitScan vereist een hoofdreden voor vertrek.")
     if payload.enps_score is None:
-        raise HTTPException(status_code=422, detail="ExitScan vereist een eNPS-antwoord.")
+        raise reject_incomplete("ExitScan vereist een eNPS-antwoord.")
     if payload.stay_intent_score is None:
-        raise HTTPException(status_code=422, detail="ExitScan vereist een antwoord op beïnvloedbaarheid.")
+        raise reject_incomplete("ExitScan vereist een antwoord op beïnvloedbaarheid.")
     if payload.signal_visibility_score is None:
-        raise HTTPException(status_code=422, detail="ExitScan vereist een antwoord op eerdere signalering.")
+        raise reject_incomplete("ExitScan vereist een antwoord op eerdere signalering.")
 
 
 def compute_exit_friction(

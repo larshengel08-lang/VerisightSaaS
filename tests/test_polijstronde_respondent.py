@@ -1,18 +1,21 @@
 """Spec 2026-10-09 par. 4: respondentflow in gewone taal, een bron voor de invultijd.
 
 Plan polijstronde, Taak 12. Wat een respondent leest (startpagina, vragenlijst,
-bedankpagina, statuspagina's) is Nederlands, zonder em- of en-dashes, zonder
-"survey" en zonder jargon, en de invultijd komt overal uit `survey_minutes`
-in de productdefinitie.
+bedankpagina, statuspagina's, foutmeldingen na versturen) is Nederlands, zonder
+em- of en-dashes, zonder "survey" en zonder jargon, en de invultijd komt overal
+uit `survey_minutes` in de productdefinitie.
 """
 from __future__ import annotations
 
 import re
+import uuid
+from datetime import date
+from html import unescape
 from pathlib import Path
 
 import pytest
 
-from backend.models import Campaign, Organization, OrganizationSecret
+from backend.models import Campaign, Organization, OrganizationSecret, Respondent
 from backend.products.exit.definition import SCAN_DEFINITION as EXIT
 from backend.products.onboarding.definition import SCAN_DEFINITION as ONB
 from backend.products.retention.definition import SCAN_DEFINITION as RET
@@ -21,17 +24,23 @@ ROOT = Path(__file__).resolve().parent.parent
 RESPONDENT = [ROOT / "templates" / n for n in ("survey-intro.html", "survey.html",
               "complete.html", "survey-status.html")] + sorted((ROOT / "templates" / "survey").glob("*.html"))
 
+EM = chr(0x2014)
+EN = chr(0x2013)
+# Mojibake van UTF-8 dat als cp1252 is gelezen: "â€" (zoals in "â€”") en "â—".
+KAPOT = (chr(0xE2) + chr(0x20AC), chr(0xE2) + chr(0x2014))
+
 
 @pytest.mark.parametrize("pad", RESPONDENT, ids=lambda p: p.name)
 def test_geen_streepjes_in_respondenttemplates(pad):
     tekst = pad.read_text(encoding="utf-8")
-    assert "—" not in tekst and "–" not in tekst
+    assert EM not in tekst and EN not in tekst
 
 
 @pytest.mark.parametrize("pad", RESPONDENT, ids=lambda p: p.name)
 def test_geen_kapotte_tekens(pad):
     tekst = pad.read_text(encoding="utf-8")
-    assert "â€" not in tekst and "â—" not in tekst
+    for kapot in KAPOT:
+        assert kapot not in tekst
 
 
 def test_startknop_nederlands():
@@ -60,12 +69,17 @@ def test_invultijd_een_bron(definitie, minuten):
 
 
 def test_frontend_minuten_gelijk_aan_backend():
+    """SURVEY_MINUTES in campaign-setup.ts en survey_minutes in de definities: in
+    beide richtingen dezelfde scans met dezelfde getallen."""
+    from backend.scan_definitions import SCAN_DEFINITIONS
+
     ts = (ROOT / "frontend" / "lib" / "campaign-setup.ts").read_text(encoding="utf-8")
-    m = re.search(r"SURVEY_MINUTES[^=]*=\s*\{([^}]*)\}", ts)
-    assert m, "SURVEY_MINUTES niet gevonden in frontend/lib/campaign-setup.ts"
-    blok = m.group(1)
-    for scan, d in (("exit", EXIT), ("retention", RET), ("onboarding", ONB)):
-        assert re.search(r"\b" + scan + r"\s*:\s*" + str(d["survey_minutes"]) + r"\b", blok), scan
+    m = re.search(r"export const SURVEY_MINUTES\b[^=]*=\s*\{([^}]*)\}", ts)
+    assert m, "export const SURVEY_MINUTES niet gevonden in frontend/lib/campaign-setup.ts"
+    frontend = {k: int(v) for k, v in re.findall(r"(\w+)\s*:\s*(\d+)", m.group(1))}
+    backend = {scan: d["survey_minutes"] for scan, d in SCAN_DEFINITIONS.items() if "survey_minutes" in d}
+    assert frontend == backend
+    assert backend == {"exit": 8, "retention": 6, "onboarding": 3}
 
 
 def test_onboarding_intro_zonder_jargon():
@@ -96,13 +110,33 @@ def _make_campaign(db_session, scan_type: str, slug: str) -> Campaign:
     return campaign
 
 
+def _start(client, db_session, campaign: Campaign):
+    """Start de open flow; geeft (redirect-response, respondent) terug."""
+    start = client.post("/survey/open/" + campaign.public_survey_token + "/start",
+                        data={}, follow_redirects=False)
+    assert start.status_code == 303
+    respondent = db_session.query(Respondent).filter(Respondent.campaign_id == campaign.id).one()
+    return start, respondent
+
+
 def _zichtbare_tekst(html: str) -> str:
-    """Wat een respondent leest: scripts, styles, commentaar en tags eruit."""
+    """Wat een respondent leest: scripts, styles, commentaar en tags eruit.
+
+    Attribuutwaarden die op het scherm komen (data-label voedt het
+    voortgangslabel, placeholder, title) tellen mee, en entiteiten worden
+    gedecodeerd zodat ook `&mdash;` of `&#8211;` opvalt."""
     html = re.sub(r"<script\b.*?</script>", " ", html, flags=re.S | re.I)
     html = re.sub(r"<style\b.*?</style>", " ", html, flags=re.S | re.I)
     html = re.sub(r"<!--.*?-->", " ", html, flags=re.S)
+    attrs = re.findall(r'\b(?:data-label|placeholder|title)\s*=\s*"([^"]*)"', html)
     html = re.sub(r"<[^>]+>", " ", html)
-    return re.sub(r"\s+", " ", html)
+    return re.sub(r"\s+", " ", unescape(html + " " + " ".join(attrs)))
+
+
+def test_zichtbare_tekst_vangt_attributen_en_entiteiten():
+    html = '<div data-label="Stap &mdash; x"><input placeholder="a &#8211; b"></div>'
+    tekst = _zichtbare_tekst(html)
+    assert EM in tekst and EN in tekst
 
 
 @pytest.mark.parametrize("scan_type,minuten,aanhef", [
@@ -121,7 +155,7 @@ def test_startpagina_toont_invultijd_en_juiste_aanhef(client, db_session, scan_t
     assert "Je werkgever" not in tekst
     assert "10 tot 15" not in tekst
     assert "survey" not in tekst.lower()
-    assert "—" not in tekst and "–" not in tekst
+    assert EM not in tekst and EN not in tekst
 
 
 def test_startpagina_zonder_survey_minutes_noemt_geen_tijd(client, db_session, monkeypatch):
@@ -138,20 +172,49 @@ def test_startpagina_zonder_survey_minutes_noemt_geen_tijd(client, db_session, m
     assert "Je organisatie heeft Loep gevraagd" in tekst
 
 
+def test_startpagina_noemt_de_sluitdag(client, db_session):
+    campaign = _make_campaign(db_session, "retention", "acme-sluitdag")
+    campaign.closes_at = date(2099, 10, 8)
+    db_session.commit()
+    r = client.get("/survey/open/" + campaign.public_survey_token)
+    assert r.status_code == 200
+    tekst = _zichtbare_tekst(r.text)
+    assert "Invullen kan tot en met 8 oktober 2099." in tekst
+    assert "90 dagen" not in tekst
+
+
+def test_startpagina_zonder_sluitdatum_belooft_geen_termijn(client, db_session):
+    campaign = _make_campaign(db_session, "retention", "acme-geen-sluitdag")
+    r = client.get("/survey/open/" + campaign.public_survey_token)
+    assert r.status_code == 200
+    tekst = _zichtbare_tekst(r.text)
+    assert "tot en met" not in tekst
+    assert "90 dagen" not in tekst
+
+
+def test_format_closes_at_gelijk_aan_de_uitnodiging():
+    """Zelfde vorm als "Invullen kan tot en met 8 oktober 2026." in
+    frontend/lib/self-send-comms.test.ts."""
+    from backend.survey_window import format_closes_at
+
+    assert format_closes_at(date(2026, 10, 8)) == "8 oktober 2026"
+    assert format_closes_at(date(2027, 1, 31)) == "31 januari 2027"
+
+
 @pytest.mark.parametrize("scan_type", ["exit", "retention"])
 def test_vragenlijst_zonder_streepjes_survey_en_jargon(client, db_session, scan_type):
     campaign = _make_campaign(db_session, scan_type, "acme-vl-" + scan_type)
-    start = client.post("/survey/open/" + campaign.public_survey_token + "/start",
-                        data={}, follow_redirects=False)
-    assert start.status_code == 303
+    start, _ = _start(client, db_session, campaign)
     r = client.get(start.headers["location"])
     assert r.status_code == 200
     tekst = _zichtbare_tekst(r.text)
-    for verboden in ("—", "–", "Stay-intent", "(push)", "(pull)", "â"):
+    for verboden in (EM, EN, "Stay-intent", "(push)", "(pull)", chr(0xE2), "Organisatiefactoren"):
         assert verboden not in tekst, verboden
     assert "survey" not in tekst.lower()
     assert "Verstuur je antwoorden" in tekst
+    assert "Je werksituatie" in tekst
     if scan_type == "exit":
+        assert "Stap 1: Over je vertrek" in tekst
         assert "Kies een antwoord" in tekst
         assert "3 tot 6 maanden" in tekst
         assert "Vertrekcontext" not in tekst
@@ -160,17 +223,16 @@ def test_vragenlijst_zonder_streepjes_survey_en_jargon(client, db_session, scan_
         assert "Behoudssignalen" not in tekst
 
 
-def test_bedankpagina_en_al_ingevuld_in_gewone_taal(client, db_session):
+def test_bedankpagina_in_gewone_taal(client, db_session):
     r = client.get("/survey/complete")
     assert r.status_code == 200
     tekst = _zichtbare_tekst(r.text)
+    assert "Bedankt voor je deelname" in tekst
     assert "survey" not in tekst.lower() and "responses" not in tekst
-    assert "—" not in tekst and "–" not in tekst
+    assert EM not in tekst and EN not in tekst
 
 
 def test_statuspagina_ongeldige_link(client):
-    import uuid
-
     r = client.get("/survey/open/" + str(uuid.uuid4()))
     assert r.status_code == 404
     tekst = _zichtbare_tekst(r.text)
@@ -180,11 +242,7 @@ def test_statuspagina_ongeldige_link(client):
 
 def test_al_ingevuld_in_gewone_taal(client, db_session):
     campaign = _make_campaign(db_session, "exit", "acme-al-ingevuld")
-    start = client.post("/survey/open/" + campaign.public_survey_token + "/start",
-                        data={}, follow_redirects=False)
-    from backend.models import Respondent
-
-    respondent = db_session.query(Respondent).filter(Respondent.campaign_id == campaign.id).one()
+    start, respondent = _start(client, db_session, campaign)
     respondent.completed = True
     db_session.commit()
     r = client.get(start.headers["location"])
@@ -192,7 +250,7 @@ def test_al_ingevuld_in_gewone_taal(client, db_session):
     tekst = _zichtbare_tekst(r.text)
     assert "Je hebt deze vragenlijst al eerder ingevuld. Je antwoorden" in tekst
     assert "survey" not in tekst.lower()
-    assert "—" not in tekst and "–" not in tekst
+    assert EM not in tekst and EN not in tekst
 
 
 def test_main_respondentteksten_zonder_survey_en_u():
@@ -201,5 +259,36 @@ def test_main_respondentteksten_zonder_survey_en_u():
     for oud in ("Survey-link", "survey-link klopt", "U heeft deze vragenlijst",
                 "uw eerdere antwoorden", "Survey al ingevuld", "De survey is niet opgeslagen",
                 "Opslaan van survey-antwoorden", "invullen van de survey",
-                "de survey alsnog wilt invullen", "Ongeldige token."):
+                "de survey alsnog wilt invullen", "Ongeldige token.",
+                'detail="Verouderde', 'detail="Onbekende', "niet ondersteund voor dit scantype"):
         assert oud not in src, oud
+
+
+# ── Foutmeldingen die de vragenlijst letterlijk toont ────────────────────────
+
+def test_onvolledige_inzending_toont_gewone_taal_en_logt_reden(client, db_session, caplog):
+    from backend.survey_messages import SURVEY_INCOMPLETE_MESSAGE
+
+    campaign = _make_campaign(db_session, "exit", "acme-onvolledig")
+    _, respondent = _start(client, db_session, campaign)
+    with caplog.at_level("WARNING", logger="loep.survey"):
+        r = client.post("/survey/submit", json={"token": respondent.token, "sdt_raw": {}, "org_raw": {}})
+    assert r.status_code == 422
+    assert r.json()["detail"] == SURVEY_INCOMPLETE_MESSAGE
+    assert "ExitScan vereist alle 12 werkbelevingsitems." in caplog.text
+
+
+def test_scoringsfout_noemt_vervolgstap():
+    src = re.sub(r'"\s+"', "", (ROOT / "backend" / "main.py").read_text(encoding="utf-8"))
+    assert ("Je antwoorden konden niet worden verwerkt en zijn niet opgeslagen. "
+            "Probeer het over een paar minuten opnieuw. Lukt het dan nog niet, "
+            "neem contact op met de HR-afdeling van je organisatie.") in src
+
+
+def test_respondentmeldingen_zonder_streepjes_en_technische_woorden():
+    from backend.survey_messages import SURVEY_INCOMPLETE_MESSAGE, SURVEY_RELOAD_MESSAGE
+
+    for melding in (SURVEY_INCOMPLETE_MESSAGE, SURVEY_RELOAD_MESSAGE):
+        assert EM not in melding and EN not in melding
+        for woord in ("survey", "versie", "scantype", "optie", "item"):
+            assert woord not in melding.lower()
