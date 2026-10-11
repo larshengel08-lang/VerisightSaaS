@@ -2191,28 +2191,35 @@ ONBOARDING_GEEN_RANGORDE = (
     "scores is er geen volgorde om de onderwerpen met de meeste aandacht aan te wijzen."
 )
 
-# Loep Start levert de verdiepings- en richtinglaag nog niet (spec ronde 2
+# Loep Start levert de verdiepings- en richtinglaag niet (spec ronde 2
 # par. 7, B18). Loep Vertrek en Loep Behoud vragen door op een lage score
 # (waarom scoort dit zo, volgens de respondent) en stellen daarna de
 # richtingvraag (wat zou hier het meest helpen); die twee vullen samen het blok
-# "Wat er moet gebeuren". Loep Start heeft geen van beide. Zolang dat zo is,
-# zegt het rapport dat zelf, op de plek waar de lezer anders naar die laag zou
-# zoeken. Dezelfde zin staat op de site (home-page-content.tsx,
-# producten-content.tsx): rapport en site zeggen hetzelfde.
+# "Wat er moet gebeuren". Loep Start heeft geen van beide. Het rapport zegt dat
+# zelf, op de plek waar de lezer anders naar die laag zou zoeken, en zegt wat
+# de lezer in plaats daarvan doet (leesronde 4, S2): geen productplanning in
+# een klantrapport.
+#
+# Let op: rapport en site zeggen dit NIET meer met dezelfde woorden. De
+# disclosure op de site (loep-start-scope-disclosure in
+# home-page-content.tsx en producten-content.tsx) zegt nog dat de laag "in een
+# volgende versie" komt. Dat is een verkoopkeuze en bewust buiten de
+# polijstronde gehouden (spec 2026-10-09 par. 6).
 ONBOARDING_GEEN_VERDIEPING_NOTE = (
-    "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag. Het rapport "
+    "Deze scan bevat geen verdiepingsvragen en geen richtingvraag. Het rapport "
     "laat zien waar het wringt bij nieuwe medewerkers; wat er volgens hen moet "
-    "gebeuren volgt in een volgende versie."
+    "gebeuren, vraag je in het gesprek met hen."
 )
 
 # Zonder factorprofiel weerlegt de tweede helft zichzelf binnen drie zinnen: het
 # degraded blok eronder zegt juist dat Loep bij dit aantal antwoorden nog geen
 # profiel per factor toont, dus "laat zien waar het wringt" is dan geen belofte
 # die dit rapport waarmaakt. De eerste zin gaat over het product en blijft waar;
-# die blijft staan, met alleen het deel over de volgende versie erachter.
+# die blijft staan, met alleen het deel over het gesprek met nieuwe
+# medewerkers erachter.
 ONBOARDING_GEEN_VERDIEPING_NOTE_DEGRADED = (
-    "Deze scan bevat nog geen verdiepingsvragen en geen richtingvraag. Wat er "
-    "volgens nieuwe medewerkers moet gebeuren volgt in een volgende versie."
+    "Deze scan bevat geen verdiepingsvragen en geen richtingvraag. Wat er "
+    "volgens nieuwe medewerkers moet gebeuren, vraag je in het gesprek met hen."
 )
 
 
@@ -2561,12 +2568,19 @@ def _laagste_stelling_zin(factor_label: str, stelling: str, score: float,
     _laagste_stelling_reikwijdte). uniek slaat op de reikwijdte die de zin
     noemt: bij laagste_van_alles op alle gemeten stellingen, anders op het
     thema, waar de gekozen stelling per definitie de laagste is.
+
+    score is de score van de STELLING zelf (de aanroeper geeft het item uit
+    data["org_item_avgs"] door, niet het factorgemiddelde), dus het getal staat direct
+    achter de stelling (leesronde 4, S8). Een afsluitend leesteken van de
+    stelling valt weg, anders staat er een punt binnen de aanhalingstekens
+    midden in de zin.
     """
     welke = ("de laagst scorende stelling" if uniek
              else "een van de laagst scorende stellingen")
     waar = "in het cijferbeeld" if laagste_van_alles else "van dit onderwerp"
-    return (f"Bespreek eerst ‘{stelling}’ binnen {factor_label.lower()} "
-            f"({score:.1f}/10). Dat is {welke} {waar}.")
+    stelling = stelling.strip().rstrip(".?!").rstrip()
+    return (f"Bespreek eerst de stelling ‘{stelling}’ ({score:.1f}/10), "
+            f"binnen {factor_label.lower()}. Dat is {welke} {waar}.")
 
 
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
@@ -8189,7 +8203,8 @@ def _landingskwaliteit(domains: list[tuple[str, float | None]]) -> str:
         legend = (f'<p style="font-size:9px;color:#64748B;margin-top:12px;">'
                   f'<span style="color:{RAG_HIGH};">&#9632;</span> kwetsbaar punt &nbsp; '
                   f'<span style="color:{RAG_MID};">&#9632;</span> aandachtspunt &nbsp; '
-                  f'<span style="color:{RAG_LOW};">&#9632;</span> goed geland</p>')
+                  f'<span style="color:{RAG_LOW};">&#9632;</span> '
+                  + _FACTOR_LABEL_WOORDEN[2].lower() + '</p>')
     else:
         rows = ('<div class="empty-state">Voor deze meting zijn er geen scores '
                 'per domein berekend.</div>')

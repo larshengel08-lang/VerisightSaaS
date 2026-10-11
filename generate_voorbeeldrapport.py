@@ -236,7 +236,11 @@ CULTURE_PROFILES = [
 
 ONBOARDING_CONFIG = {
     "scan_type": "onboarding",
-    "campaign_name": "Onboarding Checkpoint Q1 2026",
+    "campaign_name": "Loep Start Q1 2026",
+    # Oude demonaam (leesronde 4, S7). De opschoning ruimt een eerder
+    # aangemaakte demo met deze naam ook op, zodat er geen verouderde demo
+    # naast de nieuwe blijft staan (relevant bij --keep-data).
+    "legacy_campaign_names": ["Onboarding Checkpoint Q1 2026"],
     "docs_output_name": "voorbeeldrapport_onboarding.html",
     "public_output_name": "voorbeeldrapport_onboarding.html",
     "invited": 42,
@@ -971,6 +975,11 @@ def _build_onboarding_response(profile: dict[str, float | str | int]) -> dict:
     }
 
 
+def _demo_campaign_names(config: dict) -> list[str]:
+    """De huidige demonaam plus eventuele oude namen van dezelfde demo."""
+    return [str(config["campaign_name"]), *config.get("legacy_campaign_names", [])]
+
+
 def main() -> None:
     args = _parse_args()
     if args.scan_type == "retention":
@@ -997,7 +1006,7 @@ def main() -> None:
         db.query(Campaign)
         .filter(
             Campaign.organization_id == org.id,
-            Campaign.name == config["campaign_name"],
+            Campaign.name.in_(_demo_campaign_names(config)),
             Campaign.scan_type == config["scan_type"],
         )
         .all()
