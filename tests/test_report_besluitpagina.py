@@ -81,7 +81,10 @@ def test_inleiding_verwijst_naar_de_werkvragen_of_zegt_dat_ze_er_niet_zijn():
     assert 'href="#' + LEIDRAAD_ANKERS["werkvragen"] + '"' in met
     start = _plain(_pagina(scan_type="onboarding", heeft_werkvragen=False))
     assert "Zo maak je er een besluit van" not in start
-    assert "Loep Start meet nog geen richtingvraag" in start
+    # S2 (eindreview polijstronde): geen aankondiging van een volgende versie,
+    # zelfde vorm als de notitie op pagina twee.
+    assert "Deze scan bevat geen richtingvraag; het besluit volgt uit jullie gesprek" in start
+    assert "nog geen richtingvraag" not in start
 
 
 def test_niets_veronderstelt_een_begeleider_en_geen_streepjes():

@@ -4437,7 +4437,9 @@ def _besluit_page(*, opener_html: str, scan_type: str, campaign_name: str,
         intro = (f"Neem de uitkomst van ‘{WERKVRAGEN_EYEBROW}’ (pagina {werkvragen}) hier over. "
                  "Eén besluit dat iemand draagt is meer waard dan vijf voornemens.")
     elif scan_type == "onboarding":
-        intro = ("Loep Start meet nog geen richtingvraag; het besluit volgt uit jullie gesprek over "
+        # S2 (eindreview polijstronde): zelfde vorm als ONBOARDING_GEEN_VERDIEPING_NOTE,
+        # zonder "nog": een klantrapport kondigt geen volgende versie aan.
+        intro = ("Deze scan bevat geen richtingvraag; het besluit volgt uit jullie gesprek over "
                  f"het startpunt (pagina {agenda}). Eén besluit dat iemand draagt is meer waard "
                  "dan vijf voornemens.")
     else:
