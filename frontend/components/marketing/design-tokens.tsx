@@ -63,14 +63,17 @@ export function useInView(threshold = 0.12) {
 
 // ── Shared components ─────────────────────────────────────────────
 export function Reveal({
-  children, delay = 0, from = 'up' as 'up' | 'right' | 'none', threshold = 0.1,
+  children, delay = 0, from = 'up' as 'up' | 'right' | 'none', threshold = 0.1, style,
 }: {
   children?: React.ReactNode; delay?: number; from?: 'up' | 'right' | 'none'; threshold?: number
+  /** Alleen voor de lay-out van de buitenste div (bijv. een grid-rij); de animatie blijft van Reveal. */
+  style?: React.CSSProperties
 }) {
   const [ref, inView] = useInView(threshold)
   const tr = { up: 'translateY(22px)', right: 'translateX(24px)', none: 'none' }
   return (
     <div ref={ref} style={{
+      ...style,
       opacity: inView ? 1 : 0,
       transform: inView ? 'none' : tr[from],
       transition: `opacity .75s ease ${delay}s, transform .75s cubic-bezier(.16,1,.3,1) ${delay}s`,

@@ -35,7 +35,7 @@ describe('homepage na besluit A', () => {
   })
 
   it('zegt eerlijk dat de klant de respons in een eigen omgeving volgt', () => {
-    expect(bron()).toContain('Loep ziet hun adressen nooit. De respons volg je in je eigen omgeving.')
+    expect(bron()).toContain('Loep ziet de adressen van je mensen nooit. De respons volg je in je eigen omgeving.')
   })
 
   it('schrijft de werkvragen toe aan de twee scans die ze hebben, niet aan Loep Start', () => {
@@ -45,11 +45,12 @@ describe('homepage na besluit A', () => {
   })
 
   it('belooft de afweging achter de ranglijst alleen bij de twee scans die een raster hebben', () => {
-    // De ranglijst zelf staat in elk scanrapport en blijft dus onvoorwaardelijk.
-    // Wat Loep Start mist is het prioriteringsraster: daar is de rangorde puur
-    // de score (backend/report_html.py), dus "je ziet waarom dit bovenaan
-    // staat" is voor Loep Start niet waar.
-    expect(bron()).toContain('Bij Loep Vertrek en Loep Behoud lees je er ook bij wat er meewoog in die volgorde.')
+    // Loep Start mist het prioriteringsraster: daar is de rangorde puur de
+    // score (backend/report_html.py), dus "je ziet waarom dit bovenaan staat"
+    // is voor Loep Start niet waar. Sinds de polijstronde (Taak 13b) hangt de
+    // homepagekaart de ranglijst met het waarom daarom aan de twee scans met
+    // een raster; voor elke scan belooft hij alleen wat laag scoort en waar je begint.
+    expect(bron()).toContain('Bij Loep Vertrek en Loep Behoud komt daar één ranglijst bij, dit eerst en waarom,')
     // De ontkenningen dekken ook SuitePreviewSection en suiteFlowPoints. Die
     // staan wel in dit bestand maar hangen niet in de renderboom, dus daar
     // wordt bewust geen zin vastgepind: verdwijnt dat dode blok ooit, dan hoort

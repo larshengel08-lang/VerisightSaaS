@@ -1,7 +1,9 @@
 ﻿'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
+import { SURVEY_MINUTES } from '@/lib/campaign-setup'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
@@ -113,24 +115,30 @@ const problemSignalPoints = [
   },
 ]
 
+// Invultijd uit dezelfde bron als de vragenlijst zelf (SURVEY_MINUTES), zodat de
+// homepage niet iets anders belooft dan de respondent leest.
+const surveyMinutes = Object.values(SURVEY_MINUTES).filter((m): m is number => typeof m === 'number')
+const minSurveyMinutes = Math.min(...surveyMinutes)
+const maxSurveyMinutes = Math.max(...surveyMinutes)
+
 const managementFlowSteps = [
   {
     step: '1',
     label: 'Luisteren',
     title: 'Medewerkers vullen de scan in',
-    body: 'Anoniem, in tien minuten ingevuld. Loep zet alles klaar; jij stuurt één mail naar je mensen vanuit je eigen mailbox. Loep ziet hun adressen nooit. De respons volg je in je eigen omgeving.',
+    body: `Anoniem, in ${minSurveyMinutes} tot ${maxSurveyMinutes} minuten ingevuld, afhankelijk van de scan. Loep zet alles klaar; jij stuurt één mail vanuit je eigen mailbox. Loep ziet de adressen van je mensen nooit. De respons volg je in je eigen omgeving.`,
   },
   {
     step: '2',
     label: 'Begrijpen',
     title: 'Loep levert een rapport met een antwoord',
-    body: 'Een rapport dat niet alleen zegt wat laag scoort, maar ook wat je mensen daar zelf over zeggen. Plus één ranglijst: dit eerst. Bij Loep Vertrek en Loep Behoud lees je er ook bij wat er meewoog in die volgorde. Binnen weken, niet maanden.',
+    body: 'Een rapport dat laat zien wat laag scoort en waar je begint. Bij Loep Vertrek en Loep Behoud komt daar één ranglijst bij, dit eerst en waarom, plus wat je mensen zelf als reden kozen en wat er volgens hen moet gebeuren.',
   },
   {
     step: '3',
     label: 'Kiezen',
     title: 'Kiezen met je MT: wat, wie, wanneer',
-    body: 'Jij leidt het gesprek met je MT; het rapport is je leidraad van 45 minuten. Jullie kiezen: wat pakken we op, wie doet het, wanneer kijken we terug. Geen actieplan uit een computer, wel de feiten erbij.',
+    body: 'Jij leidt het gesprek met je MT; het rapport is je leidraad van 45 minuten. Samen kiezen jullie wat er gebeurt, wie het oppakt en wanneer jullie terugkijken. Geen actieplan uit een computer, wel de feiten erbij.',
   },
 ] as const
 
@@ -178,12 +186,11 @@ function ManagementFlowVisual({ step }: { step: string }) {
           background: '#f5f0e9',
           border: `1px solid ${SURFACE.borderSoft}`,
           borderRadius: 22,
-          marginTop: 'auto',
           minHeight: 126,
           padding: '18px 18px 16px',
         }}
       >
-        <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
           {['Doelgroep', 'Vragenlijst', 'Planning'].map((label, index) => (
             <span
               key={label}
@@ -246,7 +253,6 @@ function ManagementFlowVisual({ step }: { step: string }) {
           background: '#f5f0e9',
           border: `1px solid ${SURFACE.borderSoft}`,
           borderRadius: 22,
-          marginTop: 'auto',
           minHeight: 126,
           padding: '18px 18px 16px',
         }}
@@ -266,7 +272,7 @@ function ManagementFlowVisual({ step }: { step: string }) {
         <div style={{ display: 'grid', gap: 10 }}>
           <div style={{ background: SURFACE.surface, borderRadius: 16, padding: '12px 14px' }}>
             <div style={{ color: SURFACE.ink, fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>
-              Eerste managementvraag
+              Gespreksopener
             </div>
             <div style={{ background: SURFACE.borderSoft, borderRadius: 999, height: 7, marginBottom: 8, overflow: 'hidden' }}>
               <div style={{ background: SURFACE.teal, borderRadius: 999, height: '100%', width: '78%' }} />
@@ -295,7 +301,6 @@ function ManagementFlowVisual({ step }: { step: string }) {
         background: '#f5f0e9',
         border: `1px solid ${SURFACE.borderSoft}`,
         borderRadius: 22,
-        marginTop: 'auto',
         minHeight: 126,
         padding: '18px 18px 16px',
       }}
@@ -536,6 +541,17 @@ function ProblemSection() {
   )
 }
 
+// minmax(0, 1fr) als enige kolom: zonder die regel krijgt het grid een
+// auto-kolom die meegroeit met de min-content van de mini-visual, en dan
+// schuift kaart 1 op 375 px buiten de kolom (zie ook .management-flow-grid).
+const FLOW_CARD_SUBGRID = {
+  display: 'grid',
+  gridRow: 'span 2',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  gridTemplateRows: 'subgrid',
+  rowGap: 0,
+} as const
+
 function ManagementFlowSection() {
   return (
     <section
@@ -608,77 +624,84 @@ function ManagementFlowSection() {
           />
 
           {managementFlowSteps.map((item, index) => (
-            <Reveal key={item.title} delay={0.1 + index * 0.05}>
+            // Kaart en Reveal zijn subgrids over twee rijen (tekst, mini-visual): zo
+            // zijn de drie kaarten even hoog en beginnen de mini-visuals op één lijn,
+            // ook als de teksten of de visuals onderling verschillen in hoogte.
+            <Reveal key={item.title} delay={0.1 + index * 0.05} style={FLOW_CARD_SUBGRID}>
               <article
                 style={{
                   background: SURFACE.surface,
                   border: `1px solid ${SURFACE.borderSoft}`,
                   borderRadius: 28,
                   boxShadow: '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)',
-                  minHeight: 408,
+                  ...FLOW_CARD_SUBGRID,
                   padding: '22px 24px 24px',
                   position: 'relative',
                   zIndex: 1,
                 }}
               >
-                <div style={{ alignItems: 'center', display: 'flex', gap: 14, marginBottom: 24 }}>
-                  <div
-                    style={{
-                      alignItems: 'center',
-                      background: SURFACE.ink,
-                      borderRadius: '999px',
-                      color: SURFACE.surface,
-                      display: 'inline-flex',
-                      fontFamily: bodyFont,
-                      fontSize: 15,
-                      fontWeight: 700,
-                      height: 36,
-                      justifyContent: 'center',
-                      width: 36,
-                    }}
-                  >
-                    {item.step}
+                <div>
+                  <div style={{ alignItems: 'center', display: 'flex', gap: 14, marginBottom: 24 }}>
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        background: SURFACE.ink,
+                        borderRadius: '999px',
+                        color: SURFACE.surface,
+                        display: 'inline-flex',
+                        fontFamily: bodyFont,
+                        fontSize: 15,
+                        fontWeight: 700,
+                        height: 36,
+                        justifyContent: 'center',
+                        width: 36,
+                      }}
+                    >
+                      {item.step}
+                    </div>
+                    <span
+                      style={{
+                        color: SURFACE.ink,
+                        fontFamily: bodyFont,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        letterSpacing: '.14em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {item.label}
+                    </span>
                   </div>
-                  <span
+
+                  <h3
                     style={{
                       color: SURFACE.ink,
-                      fontFamily: bodyFont,
-                      fontSize: 11,
+                      fontFamily: displayFont,
+                      fontSize: 'clamp(2rem, 2.35vw, 2.6rem)',
                       fontWeight: 600,
-                      letterSpacing: '.14em',
-                      textTransform: 'uppercase',
+                      letterSpacing: '-0.035em',
+                      lineHeight: 1.03,
+                      marginBottom: 16,
                     }}
                   >
-                    {item.label}
-                  </span>
+                    {item.title}
+                  </h3>
+
+                  <p
+                    style={{
+                      color: SURFACE.text,
+                      fontSize: 15.5,
+                      lineHeight: 1.62,
+                      marginBottom: 28,
+                      maxWidth: '25rem',
+                    }}
+                  >
+                    {item.body}
+                  </p>
                 </div>
-
-                <h3
-                  style={{
-                    color: SURFACE.ink,
-                    fontFamily: displayFont,
-                    fontSize: 'clamp(2rem, 2.35vw, 2.6rem)',
-                    fontWeight: 600,
-                    letterSpacing: '-0.035em',
-                    lineHeight: 1.03,
-                    marginBottom: 16,
-                  }}
-                >
-                  {item.title}
-                </h3>
-
-                <p
-                  style={{
-                    color: SURFACE.text,
-                    fontSize: 15.5,
-                    lineHeight: 1.62,
-                    marginBottom: 28,
-                    maxWidth: '25rem',
-                  }}
-                >
-                  {item.body}
-                </p>
-                <ManagementFlowVisual step={item.step} />
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)' }}>
+                  <ManagementFlowVisual step={item.step} />
+                </div>
               </article>
             </Reveal>
           ))}
@@ -831,60 +854,44 @@ function HeroSection() {
                   border: '1px solid rgba(255,255,255,0.06)',
                 }}
               />
-              <div
-                style={{
-                  background: '#0d1b2a',
-                  border: '1px solid rgba(255,255,255,0.07)',
-                  boxShadow: '0 30px 70px rgba(13, 27, 42, 0.28)',
-                  color: '#f4ece0',
-                  padding: '36px 38px 30px',
-                  position: 'relative',
-                }}
-              >
-                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 28 }}>
-                  <span style={{ color: '#e8a020', fontFamily: bodyFont, fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase' }}>
-                    Loep Behoud
+              <figure style={{ margin: 0, position: 'relative' }}>
+                <div
+                  style={{
+                    background: '#f4efe6',
+                    border: '1px solid rgba(13, 27, 42, 0.12)',
+                    boxShadow: '0 30px 70px rgba(13, 27, 42, 0.28)',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}
+                >
+                  <Image
+                    src="/images/voorbeeld-loep-behoud-p02.webp"
+                    alt="Voorbeeld van pagina twee uit een Loep Behoud-rapport: de kernzin, het werkbeeld en de cijfers over blijven en vertrekken."
+                    width={1489}
+                    height={1137}
+                    sizes="(max-width: 1120px) 100vw, 480px"
+                    priority
+                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                  />
+                  <span
+                    style={{
+                      background: '#0d1b2a',
+                      color: '#f4ece0',
+                      fontFamily: bodyFont,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      left: 0,
+                      letterSpacing: '.18em',
+                      padding: '7px 11px',
+                      position: 'absolute',
+                      textTransform: 'uppercase',
+                      top: 0,
+                    }}
+                  >
+                    Voorbeeld
                   </span>
-                  <span style={{ color: 'rgba(244,237,226,0.5)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' }}>
-                    Illustratief voorbeeld
-                  </span>
                 </div>
-
-                <h3 style={{ fontFamily: displayFont, fontSize: 'clamp(1.9rem, 2.7vw, 2.6rem)', fontWeight: 700, letterSpacing: '-0.04em', lineHeight: 1.02, marginBottom: 22, maxWidth: '16ch' }}>
-                  Groeiperspectief scoort veruit het laagst.
-                </h3>
-                <div style={{ background: '#e8a020', height: 2, marginBottom: 24, width: 54 }} />
-
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', display: 'grid', gap: 0, marginBottom: 24 }}>
-                  {[
-                    { factor: 'Groeiperspectief', score: '4,8', duiding: 'Grootste uitschieter', color: '#e8a020', dominant: true },
-                    { factor: 'Werkbelasting', score: '5,0', duiding: 'Speelt mee', color: 'rgba(244,237,226,0.55)', dominant: false },
-                    { factor: 'Waardering en erkenning', score: '7,1', duiding: 'Relatief sterk', color: '#4db6a8', dominant: false },
-                  ].map((row) => (
-                    <div
-                      key={row.factor}
-                      style={{ alignItems: 'baseline', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0,1fr) auto auto', padding: '13px 0' }}
-                    >
-                      <span style={{ color: row.dominant ? '#f4ece0' : 'rgba(244,237,226,0.82)', fontFamily: bodyFont, fontSize: 13.5, fontWeight: row.dominant ? 600 : 500 }}>{row.factor}</span>
-                      <span className="dash-number" style={{ color: row.color, fontFamily: displayFont, fontSize: 18, fontWeight: 700, letterSpacing: '-0.02em' }}>{row.score}</span>
-                      <span style={{ color: row.color, fontFamily: bodyFont, fontSize: 10.5, fontWeight: 600, letterSpacing: '.04em', textAlign: 'right', whiteSpace: 'nowrap' }}>{row.duiding}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div style={{ background: 'rgba(232,160,32,0.1)', border: '1px solid rgba(232,160,32,0.28)', padding: '14px 16px' }}>
-                  <div style={{ color: '#e8a020', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 700, letterSpacing: '.16em', marginBottom: 7, textTransform: 'uppercase' }}>
-                    Eerste managementvraag
-                  </div>
-                  <p style={{ color: '#f4ece0', fontFamily: bodyFont, fontSize: 13.5, lineHeight: 1.5 }}>
-                    Meer zicht op mogelijkheden, een beter ontwikkelgesprek, of echte ontwikkelruimte?
-                  </p>
-                </div>
-
-                <div style={{ color: 'rgba(244,237,226,0.42)', fontFamily: bodyFont, fontSize: 9.5, fontWeight: 600, letterSpacing: '.1em', marginTop: 22, textTransform: 'uppercase' }}>
-                  n = 39 · Groepsniveau · Geen individuele risicolijst
-                </div>
-              </div>
+              </figure>
             </div>
         </div>
       </div>
