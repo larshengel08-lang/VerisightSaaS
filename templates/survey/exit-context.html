@@ -1,21 +1,21 @@
 {% if scan_type == "exit" %}
-<div class="step active" data-step="1" data-label="Vertrekcontext">
+<div class="step active" data-step="1" data-label="Over je vertrek">
   <div class="card">
-    <div class="card-title">Stap 1 — Vertrekcontext</div>
+    <div class="card-title">Stap 1: Over je vertrek</div>
 
     <div class="question-block" id="qblock-tenure">
       <label class="field-label" for="tenure_years">
         Hoe lang was je in dienst bij deze organisatie?
       </label>
       <select name="tenure_years" id="tenure_years" required>
-        <option value="">— Selecteer —</option>
+        <option value="">Kies een antwoord</option>
         <option value="0.25">Minder dan 3 maanden</option>
-        <option value="0.5">3–6 maanden</option>
-        <option value="1">6–12 maanden</option>
-        <option value="2">1–2 jaar</option>
-        <option value="3.5">2–5 jaar</option>
-        <option value="7.5">5–10 jaar</option>
-        <option value="12">10–15 jaar</option>
+        <option value="0.5">3 tot 6 maanden</option>
+        <option value="1">6 tot 12 maanden</option>
+        <option value="2">1 tot 2 jaar</option>
+        <option value="3.5">2 tot 5 jaar</option>
+        <option value="7.5">5 tot 10 jaar</option>
+        <option value="12">10 tot 15 jaar</option>
         <option value="20">Meer dan 15 jaar</option>
       </select>
       <div class="field-error">Selecteer een optie.</div>
@@ -42,8 +42,8 @@
         Wat is de belangrijkste reden voor je vertrek?
       </label>
       <select name="exit_reason_category" id="exit_reason_category" required>
-        <option value="">— Selecteer —</option>
-        <optgroup label="Organisatiefactoren (push)">
+        <option value="">Kies een antwoord</option>
+        <optgroup label="Redenen binnen de organisatie">
           <option value="leiderschap">Leiderschap / mijn direct leidinggevende</option>
           <option value="cultuur">Organisatiecultuur of werksfeer</option>
           <option value="groei">Onvoldoende doorgroeimogelijkheden</option>
@@ -51,7 +51,7 @@
           <option value="werkdruk">Werkdruk of werkstress</option>
           <option value="rolonduidelijkheid">Rolonduidelijkheid of tegenstrijdige verwachtingen</option>
         </optgroup>
-        <optgroup label="Externe aantrekkingskrachten (pull)">
+        <optgroup label="Redenen van buiten">
           <option value="beter_aanbod">Beter aanbod elders (salaris, functie, kansen)</option>
           <option value="carriere_switch">Carrièreswitch naar andere sector</option>
           <option value="ondernemerschap">Eigen onderneming starten</option>

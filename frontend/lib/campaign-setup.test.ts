@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   CAMPAIGN_SCAN_OPTIONS,
   SURVEY_DURATION_LABEL,
+  SURVEY_MINUTES,
   getAllowedDeliveryModes,
   getCampaignNamePlaceholder,
   getCampaignReportAddOnSetupNote,
@@ -46,5 +47,13 @@ describe('SURVEY_DURATION_LABEL', () => {
     for (const option of CAMPAIGN_SCAN_OPTIONS) {
       expect(SURVEY_DURATION_LABEL[option.value]).toBeTruthy()
     }
+  })
+
+  it('komt uit SURVEY_MINUTES, de enige bron voor de invultijd', () => {
+    expect(SURVEY_MINUTES).toEqual({ exit: 8, retention: 6, onboarding: 3 })
+    for (const [scan, minutes] of Object.entries(SURVEY_MINUTES)) {
+      expect(SURVEY_DURATION_LABEL[scan as keyof typeof SURVEY_DURATION_LABEL]).toBe('ongeveer ' + minutes + ' minuten')
+    }
+    expect(SURVEY_DURATION_LABEL.culture_assessment).toBe('een paar minuten')
   })
 })

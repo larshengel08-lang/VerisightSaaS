@@ -462,14 +462,14 @@ def test_survey_submit_rejects_duplicate_submission(client, db_session: Session)
     response = client.post("/survey/submit", json=_survey_payload(respondent.token))
 
     assert response.status_code == 409
-    assert response.json()["detail"] == "Survey al ingevuld."
+    assert response.json()["detail"] == "Je hebt deze vragenlijst al ingevuld."
 
 
 def test_survey_submit_rejects_unknown_token(client):
     response = client.post("/survey/submit", json=_survey_payload("missing-token"))
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Ongeldige token."
+    assert response.json()["detail"] == "Deze link naar de vragenlijst klopt niet."
 
 
 def test_exit_survey_submit_requires_signal_visibility_answer(client, db_session: Session):

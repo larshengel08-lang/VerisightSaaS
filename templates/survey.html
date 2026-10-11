@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{ campaign_name }} — Loep</title>
+  <title>{{ campaign_name }} | Loep</title>
 
   <style>
     /* ── Reset & tokens ─────────────────────────────────────── */
@@ -458,7 +458,7 @@
   </div>
   <div class="draft-actions">
     <button type="button" class="btn btn-ghost" id="clear-draft-btn">Wis lokaal opgeslagen concept</button>
-    <span class="draft-note">Aanbevolen als je deze survey op een gedeeld apparaat invult.</span>
+    <span class="draft-note">Aanbevolen als je deze vragenlijst op een gedeeld apparaat invult.</span>
   </div>
 
   <form id="survey-form" novalidate>
@@ -473,9 +473,9 @@
     {% set dp_offset = 1 if deepening_sets else 0 %}
     {% set dir_offset = 1 if direction_sets else 0 %}
     {% set step_d = (4 if scan_type == "exit" else 3) + dp_offset + dir_offset %}
-    <div class="step" data-step="{{ step_d }}" data-label="{% if scan_type == "retention" %}Behoudssignalen{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}">
+    <div class="step" data-step="{{ step_d }}" data-label="{% if scan_type == "retention" %}Werkplezier en blijven{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}">
       <div class="card">
-        <div class="card-title">Stap {{ step_d }} — {% if scan_type == "retention" %}Behoudssignalen{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}</div>
+        <div class="card-title">Stap {{ step_d }}: {% if scan_type == "retention" %}Werkplezier en blijven{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}</div>
 
         {% include "survey/retention-signals.html" %}
         {% include "survey/pulse-signals.html" %}
@@ -488,7 +488,7 @@
 
       <div class="nav-row">
         <button type="button" class="btn btn-secondary prev-btn">← Vorige</button>
-        <button type="submit" class="btn btn-primary" id="submit-btn">Verstuur survey ✓</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn">Verstuur je antwoorden ✓</button>
       </div>
     </div>
 
@@ -554,7 +554,7 @@
     fillBar.style.width = pct + "%";
     pctLabel.textContent = pct + "% voortgang";
     const label = steps[currentStep]?.dataset.label || "";
-    stepLabel.textContent = `Stap ${visIdx + 1} van ${total}${label ? " — " + label : ""}`;
+    stepLabel.textContent = `Stap ${visIdx + 1} van ${total}${label ? ": " + label : ""}`;
   }
 
   function setFormStatus(message, type = "error") {
@@ -788,7 +788,7 @@
 
   function applyDeepeningValue (name, val) {
     // Vrije tekst (other_text) kan quotes/backslashes bevatten; nooit in een
-    // attribute-selector interpoleren — match waarden in JS.
+    // attribute-selector interpoleren; match waarden in JS.
     if (!deepBlocks) return;
     for (const inp of deepBlocks.querySelectorAll("input")) {
       if (inp.name !== name) continue;
@@ -945,7 +945,7 @@
     // daardoor zelf-sleutelend: een verstaald hersteld antwoord vindt het veld
     // van zijn eigen factor terug, of vindt niets → veroudering is door
     // constructie uitgesloten. De richtingvelden zijn vlak genaamd (dpd_choice,
-    // niet per factor), dus missen die garantie — vandaar deze expliciete
+    // niet per factor), dus missen die garantie, vandaar deze expliciete
     // dpd_factor-vlag om bij restore te verifiëren dat een hersteld antwoord
     // nog bij de huidige (laagste) factor van deze respondent hoort.
     const factorFlag = document.createElement("input");
@@ -961,7 +961,7 @@
 
   function applyDirectionValue (name, val) {
     // Vrije tekst (other_text) kan quotes/backslashes bevatten; nooit in een
-    // attribute-selector interpoleren — match waarden in JS.
+    // attribute-selector interpoleren; match waarden in JS.
     if (!dirBlocks) return;
     for (const inp of dirBlocks.querySelectorAll("input")) {
       if (inp.name !== name) continue;
@@ -1021,7 +1021,7 @@
 // ── sessionStorage persistence ───────────────────────────────────────────
   // Slaat antwoorden en huidige stap op bij elke navigatie.
   // Herstelt automatisch bij herbezoek (bijv. na refresh).
-  // Sleutel: verisight_survey_{token} — per respondent uniek.
+  // Sleutel: verisight_survey_{token}, per respondent uniek.
 
   function _storageKey() {
     const t = form.querySelector('input[name="token"]');
@@ -1194,7 +1194,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
     e.preventDefault();
     clearFormStatus();
     if (!validateStep(getActiveStep())) {
-      setFormStatus("Controleer de gemarkeerde vragen voordat je de survey verstuurt.");
+      setFormStatus("Controleer de gemarkeerde vragen voordat je de vragenlijst verstuurt.");
       return;
     }
 
@@ -1305,7 +1305,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
       } else {
         const err = await resp.json().catch(() => ({}));
         // FastAPI geeft bij een HTTPException een string-detail, maar bij een
-        // Pydantic-validatiefout een LIJST met foutobjecten — die is ook truthy,
+        // Pydantic-validatiefout een LIJST met foutobjecten; die is ook truthy,
         // dus zonder deze check zag de respondent letterlijk "[object Object]".
         const detail = typeof err.detail === "string" ? err.detail : null;
         setFormStatus(detail || "Er is iets misgegaan bij het verzenden. Probeer het opnieuw.");

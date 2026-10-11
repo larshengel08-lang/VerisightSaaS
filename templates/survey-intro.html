@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>{{ product_name }} — Loep</title>
+  <title>{{ product_name }} | Loep</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@700;800&display=swap" rel="stylesheet" />
@@ -182,14 +182,15 @@
 
     <h1>{{ product_name }}</h1>
     <p class="subtitle">
-      Je werkgever heeft Loep gevraagd dit onderzoek uit te voeren.<br>
-      Het invullen duurt ongeveer 10–15 minuten.
+      {% if scan_type == "exit" %}De organisatie waar je werkt of werkte, heeft Loep gevraagd dit onderzoek uit te voeren.{% else %}Je organisatie heeft Loep gevraagd dit onderzoek uit te voeren.{% endif %}
+      {% if survey_minutes %}<br>
+      Invullen kost ongeveer {{ survey_minutes }} minuten.{% endif %}
     </p>
 
     <div class="privacy-block">
       <p>
         Je antwoorden worden anoniem verwerkt en alleen op groepsniveau gerapporteerd.
-        Open antwoorden worden gecontroleerd op herleidbare informatie voordat ze in een rapport komen.
+        Herkende namen, e-mailadressen, telefoonnummers en postcodes haalt Loep automatisch uit open antwoorden voordat ze in een rapport komen. Noem liever zelf geen namen.
       </p>
     </div>
 
@@ -213,12 +214,12 @@
       {% endif %}
 
       <button type="submit" class="start-btn" id="start-btn">
-        Survey starten
+        Begin met invullen
       </button>
     </form>
 
     <div id="already-done" class="privacy-block" style="display:none;">
-      <p><strong>Je hebt deze vragenlijst al ingevuld.</strong> Bedankt — een tweede invulling is niet nodig.</p>
+      <p><strong>Je hebt deze vragenlijst al ingevuld.</strong> Bedankt, een tweede keer invullen is niet nodig.</p>
     </div>
 
     <p class="duration-hint">Eenmaal gestart kun je de link 90 dagen opnieuw openen.</p>

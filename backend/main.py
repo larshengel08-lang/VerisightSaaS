@@ -1157,8 +1157,8 @@ async def open_survey_intro(
         return _render_survey_status(
             request,
             status_code=404,
-            title="Survey-link ongeldig",
-            heading="Deze survey-link klopt niet",
+            title="Link ongeldig",
+            heading="Deze link naar de vragenlijst klopt niet",
             message="De link is ongeldig. Controleer of je de volledige link hebt geopend.",
             tone="warning",
         )
@@ -1180,7 +1180,11 @@ async def open_survey_intro(
         )
 
     scan = get_scan_definition(campaign.scan_type)
-    product_name = scan.get("product_name", "Survey") if scan else "Survey"
+    product_name = scan.get("product_name", "Vragenlijst") if scan else "Vragenlijst"
+    # Invultijd uit een bron (spec 2026-10-09 par. 4): survey_minutes in de
+    # productdefinitie. Ontbreekt die (niet-verkochte scans), dan laat de
+    # startpagina de tijdzin weg in plaats van een getal te verzinnen.
+    survey_minutes = scan.get("survey_minutes") if scan else None
 
     from backend.segments import has_segments, resolve_department
 
@@ -1194,6 +1198,8 @@ async def open_survey_intro(
         "survey-intro.html",
         context={
             "product_name": product_name,
+            "scan_type": campaign.scan_type,
+            "survey_minutes": survey_minutes,
             "public_survey_token": public_survey_token,
             "afd_slug": afd_slug if resolved_label else "",
             "show_chooser": show_chooser,
@@ -1225,8 +1231,8 @@ async def open_survey_start(
         return _render_survey_status(
             request,
             status_code=404,
-            title="Survey-link ongeldig",
-            heading="Deze survey-link klopt niet",
+            title="Link ongeldig",
+            heading="Deze link naar de vragenlijst klopt niet",
             message="De link is ongeldig. Controleer of je de volledige link hebt geopend.",
             tone="warning",
         )
@@ -1275,8 +1281,8 @@ async def open_survey_start(
                 request,
                 status_code=409,
                 title="Al ingevuld",
-                heading="U heeft deze vragenlijst al ingevuld",
-                message="Bedankt — uw eerdere antwoorden zijn al meegenomen. Een tweede invulling is niet nodig.",
+                heading="Je hebt deze vragenlijst al ingevuld",
+                message="Bedankt, je eerdere antwoorden zijn al meegenomen. Een tweede keer invullen is niet nodig.",
                 tone="info",
             )
 
@@ -1316,8 +1322,8 @@ async def serve_survey(
         return _render_survey_status(
             request,
             status_code=404,
-            title="Survey-link ongeldig",
-            heading="Deze survey-link klopt niet",
+            title="Link ongeldig",
+            heading="Deze link naar de vragenlijst klopt niet",
             message="De link is ongeldig of niet meer actief. Controleer of je de volledige link hebt geopend.",
             hint="Neem contact op met de HR-afdeling van je organisatie als je een nieuwe uitnodiging nodig hebt.",
             tone="warning",
@@ -1335,10 +1341,10 @@ async def serve_survey(
             return _render_survey_status(
                 request,
                 status_code=410,
-                title="Survey-link verlopen",
-                heading="Deze survey-link is verlopen",
+                title="Link verlopen",
+                heading="Deze link naar de vragenlijst is verlopen",
                 message="Om privacy- en beveiligingsredenen is deze persoonlijke link niet meer geldig.",
-                hint="Neem contact op met de HR-afdeling van je organisatie als je de survey alsnog wilt invullen.",
+                hint="Neem contact op met de HR-afdeling van je organisatie als je de vragenlijst alsnog wilt invullen.",
                 tone="warning",
             )
 
@@ -1408,9 +1414,9 @@ async def submit_survey(
     # Validate token
     respondent = _get_respondent_by_token(payload.token, db)
     if not respondent:
-        raise HTTPException(status_code=404, detail="Ongeldige token.")
+        raise HTTPException(status_code=404, detail="Deze link naar de vragenlijst klopt niet.")
     if respondent.completed:
-        raise HTTPException(status_code=409, detail="Survey al ingevuld.")
+        raise HTTPException(status_code=409, detail="Je hebt deze vragenlijst al ingevuld.")
     if not _campaign_is_open(respondent.campaign):
         raise HTTPException(status_code=410, detail=SURVEY_CLOSED_MESSAGE)
     if _is_placeholder_primary_route(respondent.campaign.scan_type):
@@ -1523,7 +1529,7 @@ async def submit_survey(
             "campaign_id": str(respondent.campaign_id),
             "flow": "survey_scoring",
         })
-        raise HTTPException(status_code=500, detail="Scoringsberekening mislukt. De survey is niet opgeslagen.")
+        raise HTTPException(status_code=500, detail="Je antwoorden konden niet worden verwerkt en zijn niet opgeslagen. Probeer het opnieuw.")
 
     # Open text — anonymise then optionally enrich
     open_text_clean: str | None = None
@@ -1582,7 +1588,7 @@ async def submit_survey(
             "campaign_id": str(respondent.campaign_id),
             "flow": "survey_persist",
         })
-        raise HTTPException(status_code=500, detail="Opslaan van survey-antwoorden mislukt. Probeer opnieuw.")
+        raise HTTPException(status_code=500, detail="Je antwoorden konden niet worden opgeslagen. Probeer het opnieuw.")
 
     campaign_obj = respondent.campaign
     org = campaign_obj.organization
@@ -1597,7 +1603,7 @@ async def submit_survey(
         total_invited=total_invited,
     )
 
-    return {"status": "ok", "message": "Bedankt voor het invullen van de survey."}
+    return {"status": "ok", "message": "Bedankt voor het invullen van de vragenlijst."}
 
 
 # ---------------------------------------------------------------------------

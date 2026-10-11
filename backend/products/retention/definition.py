@@ -5,6 +5,11 @@ from typing import Any
 from backend.products.shared.definitions import build_org_sections
 
 
+# Invultijd in minuten: een bron voor survey_intro, invite_duration en de
+# startpagina (spec 2026-10-09 par. 4). frontend/lib/campaign-setup.ts
+# SURVEY_MINUTES moet gelijk blijven (tests/test_polijstronde_respondent.py).
+SURVEY_MINUTES = 6
+
 SCAN_DEFINITION: dict[str, Any] = {
     "product_name": "Loep Behoud",
     "signal_label": "Retentiesignaal",
@@ -31,7 +36,8 @@ SCAN_DEFINITION: dict[str, Any] = {
             "testmatig beschermd. Het product is nadrukkelijk geen pragmatisch bewezen of wetenschappelijk gevalideerde predictor van vrijwillig vertrek."
         ),
     },
-    "survey_intro": "Jouw mening telt. Deze vragenlijst gaat over hoe jij je werk ervaart en wat maakt dat je blijft of zou vertrekken. Je antwoorden worden alleen per groep bekeken, nooit per persoon. Invullen kost ongeveer 6 minuten.",
+    "survey_minutes": SURVEY_MINUTES,
+    "survey_intro": "Jouw mening telt. Deze vragenlijst gaat over hoe jij je werk ervaart en wat maakt dat je blijft of zou vertrekken. Je antwoorden worden alleen per groep bekeken, nooit per persoon. Invullen kost ongeveer " + str(SURVEY_MINUTES) + " minuten.",
     "survey_privacy_note": "Je antwoorden zijn vertrouwelijk en worden alleen per groep gerapporteerd, nooit per persoon. Ze zijn bedoeld om te zien waar het in de organisatie wringt, niet om jou te beoordelen of iets over jou te voorspellen. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk nu ervaart. Geef aan in welke mate elke stelling voor jou van toepassing is (1 = helemaal niet mee eens, 5 = helemaal mee eens).",
     "org_intro": "Geef aan in welke mate de volgende uitspraken van toepassing zijn op jouw huidige werksituatie.",
@@ -45,7 +51,7 @@ SCAN_DEFINITION: dict[str, Any] = {
     "open_text_placeholder": "Welke verandering zou behoud voor jou het meest versterken?",
     "open_text_help": "Je antwoord wordt anoniem bewaard en alleen per groep bekeken, nooit per persoon. Noem liever geen namen.",
     "invite_intro": "Je leidinggevende of HR nodigt je uit voor een korte vragenlijst over hoe jij je werk ervaart. Je antwoorden zijn vertrouwelijk en worden alleen per groep bekeken. Zo weet de organisatie eerder waar het wringt.",
-    "invite_duration": "6-10 minuten",
+    "invite_duration": "ongeveer " + str(SURVEY_MINUTES) + " minuten",
     "contact_subject": "Kennismakingsaanvraag Loep Behoud",
     "dashboard_signal_help": "Retentiesignaal 1-10: werkfactoren en werkbeleving samengebracht tot een groepsscore. Hoe hoger, hoe beter; onder de 5,0 vraagt behoud aandacht.",
     "report_repeat_title": "Herhaal Loep Behoud, bijvoorbeeld per kwartaal of halfjaar",
