@@ -62,10 +62,12 @@ Alleen copy en routering. Geen wijziging aan vragenlijst, scoring, rapportlogica
 - Metadata, OG en JSON-LD van de homepage en `/producten`, plus de FAQPage-JSON-LD op `/producten`: "medewerkersonderzoek" en "MTO" voor vindbaarheid, binnen regels 4.1 tot en met 4.5. De paginatitel van de homepage blijft.
 - `frontend/public/llms.txt`: Loep Behoud beschreven als alternatief voor het grote jaarlijkse MTO. Cultuurbeeld eruit.
 
-### 6.2 Product- en rapportcopy
-- `backend/products/retention/definition.py`, `trust_contract.what_it_is_not`: "Geen brede MTO" wordt "Geen breed MTO met benchmark". De rest van die zin blijft.
-- `frontend/lib/products/retention/definition.ts`: dezelfde wijziging. Deze tekst noemt ook nog "Verisight", dat wordt "Loep". Zoek uit of hij gerenderd wordt. Wordt hij dat niet, dan is alleen consistentie met de backend het doel.
-- `backend/products/retention/report_content.py` (r. ~146 en ~298, "geen brede MTO"): in lijn met regel 4.2. Een klant die Behoud als MTO-alternatief koopt, mag in het rapport niet lezen dat het "geen MTO" is. Formulering bijvoorbeeld: "geen breed MTO met benchmark". Dit is rapportcopy, dus de voorbeeldrapporten worden opnieuw gegenereerd en in het productie-image gerenderd.
+### 6.2 Product- en dashboardcopy
+
+**Correctie na inventarisatie (11-10):** het live rapport van Loep Behoud (`backend/report_html.py`) gebruikt `retention/report_content.py` en het backend-trust-contract niet. De voorbeeldrapporten bevatten 0 keer "MTO". De zinnen "geen brede MTO" in de backend staan alleen in de oude ReportLab-route (`backend/report.py`), die Loep Behoud niet meer rendert. Klantzichtbaar is wél de methodiekkaart op de campagnepagina in het dashboard.
+
+- **Klantzichtbaar, moet mee:** `frontend/lib/products/retention/definition.ts`. Die wordt getoond door `MethodologyCard` in `frontend/app/(dashboard)/campaigns/[id]/page-helpers.tsx` (velden `methodologyText` en `whatItIsNotText`). "Geen brede MTO" wordt "geen breed MTO met benchmark". "Verisight maakt zichtbaar" wordt "Loep maakt zichtbaar".
+- **Consistentie, niet klantzichtbaar:** `backend/products/retention/definition.py` (`trust_contract.what_it_is_not`) en `backend/products/retention/report_content.py` (r. ~146 en ~298). Dezelfde wijziging, zodat de backend niet terugpraat als de oude route ooit weer gebruikt wordt. Er hoeven geen voorbeeldrapporten opnieuw gegenereerd te worden. Een guardtest bewijst dat het live rapport geen "MTO" bevat.
 
 ### 6.3 Ongerenderde copy
 `frontend/lib/seo-solution-pages.ts`, `frontend/lib/sample-showcase-assets.ts`, `frontend/lib/products/pulse/definition.ts` en `backend/products/pulse/definition.py` noemen ook "geen brede MTO". Verify-before-touch: aanpassen alleen als de tekst ergens voor een klant of crawler zichtbaar wordt. Anders laten staan en in het uitvoeringsverslag noemen.
@@ -115,7 +117,7 @@ Na de merge komt er een entry in `C:\Users\larsh\CLAUDE.md` met: de route (a) al
 - Nieuwe onderwerpen in de vragenlijst (communicatie, tevredenheid).
 - Normdata of een benchmark.
 - Een naamswijziging van Loep Behoud.
-- Wijzigingen aan rapportlogica, vragenlijst, scoring of database (alleen copy uit 6.2).
+- Wijzigingen aan rapportlogica, vragenlijst, scoring of database (alleen de copy uit 6.2).
 - Het verwijderen van Cultuurbeeld-code.
 - De zin over vergelijken met de vorige meting (komt met plan 3c).
 - De homepage-h1 en de paginatitel.
@@ -130,7 +132,7 @@ Na de merge komt er een entry in `C:\Users\larsh\CLAUDE.md` met: de route (a) al
    - redirecttest: `/producten/cultuurbeeld` geeft 308 naar het Behoud-anker;
    - de leadlabeltest uit 7.3;
    - de contact-funnel-inferentie: een brede cultuurvraag landt op Loep Behoud.
-5. **Rapport:** de drie voorbeeldrapporten opnieuw genereren en renderen in het productie-image (`docker build -t loep-backend:test .`). 0 warnings, 0 em-dashes in de tekstlaag, `scripts/check_pdf_report.py` OK.
-6. **Browsercheck** van home, `/producten` (desktop en 375 px) en de redirect, volgens `docs/testklant.md`. Dit is een publieke wijziging, de testklant hoeft niet.
-7. **Backendversie:** de rapportcopy uit 6.2 is pas live na een Railway-deploy van de service "Loep main" (Vercel deployt alleen de frontend). De go-live-check draait op die backendversie: controleer vooraf met `GET /api/health` dat de live git-sha de merge-commit van deze ronde bevat.
+5. **Rapport:** het live rapport verandert niet (zie 6.2). Bewijs dat met een test die een Behoud-voorbeeldrapport via `report_html.py` rendert en controleert dat er geen "MTO" in de tekst staat. Er hoeven geen voorbeeldrapporten opnieuw gegenereerd te worden.
+6. **Browsercheck** van home, `/producten` (desktop en 375 px) en de redirect. Ook de methodiekkaart op de campagnepagina van testklant A (dashboard), volgens `docs/testklant.md`.
+7. **Backendversie:** de backendwijzigingen uit 6.2 zijn niet klantzichtbaar, maar gaan wel mee in een Railway-deploy van "Loep main", zodat code en productie gelijk lopen. De go-live-check draait op die backendversie: controleer vooraf met `GET /api/health` dat de live git-sha de merge-commit van deze ronde bevat. Vercel deployt de frontend, inclusief de dashboardkaart.
 8. **Niet mergen of pushen** zonder akkoord van Lars.
