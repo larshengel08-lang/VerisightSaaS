@@ -513,7 +513,7 @@ def test_verwijzende_terugval_krijgt_geen_haakje():
     data["factor_items_map"] = {}
     data["avg_risk"] = None
     tekst = _tekst(render_exit_report_html(data))
-    assert ("Dit rapport rust op 45 van de 150 genodigden. Zie de vertrekcontext "
+    assert ("Dit rapport rust op 45 van de 150 genodigden. Zie de vertrekredenen "
             "en de meetgegevens voor wat dit rapport wel toont.") in tekst
     assert "toont (op basis van" not in tekst
 

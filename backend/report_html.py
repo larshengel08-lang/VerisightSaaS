@@ -6946,7 +6946,7 @@ def render_exit_report_html(data: dict) -> str:
         # niet, dus de frictiescore blijft hier staan in plaats van uit het
         # rapport te verdwijnen.
         exec_line = (f"De frictiescore van {rdsp} wijst op een {fl.lower()}." if avg_risk
-                     else "Zie de vertrekcontext en de meetgegevens voor wat dit rapport wel toont.")
+                     else "Zie de vertrekredenen en de meetgegevens voor wat dit rapport wel toont.")
 
     exec_line = _p02_met_respons(exec_line, completed=data["n_completed"],
                                  invited=data["n_invited"],
@@ -7140,7 +7140,7 @@ def render_exit_report_html(data: dict) -> str:
         # ── Exit reason context block ──
         er_count = exit_code_counts.get(fk, 0)
         if er_count > 0:
-            er_context = f'<div class="card accent">{er_count}&times; als hoofdreden van vertrek genoemd; die telling staat ook in de vertrekcontext.</div>'
+            er_context = f'<div class="card accent">{er_count}&times; als hoofdreden van vertrek genoemd; die telling staat ook bij &lsquo;Waarom mensen vertrokken&rsquo;.</div>'
         else:
             er_context = ""
         # ── Lowest / highest item cards — alleen bij >3 items; bij 3 items zijn

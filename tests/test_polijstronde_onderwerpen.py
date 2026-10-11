@@ -260,3 +260,46 @@ def test_r26_keten_breder_dan_de_marge_wordt_niet_een_groep():
     assert ("Beloning en Cultuur staan in de rangorde vrijwel gelijk (6.8 tot 7.0). "
             "Cultuur en Rolhelderheid staan in de rangorde vrijwel gelijk (7.0 tot 7.2).") in t
     assert "(6.8 tot 7.2)" not in t
+
+
+# ── R11-vervolg (specreview): geen verwijzing naar een sectienaam die niet
+# meer bestaat. Kickers heten nu "Waarom mensen vertrokken" en "Blijven en
+# vertrekken"; de copy mag niet meer naar de oude namen wijzen. Ankers,
+# id's en functienamen blijven, dus de test kijkt alleen naar zichtbare tekst.
+
+_OUDE_NAMEN = ("vertrekcontext", "behoudscontext")
+
+
+def _zichtbaar(raw: str) -> str:
+    return _plain(raw).lower()
+
+
+def test_r11_vertrek_rapport_noemt_de_vertrekcontext_niet(html_van):
+    t = _zichtbaar(html_van("08_exit_n12"))
+    # Het scenario bevat de hoofdredenkaart op een onderwerppagina: die zin
+    # verwees naar "de vertrekcontext".
+    assert "als hoofdreden van vertrek genoemd; die telling staat ook bij ‘waarom mensen vertrokken’." in t
+    for naam in _OUDE_NAMEN:
+        assert naam not in t, naam
+
+
+def test_r11_gedegradeerde_p02_vertrek_zonder_frictiescore():
+    from tests.test_report_degraded_page_two import _N_DEGRADED, _RENDERERS, _fixture
+    data = _fixture("exit", n=_N_DEGRADED, profile=False)
+    data["avg_risk"] = None  # dan valt p.02 terug op de verwijzende zin
+    t = _zichtbaar(_RENDERERS["exit"](data))
+    assert "zie de vertrekredenen en de meetgegevens voor wat dit rapport wel toont." in t
+    for naam in _OUDE_NAMEN:
+        assert naam not in t, naam
+
+
+def test_r11_gedegradeerde_p02_behoud_noemt_de_oude_naam_niet():
+    from tests.test_report_degraded_page_two import _N_DEGRADED, _RENDERERS, _fixture
+    for risk in (None, "fixture"):
+        data = _fixture("retention", n=_N_DEGRADED, profile=False)
+        if risk is None:
+            data["avg_risk"] = None
+        t = _zichtbaar(_RENDERERS["retention"](data))
+        assert "blijven en vertrekken" in t
+        for naam in _OUDE_NAMEN:
+            assert naam not in t, (risk, naam)
