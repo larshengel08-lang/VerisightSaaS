@@ -130,7 +130,7 @@ describe('Loep Behoud positioning copy', () => {
     expect(retentionProduct?.description.toLowerCase()).toContain('voordat verloop zichtbaar oploopt')
     expect(retentionProduct?.description.toLowerCase()).not.toContain('mto')
     expect(retentionProduct?.description.toLowerCase()).not.toContain('voorspeller')
-    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen brede mto')
+    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen breed mto met benchmark')
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen individuele voorspeller')
     expect(retentionScanDefinition.whatItIsText.toLowerCase()).toContain('groeps- en segmentniveau')
     expect(retentionScanDefinition.whatItIsNotText.toLowerCase()).toContain('performance-instrument')
