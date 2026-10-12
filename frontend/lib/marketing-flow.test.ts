@@ -69,18 +69,20 @@ describe('marketing flow defaults', () => {
   it('keeps route labels and first-step defaults aligned with the funnel', () => {
     expect(getContactRouteLabel('exitscan')).toBe('Loep Vertrek')
     expect(getContactRouteLabel('retentiescan')).toBe('Loep Behoud')
-    expect(getContactRouteLabel('culture_assessment')).toBe('Loep Culture Assessment')
+    // Cultuurbeeld is sinds 11-10-2026 uit het aanbod (besluit Lars); oude leads
+    // blijven leesbaar via LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS met het label
+    // 'Loep Cultuurbeeld' (zie lib/cultuurbeeld-uit-aanbod.test.ts).
+    expect(getContactRouteLabel('culture_assessment')).toBe('Loep Cultuurbeeld')
     expect(getContactFirstStepLabel('combinatie')).toBe('een gefaseerde combinatieroute')
     expect(getContactFirstStepLabel('onboarding')).toContain('Loep Start Baseline')
     expect(getContactFirstStepLabel('pulse')).toContain('na een eerste baseline')
     expect(getContactFirstStepLabel('leadership')).toContain('na een bestaand signaal')
   })
 
-  it('keeps the contact route ordering core-first with culture assessment as a visible primary route', () => {
+  it('keeps the contact route ordering core-first without culture assessment as a visible primary route', () => {
     expect(CONTACT_ROUTE_OPTIONS.map((option) => option.value)).toEqual([
       'exitscan',
       'retentiescan',
-      'culture_assessment',
       'combinatie',
       'onboarding',
       'pulse',
@@ -96,9 +98,7 @@ describe('marketing flow defaults', () => {
     expect(CONTACT_ROUTE_OPTIONS.find((option) => option.value === 'leadership')?.description.toLowerCase()).toContain(
       'na een bestaand people-signaal',
     )
-    expect(CONTACT_ROUTE_OPTIONS.find((option) => option.value === 'culture_assessment')?.description.toLowerCase()).toContain(
-      'jaarlijkse',
-    )
+    expect(CONTACT_ROUTE_OPTIONS.map((option) => option.value)).not.toContain('culture_assessment')
   })
 
   it('keeps onboarding qualified as a gerichte eerste route instead of reframing it as a gewone follow-up', () => {
