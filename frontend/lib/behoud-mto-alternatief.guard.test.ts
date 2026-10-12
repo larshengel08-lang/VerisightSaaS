@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { SURVEY_DURATION_LABEL } from '@/lib/campaign-setup'
 
 /**
  * Loep Behoud als alternatief voor het grote jaarlijkse MTO (besluit Lars
@@ -99,14 +100,14 @@ describe('Loep Behoud als MTO-alternatief: copyregels', () => {
   })
 
   /**
-   * Regel 4.4: "kort" alleen naast de echte invultijd. INVULTIJD is de letterlijke
-   * waarde uit de bron van Taak 0 stap 5: `SURVEY_DURATION_LABEL` in
-   * frontend/lib/campaign-setup.ts, retention = 'ongeveer 6 minuten' (afgeleid van
-   * SURVEY_MINUTES). INVULTIJD_IDENT is de verwijzing naar de Behoud-waarde van die constante als die in de
-   * frontend wordt geïmporteerd (Taak 2 stap 5). Een bestand is in orde als het een
-   * van beide bevat.
+   * Regel 4.4: "kort" alleen naast de echte invultijd. INVULTIJD komt rechtstreeks
+   * uit de bron (SURVEY_DURATION_LABEL.retention in frontend/lib/campaign-setup.ts,
+   * afgeleid van SURVEY_MINUTES), zodat deze guard faalt zodra bijv. llms.txt (dat
+   * de tekst letterlijk bevat) achterloopt op SURVEY_MINUTES. INVULTIJD_IDENT is de
+   * verwijzing naar de Behoud-waarde van die constante als die in de frontend wordt
+   * geïmporteerd (Taak 2 stap 5). Een bestand is in orde als het een van beide bevat.
    */
-  const INVULTIJD = 'ongeveer 6 minuten'
+  const INVULTIJD = SURVEY_DURATION_LABEL.retention
   const INVULTIJD_IDENT = 'SURVEY_DURATION_LABEL.retention'
 
   it('elk bestand met "korte medewerkersonderzoek" noemt ook de invultijd', () => {
