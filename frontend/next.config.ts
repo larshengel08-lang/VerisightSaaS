@@ -86,10 +86,12 @@ const nextConfig: NextConfig = {
       { source: '/oplossingen', destination: '/producten', permanent: true },
       { source: '/oplossingen/:slug*', destination: '/producten', permanent: true },
       // Losse productpagina's geconsolideerd onder één /producten-pagina.
-      // Loep Cultuurbeeld blijft bewust een eigen (stille) pagina en redirect NIET.
       { source: '/producten/exitscan', destination: '/producten#loep-vertrek', permanent: true },
       { source: '/producten/retentiescan', destination: '/producten#loep-behoud', permanent: true },
       { source: '/producten/onboarding-30-60-90', destination: '/producten#loep-start', permanent: true },
+      // Loep Cultuurbeeld is sinds 11-10-2026 uit het aanbod (spec behoud-als-mto-alternatief).
+      // De code blijft staan; bestaande campagnes en rapporten werken door.
+      { source: '/producten/cultuurbeeld', destination: '/producten#loep-behoud', permanent: true },
       // Tarieven gevouwen in /producten
       { source: '/tarieven', destination: '/producten#tarieven', permanent: true },
       // /aanpak was een wees-pagina met verouderde terminologie; de werkwijze
