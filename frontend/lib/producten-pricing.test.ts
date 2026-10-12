@@ -53,13 +53,13 @@ describe('/producten: de prijs komt uit lib/pricing.ts', () => {
     expect(bron(CONTENT)).not.toMatch(/korting/i)
   })
 
-  it('houdt de rekensom van 30 euro per medewerker, zonder de bespreking', () => {
-    // De trede staat nu in de zin. Zonder die afbakening legt een lezer de
-    // rekensom naast de rij "Minder dan 150 medewerkers" (eerste scan €3.500) en komt
-    // hij op €23. lib/pricing.test.ts pint dat 150 x 30 de middelste trede is.
-    expect(bron(CONTENT)).toContain(
-      'In de trede van 150 tot 400 medewerkers komt een scan bij 150 medewerkers neer op zo&rsquo;n €30 per medewerker,',
-    )
+  it('noemt geen bedrag per medewerker en houdt de vergelijking met een uitbesteed traject', () => {
+    // Besluit Lars 11-10-2026 (spec behoud-als-mto-alternatief, regel 4.3): de site
+    // noemt geen prijs per medewerker, ook niet als rekenvoorbeeld. Zo'n bedrag
+    // verschilt per trede en schept verwarring met licentiemodellen. De trede blijft
+    // in de zin, zodat "het bedrag van die trede" een referent heeft.
+    expect(bron(CONTENT)).not.toMatch(/€\s?\d[^.]{0,40}per\s+medewerker/)
+    expect(bron(CONTENT)).toContain('bij een organisatie van 150 tot 400 medewerkers')
     // De vergelijking heeft sinds de staffel een referent nodig: "zoveel" wees
     // naar een vast bedrag dat er niet meer is.
     expect(bron(CONTENT)).toContain('drie tot vier keer het bedrag van die trede')
