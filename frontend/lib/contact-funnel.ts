@@ -272,6 +272,21 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
   return 'exitscan'
 }
 
+const visibleRouteValues = new Set<ContactRouteInterest>(CONTACT_ROUTE_OPTIONS.map((option) => option.value))
+
+/**
+ * De route die het formulier mag TONEN in de <select>. `normalizeContactRouteInterest`
+ * houdt legacy routes (zoals 'culture_assessment') bewust geldig zodat oude leads en de
+ * API ze blijven accepteren, maar die waarden staan niet in CONTACT_ROUTE_OPTIONS. Zonder
+ * deze helper toont de select dan stilzwijgend de eerste optie terwijl de verzonden
+ * waarde de onzichtbare legacy-route blijft (zie fixronde-punt 1, 2026-10-11/12).
+ * Cultuurbeeld verwijst sinds 11-10-2026 naar Loep Behoud; teamscan valt mee onder
+ * dezelfde regel.
+ */
+export function visibleContactRouteInterest(value: ContactRouteInterest): ContactRouteInterest {
+  return visibleRouteValues.has(value) ? value : 'retentiescan'
+}
+
 export function getContactRouteLabel(value: string | null | undefined) {
   return routeOptionMap.get(normalizeContactRouteInterest(value))?.label ?? 'Loep Vertrek'
 }

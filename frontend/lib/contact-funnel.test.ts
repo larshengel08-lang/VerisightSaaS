@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildContactHref,
+  CONTACT_ROUTE_OPTIONS,
   getContactQualificationGuidance,
   getContactRouteLabel,
   inferRouteInterestFromSource,
   normalizeContactRouteInterest,
+  visibleContactRouteInterest,
 } from '@/lib/contact-funnel'
 
 describe('contact qualification guidance', () => {
@@ -104,5 +106,18 @@ describe('contact qualification guidance', () => {
     expect(guidance.recommendedCoreRoute).toBe('culture_assessment')
     expect(guidance.followOnCandidateRoute).toBeNull()
     expect(guidance.detail.toLowerCase()).toContain('board-read')
+  })
+})
+
+describe('visibleContactRouteInterest', () => {
+  it('maps legacy routes not shown in the select to retentiescan', () => {
+    expect(visibleContactRouteInterest('culture_assessment')).toBe('retentiescan')
+    expect(visibleContactRouteInterest('teamscan')).toBe('retentiescan')
+  })
+
+  it('leaves every visible CONTACT_ROUTE_OPTIONS value unchanged', () => {
+    for (const option of CONTACT_ROUTE_OPTIONS) {
+      expect(visibleContactRouteInterest(option.value)).toBe(option.value)
+    }
   })
 })
