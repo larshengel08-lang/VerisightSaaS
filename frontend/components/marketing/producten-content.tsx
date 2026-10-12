@@ -68,7 +68,7 @@ const scans = [
       'Verloop loopt op maar de oorzaak is onduidelijk',
       'Je wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
       'Management wil weten waar het risico zit, niet alleen een gevoel',
-      'Je wilt na je onderzoek weten waar je begint, niet alleen hoe je scoort',
+      'Je wilt na de meting weten waar je begint, niet alleen hoe je scoort',
     ],
     output: 'Rapport met waar het wringt, wat je mensen erover zeggen, en waar je begint. Per afdeling, nooit per persoon.',
     // Uit SURVEY_MINUTES (lib/campaign-setup.ts), gelijk aan survey_minutes in
