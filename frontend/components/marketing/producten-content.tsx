@@ -337,7 +337,7 @@ function PricingSection() {
               </p>
               <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.72, marginBottom: 24, maxWidth: '52ch' }}>
                 Ter vergelijking: een volledig uitbesteed onderzoekstraject kost bij een organisatie van 150 tot 400
-                medewerkers al snel drie tot vier keer het bedrag van die trede.
+                medewerkers al snel drie tot vier keer wat Loep voor die omvang rekent.
               </p>
               <div style={{ borderTop: `1px solid ${T.rule}` }}>
                 {PRICING_TIERS.map((tier) => (

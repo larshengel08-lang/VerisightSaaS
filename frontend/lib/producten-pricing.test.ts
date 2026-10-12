@@ -57,13 +57,14 @@ describe('/producten: de prijs komt uit lib/pricing.ts', () => {
     // Besluit Lars 11-10-2026 (spec behoud-als-mto-alternatief, regel 4.3): de site
     // noemt geen prijs per medewerker, ook niet als rekenvoorbeeld. Zo'n bedrag
     // verschilt per trede en schept verwarring met licentiemodellen. De trede blijft
-    // in de zin, zodat "het bedrag van die trede" een referent heeft.
+    // in de zin, zodat de vergelijking een referent heeft.
     expect(bron(CONTENT)).not.toMatch(/€\s?\d[^.]{0,40}per\s+medewerker/)
     expect(bron(CONTENT)).toContain('bij een organisatie van 150 tot 400 medewerkers')
-    // De vergelijking heeft sinds de staffel een referent nodig: "zoveel" wees
-    // naar een vast bedrag dat er niet meer is.
-    expect(bron(CONTENT)).toContain('drie tot vier keer het bedrag van die trede')
+    // Fixronde-punt 7 (2026-10-11/12): "het bedrag van die trede" was omslachtig;
+    // "wat Loep voor die omvang rekent" leest directer met dezelfde referent.
+    expect(bron(CONTENT)).toContain('drie tot vier keer wat Loep voor die omvang rekent')
     expect(bron(CONTENT)).not.toContain('drie tot vier keer zoveel')
+    expect(bron(CONTENT)).not.toContain('het bedrag van die trede')
     expect(bron(CONTENT)).not.toContain('inclusief de')
   })
 
