@@ -35,8 +35,8 @@ describe('contact qualification visibility summary', () => {
     })
 
     expect(summary.tone).toBe('emerald')
-    expect(summary.headline).toContain('Loep Culture Assessment')
-    expect(summary.recommendationLabel).toContain('Loep Culture Assessment')
+    expect(summary.headline).toContain('Loep Cultuurbeeld')
+    expect(summary.recommendationLabel).toContain('Loep Cultuurbeeld')
     expect(summary.nextAction.toLowerCase()).toContain('organisatiebreed')
   })
 

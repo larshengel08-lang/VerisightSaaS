@@ -11,6 +11,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 const CONTACT_ROUTE_LABELS: Record<string, string> = {
   exitscan: 'Loep Vertrek',
   retentiescan: 'Loep Behoud',
+  culture_assessment: 'Loep Cultuurbeeld',
   teamscan: 'TeamScan',
   onboarding: 'Loep Start',
   leadership: 'Leadership Scan',

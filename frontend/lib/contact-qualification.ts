@@ -71,7 +71,7 @@ export function buildContactQualificationVisibilitySummary({
     case 'culture_primary':
       return {
         tone: 'emerald',
-        headline: 'Loep Culture Assessment mag hier als eerste route worden getoetst.',
+        headline: 'Loep Cultuurbeeld mag hier als eerste route worden getoetst.',
         detail: `${guidance.detail} Gewenste timing: ${timingLabel}.`,
         recommendationLabel: `Aanbevolen eerste route: ${recommendedRouteLabel}`,
         routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,

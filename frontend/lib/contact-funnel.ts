@@ -14,12 +14,6 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'Loep Behoud Baseline',
   },
   {
-    value: 'culture_assessment',
-    label: 'Loep Culture Assessment',
-    description: 'We willen een brede jaarlijkse cultuur- en engagementbaseline voor de organisatie.',
-    firstStepLabel: 'Loep Culture Assessment Baseline',
-  },
-  {
     value: 'combinatie',
     label: 'Combinatie',
     description: 'We willen beide kernvragen bewust naast elkaar organiseren.',
@@ -57,6 +51,12 @@ const LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS = [
     label: 'TeamScan',
     description: 'Verborgen legacy route voor interne of historische teamreads.',
     firstStepLabel: 'een legacy TeamScan-route na een bestaand signaal',
+  },
+  {
+    value: 'culture_assessment',
+    label: 'Loep Cultuurbeeld',
+    description: 'Verborgen route voor oude Cultuurbeeld-leads; Cultuurbeeld is sinds 11-10-2026 uit het aanbod.',
+    firstStepLabel: 'Loep Cultuurbeeld Baseline',
   },
 ] as const
 
@@ -178,6 +178,7 @@ const CULTURE_ASSESSMENT_KEYWORDS = [
   'jaarlijkse baseline',
   'brede baseline',
   'mto',
+  'medewerkersonderzoek',
 ]
 
 const PULSE_SIGNAL_KEYWORDS = [
@@ -335,11 +336,14 @@ export function getContactQualificationGuidance({
     recommendedCoreRoute = 'combinatie'
   } else if (hasRetentionSignal && !hasExitSignal) {
     recommendedCoreRoute = 'retentiescan'
-  } else if (
-    normalizedRoute === 'culture_assessment' ||
-    (hasCultureAssessmentSignal && !hasExitSignal && !hasRetentionSignal)
-  ) {
+  } else if (normalizedRoute === 'culture_assessment') {
     recommendedCoreRoute = 'culture_assessment'
+  } else if (hasCultureAssessmentSignal && !hasExitSignal) {
+    // Besluit Lars 11-10-2026: een brede vraag (cultuur, betrokkenheid,
+    // tevredenheid, medewerkersonderzoek) landt op Loep Behoud, het alternatief
+    // voor het grote jaarlijkse MTO. Alleen oude leads die zelf Cultuurbeeld
+    // kozen, houden die route.
+    recommendedCoreRoute = 'retentiescan'
   }
 
   if (onboardingCandidate) {
