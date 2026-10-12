@@ -50,7 +50,28 @@ Leg de bekende dunne pagina's vast als uitzonderingen in de meting (`scripts/che
 
 ### Taak 5 (A3)
 
-Na akkoord van Lars op de veertien nieuwe zinnen: vervang in `backend/products/shared/deepening.py` de veertien Vertrek-werkvragen met "een jaar geleden" door de goedgekeurde tekst met `WERKVRAGEN_TIJDSANKER`; werk de guardtest (`tests/test_werkvragen_tijdsanker_guard.py`, nu ondergrens 15, wordt 29), `A1_SLOTEN`, de SHA-pin en `TERUGBLIK_VORMEN` bij.
+**Akkoord Lars 12-10.** Alleen de staart verandert; het eerste deel van elke vraag blijft letterlijk gelijk. De zeven Vertrek-vragen met "het afgelopen jaar", een gebeurtenis of "sindsdien" blijven ongewijzigd.
+
+| # | factor / route | Staart nu | Goedgekeurde staart |
+|---|---|---|---|
+| 1 | leadership / ldd_mandate | Was dat een jaar geleden anders? | Was dat anders in de periode waar deze meting over gaat? |
+| 2 | culture / cud_agreements | Was dat een jaar geleden anders? | Was dat anders in de periode waar deze meting over gaat? |
+| 3 | growth / grd_followthrough | Hoeveel afspraken van een jaar geleden zijn nagekomen? | Werden ontwikkelafspraken ook zo vastgelegd en opgevolgd in de periode waar deze meting over gaat? |
+| 4 | growth / grd_time | Was dat een jaar geleden anders? | Was dat anders in de periode waar deze meting over gaat? |
+| 5 | growth / grd_nextstep | Gebeurde dat een jaar geleden ook? | Gebeurde dat ook in de periode waar deze meting over gaat? |
+| 6 | compensation / cpd_insight | Was dat een jaar geleden anders? | Was dat anders in de periode waar deze meting over gaat? |
+| 7 | compensation / cpd_explain | En een jaar geleden? | En in de periode waar deze meting over gaat? |
+| 8 | compensation / cpd_path | Kreeg een medewerker dat een jaar geleden ook te horen? | Kreeg een medewerker dat in de periode waar deze meting over gaat ook te horen? |
+| 9 | compensation / cpd_clarity | Was die uitleg er een jaar geleden ook? | Was die uitleg er ook in de periode waar deze meting over gaat? |
+| 10 | compensation / cpd_flex | Was dat een jaar geleden anders? | Was dat anders in de periode waar deze meting over gaat? |
+| 11 | workload / wld_planning | Keken jullie daar een jaar geleden ook zo naar? | Keken jullie daar ook zo naar in de periode waar deze meting over gaat? |
+| 12 | workload / wld_priorities | Was dat een jaar geleden anders? | Was dat anders in de periode waar deze meting over gaat? |
+| 13 | role_clarity / rcd_priorities | En een jaar geleden? | En in de periode waar deze meting over gaat? |
+| 14 | role_clarity / rcd_mandate | Was dat een jaar geleden even duidelijk? | Was dat even duidelijk in de periode waar deze meting over gaat? |
+
+Extra controles (eis Lars): (a) na vervanging door de lange vorm "in de uitstroomperiode (tussen {maand} en {maand})" en door de vorm met één maand blijft elke vraag een lopende zin die op "?" eindigt, zonder dubbele spaties of verdwaalde leestekens; (b) als de periode onbekend is, blijft de terugvaltekst "in de periode waar deze meting over gaat" staan en leest de vraag correct. Beide als test over alle 29 vragen met het anker.
+
+Vervang daarna in `backend/products/shared/deepening.py` de veertien Vertrek-werkvragen met "een jaar geleden" door de goedgekeurde tekst met `WERKVRAGEN_TIJDSANKER`; werk de guardtest (`tests/test_werkvragen_tijdsanker_guard.py`, nu ondergrens 15, wordt 29), `A1_SLOTEN`, de SHA-pin en `TERUGBLIK_VORMEN` bij.
 
 ### Taak 6
 
