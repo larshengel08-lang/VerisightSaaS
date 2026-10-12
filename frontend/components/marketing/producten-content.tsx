@@ -61,14 +61,14 @@ const scans = [
   {
     id: 'loep-behoud',
     index: '02',
-    eyebrow: 'Behoud versterken',
+    eyebrow: 'Het korte medewerkersonderzoek',
     title: 'Loep Behoud',
-    lead: 'Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',
+    lead: 'Een alternatief voor het grote jaarlijkse MTO. Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',
     when: [
       'Verloop loopt op maar de oorzaak is onduidelijk',
       'Je wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
       'Management wil weten waar het risico zit, niet alleen een gevoel',
-      'Je wilt een eerste keuze, geen breed MTO-project',
+      'Je wilt na je onderzoek weten waar je begint, niet alleen hoe je scoort',
     ],
     output: 'Rapport met waar het wringt, wat je mensen erover zeggen, en waar je begint. Per afdeling, nooit per persoon.',
     // Uit SURVEY_MINUTES (lib/campaign-setup.ts), gelijk aan survey_minutes in
@@ -399,15 +399,19 @@ function PricingSection() {
 }
 
 function MtoComparisonSection() {
+  // Besluit Lars 11-10-2026 (spec behoud-als-mto-alternatief, par. 5): Loep
+  // Behoud is een alternatief voor het grote jaarlijkse MTO, geen afwijzing
+  // ervan. mtoFits noemt alleen onderwerpen die Loep Behoud zelf niet meet
+  // (gecontroleerd tegen de stellingen, scoring_config.py en deepening.py).
   const mtoFits = [
-    'Je wilt een organisatiebrede baseline over alle thema’s tegelijk',
-    'Je zoekt een terugkerend meetritme dat een intern team zelf beheert',
-    'De vraag is "hoe staat het overal?", zonder acuut vraagstuk',
+    'Je wilt je scores vergelijken met andere organisaties of je branche (een benchmark)',
+    'Je wilt onderwerpen meten die Loep Behoud niet meet, zoals communicatie als eigen onderwerp, arbeidsomstandigheden of ongewenst gedrag',
+    'Je wilt een vast meetritme dat een intern team zelf beheert in een eigen platform',
   ] as const
   const loepFits = [
-    'Er speelt nu een concreet vraagstuk rond vertrek, behoud of onboarding',
-    'Je wilt één scherpe eerste keuze, geen breed dashboard',
+    'Je wilt weten waar het wringt bij de mensen die je wilt houden, en waarom volgens henzelf',
     'Je wilt een antwoord waar je MT mee aan tafel kan, geen dashboard om te beheren',
+    'Je wilt na de meting een besluit: wat, wie en wanneer',
   ] as const
 
   return (
@@ -419,11 +423,11 @@ function MtoComparisonSection() {
               Eerlijk over de keuze
             </div>
             <h2 style={{ color: T.ink, fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 700, letterSpacing: '-.026em', lineHeight: 1.06, marginBottom: 14 }}>
-              Wanneer past een breed MTO beter?
+              Wanneer past een groot MTO beter?
             </h2>
             <p style={{ color: T.inkSoft, fontSize: 15.5, lineHeight: 1.72 }}>
-              Een Loep-scan vervangt geen breed medewerkersonderzoek, en dat hoeft ook niet. Het zijn verschillende
-              instrumenten voor verschillende vragen.
+              Loep Behoud is een alternatief voor het grote jaarlijkse MTO, geen kopie ervan. Het meet minder
+              onderwerpen en zegt daardoor scherper waar je begint. Soms heb je iets anders nodig.
             </p>
           </div>
         </Reveal>
@@ -431,7 +435,7 @@ function MtoComparisonSection() {
           <Reveal delay={0.06}>
             <div style={{ border: `1px solid ${T.rule}`, padding: '20px 22px' }}>
               <p style={{ color: T.ink, fontFamily: FF, fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
-                Kies een breed MTO als
+                Kies een groot MTO als
               </p>
               {mtoFits.map((item) => (
                 <div key={item} style={{ alignItems: 'flex-start', display: 'grid', gap: 12, gridTemplateColumns: '16px 1fr', padding: '7px 0' }}>
@@ -444,7 +448,7 @@ function MtoComparisonSection() {
           <Reveal delay={0.12}>
             <div style={{ background: T.paperSoft, border: `1px solid ${T.rule}`, borderLeft: `3px solid ${AC.mid}`, padding: '20px 22px' }}>
               <p style={{ color: T.ink, fontFamily: FF, fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
-                Kies een Loep-scan als
+                Kies Loep Behoud als
               </p>
               {loepFits.map((item) => (
                 <div key={item} style={{ alignItems: 'flex-start', display: 'grid', gap: 12, gridTemplateColumns: '16px 1fr', padding: '7px 0' }}>

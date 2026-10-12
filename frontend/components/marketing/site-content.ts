@@ -283,61 +283,6 @@ export const processHighlights = [
   },
 ] as const
 
-export const approachRoutes = [
-  {
-    eyebrow: 'Loep Vertrek Baseline',
-    title: 'De standaard eerste instap voor vertrekduiding',
-    body: 'Baseline op recente vertrekkers, bijvoorbeeld over de afgelopen 12 maanden. Dit is meestal de logische eerste commerciële instap wanneer organisaties wel exitinput hebben, maar nog geen bestuurbaar patroonbeeld.',
-    bullets: [
-      'Eenmalige aanlevering van respondentbestand',
-      'Bij voorkeur inclusief afdeling, functieniveau en exitmaand',
-      'Sterk als nulmeting en managementbeeld op uitstroom',
-    ],
-    shellClass: 'border-blue-200 bg-blue-50',
-    eyebrowClass: 'text-blue-700',
-    bodyClass: 'text-slate-700',
-  },
-  {
-    eyebrow: 'Loep Vertrek ritmeroute',
-    title: 'Voor organisaties die uitstroom doorlopend willen volgen',
-    body: 'Doorlopende Loep Vertrek voor nieuwe vertrekkers. Past vooral als quote-only vervolg op een eerste baseline of wanneer uitstroom al structureel en met voldoende volume wordt gevolgd.',
-    bullets: [
-      'Vast proces met HR voor nieuwe vertrekkers',
-      'Actuelere signalen, trends pas zinvol bij voldoende volume',
-      'Op aanvraag na baseline of bij bestaand exitvolume',
-    ],
-    shellClass: 'border-slate-200 bg-slate-50',
-    eyebrowClass: 'text-slate-500',
-    bodyClass: 'text-slate-700',
-  },
-  {
-    eyebrow: 'Loep Behoud Baseline',
-    title: 'De eerste meetvorm voor actieve medewerkers',
-    body: 'Een eenmalige Loep Behoud om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
-    bullets: [
-      'Actieve medewerkers in plaats van ex-medewerkers',
-      'Groepsinzichten, geen brede MTO en geen individuele signalen naar management',
-      'Sterk als startpunt voor gerichte opvolging en herhaalmeting',
-    ],
-    shellClass: 'border-emerald-200 bg-emerald-50',
-    eyebrowClass: 'text-emerald-700',
-    bodyClass: 'text-slate-700',
-  },
-  {
-    eyebrow: 'Loep Behoud ritmeroute',
-    title: 'De vaste vervolgvorm na een baseline',
-    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het retentiesignaal, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Dit is de buyer-facing vervolgvorm nadat de eerste baseline en opvolging staan.',
-    bullets: [
-      'Compacter vervolg op een baseline',
-      'Geschikt om effect van acties zichtbaar te maken in dezelfde signaallogica',
-      'Publieke vervolgvorm na baseline, niet als parallel eerste pakket',
-    ],
-    shellClass: 'border-amber-200 bg-amber-50',
-    eyebrowClass: 'text-amber-700',
-    bodyClass: 'text-slate-700',
-  },
-] as const
-
 export const pricingLifecycleLadder = [
   {
     route: 'Loep Vertrek',
@@ -353,57 +298,14 @@ export const pricingLifecycleLadder = [
   },
 ] as const
 
-export const pricingFaqs = [
-  [
-    'Wanneer kies je voor Loep Culture Assessment?',
-    'Als de hoofdvraag breed organisatiebreed is: cultuur, engagement, werkbeleving, vertrouwen, leiderschap en samenwerking. Dan past een jaarlijkse Loep Culture Assessment baseline beter dan Loep Behoud of Loep Vertrek.',
-  ],
-  [
-    'Waarom is Loep Behoud niet goedkoper dan Loep Vertrek?',
-    'Omdat Loep Behoud geen lichtere algemene survey of MTO-light is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
-  ],
-  [
-    'Waarom starten jullie niet met een gratis pilot?',
-    'Omdat Loep bedoeld is als serieus eerste traject met duidelijke scope, deliverables en opvolging. Een betaald baseline-traject test echte urgentie, geeft scherpere samenwerking en voorkomt vrijblijvende validatie zonder besluitvorming.',
-  ],
-  [
-    'Is Loep Behoud een MTO-vervanger?',
-    'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
-  ],
-  [
-    'Wanneer wordt Loep Vertrek ritmeroute logisch?',
-    'Meestal pas na een Loep Vertrek Baseline of wanneer uitstroom al structureel met voldoende volume wordt gevolgd. Daarom houden we Loep Vertrek ritmeroute bewust als vervolgroute op aanvraag.',
-  ],
-  [
-    'Hoe verhouden Loep Behoud ritmeroute en compacte vervolgmeting zich tot elkaar?',
-    'Loep Behoud ritmeroute is de vaste buyer-facing vervolgvorm na baseline. Een compacte retentie vervolgmeting is daarbinnen een lichtere vervolgcomponent, geen parallel eerste pakket.',
-  ],
-  [
-    'Wanneer kies je voor de combinatieroute?',
-    'Als je zowel achteraf wilt begrijpen waarom mensen gingen als eerder wilt zien waar behoud nu onder druk staat, en beide managementvragen echt bestaan.',
-  ],
-  [
-    'Wat ziet management wel en niet?',
-    'Management ziet groeps- en segmentinzichten. Bij Loep Behoud tonen we geen individuele signalen, geen vertrekintentie op persoonsniveau, geen performance-oordelen en geen persoonsgerichte actieroutes.',
-  ],
-  [
-    'Hoe vaak herhaal je Loep Behoud?',
-    'Voor v1 is een baseline het logische startpunt. Daarna is een ritme per kwartaal of halfjaar het meest logisch als je effect van acties wilt volgen.',
-  ],
-  [
-    'Beloof je hiermee lager verloop?',
-    'Nee. Loep verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
-  ],
-] as const
-
 export const faqs = [
   [
     'Wat is het verschil tussen Loep Vertrek en Loep Behoud?',
     'Loep Vertrek helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. Loep Behoud helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
   ],
   [
-    'Is Loep Behoud gewoon een MTO?',
-    'Nee. Een MTO meet alles een beetje en levert een dik rapport op. Loep Behoud is smal en scherp: het laat zien waar het wringt bij de mensen die je wilt houden, wat ze daar zelf over zeggen, en waar je begint. Per afdeling, nooit per persoon.',
+    'Is Loep Behoud een MTO?',
+    'Het is een alternatief voor het grote jaarlijkse MTO. Een groot MTO meet veel en eindigt vaak in een rapport waar niemand mee verder komt. Loep Behoud meet wat telt voor of mensen blijven, laat zien wat je mensen daar zelf over zeggen, en zegt waar je begint. Wil je je scores vergelijken met andere organisaties, dan past een groot MTO beter.',
   ],
   [
     'Ziet het management scores van losse medewerkers?',

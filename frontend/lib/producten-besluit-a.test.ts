@@ -26,8 +26,10 @@ describe('/producten na besluit A: wie doet wat', () => {
     expect(bron()).toContain(
       "lead: 'Loep brengt vertrekpatronen scherp in beeld, en het rapport brengt je MT tot één duidelijke keuze.',",
     )
+    // Behoud-als-MTO-alternatief (besluit Lars 11-10-2026, Taak 2 stap 3): de
+    // lead van Loep Behoud kreeg de alternatief-zin ervoor, de rest ongewijzigd.
     expect(bron()).toContain(
-      "lead: 'Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',",
+      "lead: 'Een alternatief voor het grote jaarlijkse MTO. Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',",
     )
     expect(bron()).toContain(
       "lead: 'Loep meet vroeg hoe nieuwe medewerkers landen. Het rapport geeft je MT een helder groepsbeeld om één eerste stap op te kiezen.',",

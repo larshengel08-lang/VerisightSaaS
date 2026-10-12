@@ -31,7 +31,11 @@ describe('homepage na besluit A', () => {
     expect(bron()).toContain("'Gespreksleidraad en besluitpagina in Loep Vertrek, Loep Behoud en Loep Start',")
     expect(bron()).not.toContain('besluitpagina in elk rapport')
     expect(bron()).toContain("['Volgende stap', 'Besluit vastgelegd'],")
-    expect(bron().split('Het rapport leidt je MT-gesprek.').length - 1).toBe(2)
+    // Behoud-als-MTO-alternatief (Taak 2 stap 5): de Behoud-kaart kreeg een
+    // nieuwe body ("Het korte medewerkersonderzoek... Een alternatief voor
+    // het grote jaarlijkse MTO.") die deze zin niet meer herhaalt; alleen
+    // Loep Vertrek noemt hem nu nog letterlijk.
+    expect(bron().split('Het rapport leidt je MT-gesprek.').length - 1).toBe(1)
   })
 
   it('zegt eerlijk dat de klant de respons in een eigen omgeving volgt', () => {

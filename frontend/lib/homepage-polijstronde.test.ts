@@ -32,7 +32,9 @@ describe('homepage polijstronde (spec par. 7)', () => {
 
   it('invultijd komt uit SURVEY_MINUTES, niet uit vaste tekst', () => {
     expect(live).not.toContain('tien minuten')
-    expect(live).toContain("import { SURVEY_MINUTES } from '@/lib/campaign-setup'")
+    // Behoud-als-MTO-alternatief (Taak 2 stap 5): SURVEY_DURATION_LABEL kwam
+    // erbij in dezelfde import voor de scankaart van Loep Behoud.
+    expect(live).toContain("import { SURVEY_DURATION_LABEL, SURVEY_MINUTES } from '@/lib/campaign-setup'")
     for (const scan of ['exit', 'retention', 'onboarding']) {
       expect(live).toContain(`surveyMinutesFor('${scan}')`)
     }

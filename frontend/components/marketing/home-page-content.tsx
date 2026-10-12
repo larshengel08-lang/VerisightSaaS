@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
-import { SURVEY_MINUTES } from '@/lib/campaign-setup'
+import { SURVEY_DURATION_LABEL, SURVEY_MINUTES } from '@/lib/campaign-setup'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
@@ -75,7 +75,7 @@ const routeCards = [
     index: '01',
     eyebrow: 'Behoud onder druk',
     title: 'Loep Behoud',
-    body: 'Waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Het rapport leidt je MT-gesprek.',
+    body: `Het korte medewerkersonderzoek, in ${SURVEY_DURATION_LABEL.retention} ingevuld: waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Een alternatief voor het grote jaarlijkse MTO.`,
     href: '/producten#loep-behoud',
     accent: SURFACE.teal,
   },

@@ -14,7 +14,6 @@ import {
   homepageUtilityLinks,
   marketingLegalLinks,
   marketingNavLinks,
-  pricingFaqs,
   pricingLifecycleLadder,
   productOverviewComparisonRows,
   trustItems,
@@ -88,7 +87,6 @@ describe('Loep Vertrek positioning copy', () => {
   })
 
   it('keeps Loep Vertrek framed as the default first route in commercial conversations', () => {
-    const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
     const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'Loep Vertrek')
 
     // Site-ronde besluit A (2026-09-20): pricingCards is weg; de prijs is een
@@ -96,13 +94,10 @@ describe('Loep Vertrek positioning copy', () => {
     expect(PRICING_TIERS.map((tier) => tier.firstScanEur)).toEqual([3500, 4500, 6900])
     expect(exitLifecycle?.firstSale.toLowerCase()).toContain('standaard eerste koop')
     expect(exitLifecycle?.expansion.toLowerCase()).toContain('loep behoud baseline')
-    expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
-    expect(freePilotFaq?.[1].toLowerCase()).toContain('echte urgentie')
   })
 
   it('keeps Loep Cultuurbeeld framed as a broad annual baseline instead of a pulse, benchmark or ranking layer', () => {
     const cultureProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'cultuurbeeld')
-    const cultureFaq = pricingFaqs.find(([question]) => question === 'Wanneer kies je voor Loep Culture Assessment?')
     const cultureRow = productOverviewComparisonRows.find((row) => row[0] === 'Loep Cultuurbeeld')
 
     expect(cultureProduct).toBeTruthy()
@@ -110,8 +105,6 @@ describe('Loep Vertrek positioning copy', () => {
     expect(cultureProduct?.description.toLowerCase()).toContain('governed drilldown')
     expect(cultureProduct?.description.toLowerCase()).not.toContain('benchmark-first')
     expect(cultureProduct?.description.toLowerCase()).not.toContain('ranking')
-    expect(cultureFaq?.[1].toLowerCase()).toContain('cultuur')
-    expect(cultureFaq?.[1].toLowerCase()).toContain('engagement')
     expect(cultureRow?.[2].toLowerCase()).toContain('cultuur- en engagementpatronen')
   })
 
@@ -149,23 +142,20 @@ describe('Loep Behoud positioning copy', () => {
   })
 
   it('keeps retention faq copy explicit about group insight and non-predictive use', () => {
-    const mtoFaq = faqs.find(([question]) => question === 'Is Loep Behoud gewoon een MTO?')
+    const mtoFaq = faqs.find(([question]) => question === 'Is Loep Behoud een MTO?')
     const scoreFaq = faqs.find(([question]) => question === 'Ziet het management scores van losse medewerkers?')
     const predictorFaq = faqs.find(([question]) => question === 'Is Loep Behoud een gevalideerde vertrekvoorspeller?')
-    const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is Loep Behoud niet goedkoper dan Loep Vertrek?')
-    const rhythmFaq = pricingFaqs.find(
-      ([question]) => question === 'Hoe verhouden Loep Behoud ritmeroute en compacte vervolgmeting zich tot elkaar?',
-    )
 
     // Copy-ronde 2026-09-06: gewone taal, zelfde grenzen (groepsinzicht, geen individuele lezing).
-    expect(mtoFaq?.[1].toLowerCase()).toContain('smal en scherp')
-    expect(mtoFaq?.[1].toLowerCase()).toContain('nooit per persoon')
-    expect(mtoFaq?.[1].toLowerCase()).toContain('wat ze daar zelf over zeggen')
+    // Behoud-als-MTO-alternatief (besluit Lars 11-10-2026): de FAQ positioneert
+    // Loep Behoud nu als alternatief voor het grote jaarlijkse MTO, i.p.v. als
+    // afwijzing ("geen brede MTO").
+    expect(mtoFaq?.[1].toLowerCase()).toContain('alternatief voor het grote jaarlijkse mto')
+    expect(mtoFaq?.[1].toLowerCase()).toContain('wat je mensen daar zelf over zeggen')
+    expect(mtoFaq?.[1].toLowerCase()).toContain('zegt waar je begint')
     expect(scoreFaq?.[1].toLowerCase()).toContain('nooit één persoon')
     expect(scoreFaq?.[1].toLowerCase()).toContain('niet bedoeld om mensen te beoordelen')
     expect(predictorFaq?.[1].toLowerCase()).toContain('voorspelt niet wie er vertrekt')
-    expect(pricingFaq?.[1].toLowerCase()).toContain('eigen managementverhaal')
-    expect(rhythmFaq?.[1].toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
   })
 
   it('keeps Loep Behoud repeat and Loep Vertrek expansion paths explicit', () => {
