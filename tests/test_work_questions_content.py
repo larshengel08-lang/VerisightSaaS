@@ -27,8 +27,12 @@ SCANS = ("retention", "exit")
 # leesronde, formulering Lars 25-9): "toen de vertrekkers er nog werkten" is
 # vervangen door "in de periode waar deze meting over gaat"; de oude vorm is
 # geen toegestane terugblik meer (zie test_vertrek_heeft_geen_oud_tijdsanker_meer).
+# Beslisronde 12-10 (A3, akkoord Lars): de veertien vragen met "een jaar
+# geleden" kregen het uitstroomanker; die vorm komt in geen Vertrek-vraag meer
+# voor en is daarom geen toegestane terugblik meer
+# (zie test_vertrek_noemt_geen_een_jaar_geleden_meer).
 TERUGBLIK_VORMEN = (
-    "in de periode waar deze meting over gaat", "een jaar geleden", "het afgelopen jaar",
+    "in de periode waar deze meting over gaat", "het afgelopen jaar",
     "sindsdien", "voor het laatst", "de laatste wijziging", "het vorige",
 )
 
@@ -153,6 +157,10 @@ def test_aansturing_hint_is_een_vaste_niet_lege_regel():
 # Polijstronde V11 (leesronde 8-10): ook grd_visibility kreeg dit anker in
 # plaats van "Stond dat er een jaar geleden ook?", zodat het startpunt en het
 # tweede punt niet elk een ander tijdsanker dragen. Nu vijftien.
+# Beslisronde 12-10 (A3, akkoord Lars, formulering #8 van Lars zelf): de
+# veertien Vertrek-vragen met "een jaar geleden" kregen ook dit anker; alleen
+# de staart veranderde. De zeven vragen met "het afgelopen jaar", een
+# gebeurtenis of "sindsdien" bleven ongewijzigd. Nu negenentwintig.
 
 import hashlib  # noqa: E402
 import json  # noqa: E402
@@ -178,14 +186,32 @@ A1_SLOTEN = {
     "wld_friction": "Wat ervan bestond al in de periode waar deze meting over gaat?",
     "rcd_expectations": "Stonden ze er al in de periode waar deze meting over gaat?",
     "grd_visibility": "En in de periode waar deze meting over gaat?",
+    # A3 (beslisronde 12-10): de veertien goedgekeurde staarten.
+    "ldd_mandate": "Was dat anders in de periode waar deze meting over gaat?",
+    "cud_agreements": "Was dat anders in de periode waar deze meting over gaat?",
+    "grd_followthrough": ("Werden ontwikkelafspraken ook zo vastgelegd en opgevolgd"
+                          " in de periode waar deze meting over gaat?"),
+    "grd_time": "Was dat anders in de periode waar deze meting over gaat?",
+    "grd_nextstep": "Gebeurde dat ook in de periode waar deze meting over gaat?",
+    "cpd_insight": "Was dat anders in de periode waar deze meting over gaat?",
+    "cpd_explain": "En in de periode waar deze meting over gaat?",
+    "cpd_path": "Kreeg een medewerker dat in de periode waar deze meting over gaat ook te horen?",
+    "cpd_clarity": "Was die uitleg er ook in de periode waar deze meting over gaat?",
+    "cpd_flex": "Was dat anders in de periode waar deze meting over gaat?",
+    "wld_planning": "Keken jullie daar ook zo naar in de periode waar deze meting over gaat?",
+    "wld_priorities": "Was dat anders in de periode waar deze meting over gaat?",
+    "rcd_priorities": "En in de periode waar deze meting over gaat?",
+    "rcd_mandate": "Was dat even duidelijk in de periode waar deze meting over gaat?",
 }
 # sha256 over json.dumps({"<factor>.<route>": tekst}, sort_keys=True,
 # ensure_ascii=False). RETENTION: de Behoud-teksten op main 37059706 (vóór de
-# fixronde). EXIT: de Vertrek-teksten van 37059706 met precies de vijftien
-# vervangingen uit A1_SLOTEN toegepast (veertien uit A1, grd_visibility uit
-# polijstronde V11), en verder niets.
+# fixronde). EXIT: de Vertrek-teksten van 37059706 met precies de
+# negenentwintig vervangingen uit A1_SLOTEN toegepast (veertien uit A1,
+# grd_visibility uit polijstronde V11, veertien uit A3 van de beslisronde),
+# en verder niets. De A3-hash is onafhankelijk berekend: de teksten van
+# 65325881 (hash 1eee205e...) met alleen de veertien staarten vervangen.
 RETENTION_SHA_MAIN = "9bec2159e84a2ec73cb6c10b230e169fac17ddc69bc07880eeadb8e11534a341"
-EXIT_SHA_NA_A1 = "1eee205e4cafff0b04fd3e9a0d466186350cc2f6a8e9d0a075a1fd7fff14b218"
+EXIT_SHA_NA_A3 = "a787e36ca4509ec2a955596be14fe89f1d58ca6a696604fad4523a5272a66bd8"
 
 
 def _sha(scan: str) -> str:
@@ -202,7 +228,15 @@ def test_vertrek_heeft_geen_oud_tijdsanker_meer():
             assert TUSSENVORM_TIJDSANKER not in tekst.lower(), (fk, rk, tekst)
 
 
-def test_precies_de_vijftien_vragen_dragen_het_nieuwe_tijdsanker():
+def test_vertrek_noemt_geen_een_jaar_geleden_meer():
+    """A3 (beslisronde 12-10): het uitstroomanker vervangt "een jaar geleden"."""
+    for fk, rk, scan, tekst in _alle_vragen():
+        if scan == "exit":
+            assert "een jaar geleden" not in tekst.lower(), (fk, rk, tekst)
+
+
+def test_precies_de_negenentwintig_vragen_dragen_het_nieuwe_tijdsanker():
+    assert len(A1_SLOTEN) == 29
     met_anker = {rk for _fk, rk, scan, tekst in _alle_vragen()
                  if scan == "exit" and NIEUW_TIJDSANKER in tekst}
     assert met_anker == set(A1_SLOTEN)
@@ -217,4 +251,4 @@ def test_behoud_teksten_zijn_byte_identiek_aan_main():
 
 
 def test_vertrek_teksten_veranderden_alleen_in_het_tijdsanker():
-    assert _sha("exit") == EXIT_SHA_NA_A1
+    assert _sha("exit") == EXIT_SHA_NA_A3
