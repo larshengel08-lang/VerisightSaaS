@@ -105,7 +105,9 @@ describe('contact qualification guidance', () => {
     expect(guidance.status).toBe('culture_primary')
     expect(guidance.recommendedCoreRoute).toBe('culture_assessment')
     expect(guidance.followOnCandidateRoute).toBeNull()
-    expect(guidance.detail.toLowerCase()).toContain('board-read')
+    expect(guidance.detail.toLowerCase()).toContain('cultuurbeeld')
+    expect(guidance.detail.toLowerCase()).toContain('loep behoud')
+    expect(guidance.headline.toLowerCase()).toContain('uit het aanbod')
   })
 })
 

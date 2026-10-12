@@ -421,11 +421,11 @@ export function getContactQualificationGuidance({
       status: 'culture_primary',
       recommendedCoreRoute,
       followOnCandidateRoute: null,
-      headline: 'Loep Culture Assessment lijkt nu de logische eerste route.',
+      headline: 'Loep Cultuurbeeld is sinds oktober 2026 uit het aanbod.',
       detail:
-        'De vraag leest als een brede organisatievraag rond cultuur, engagement, werkbeleving, vertrouwen of leiderschap. Daardoor toetsen we eerst een jaarlijkse Loep Culture Assessment baseline met board-read en governed drilldown, niet Pulse, TeamScan of een generieke MTO-light route.',
+        'De vraag leest als een brede organisatievraag rond cultuur, engagement, werkbeleving, vertrouwen of leiderschap. Loep Cultuurbeeld bieden we niet meer aan; we toetsen in plaats daarvan Loep Behoud, het korte medewerkersonderzoek dat geldt als alternatief voor het grote jaarlijkse MTO.',
       operatorSummary:
-        'Brede cultuur- en engagementvraag zichtbaar; toets Loep Culture Assessment als primaire board-level baseline en bewaak dat de intake niet vernauwt naar behoudsdruk, exitduiding of een lokale follow-on route.',
+        'Brede cultuur- en engagementvraag zichtbaar via een oude Cultuurbeeld-route; Cultuurbeeld is sinds oktober 2026 uit het aanbod. Toets Loep Behoud als primaire route en bewaak dat de intake niet vernauwt naar behoudsdruk, exitduiding of een lokale follow-on route.',
     }
   }
 
