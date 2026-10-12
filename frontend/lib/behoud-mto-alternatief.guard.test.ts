@@ -102,12 +102,12 @@ describe('Loep Behoud als MTO-alternatief: copyregels', () => {
    * Regel 4.4: "kort" alleen naast de echte invultijd. INVULTIJD is de letterlijke
    * waarde uit de bron van Taak 0 stap 5: `SURVEY_DURATION_LABEL` in
    * frontend/lib/campaign-setup.ts, retention = 'ongeveer 6 minuten' (afgeleid van
-   * SURVEY_MINUTES). INVULTIJD_IDENT is de naam van die constante als die in de
+   * SURVEY_MINUTES). INVULTIJD_IDENT is de verwijzing naar de Behoud-waarde van die constante als die in de
    * frontend wordt geïmporteerd (Taak 2 stap 5). Een bestand is in orde als het een
    * van beide bevat.
    */
   const INVULTIJD = 'ongeveer 6 minuten'
-  const INVULTIJD_IDENT = 'SURVEY_DURATION_LABEL'
+  const INVULTIJD_IDENT = 'SURVEY_DURATION_LABEL.retention'
 
   it('elk bestand met "korte medewerkersonderzoek" noemt ook de invultijd', () => {
     const metKort = RENDERED_FILES.filter((rel) => /korte medewerkersonderzoek/i.test(read(rel)))
