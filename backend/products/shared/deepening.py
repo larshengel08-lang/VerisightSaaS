@@ -411,9 +411,15 @@ def _q(onderwerp: str) -> dict[str, str]:
     }
 
 
+# De niets-tekst per scan: voor elk onderwerp dezelfde. Eén bron voor de
+# respondentoptie (_none) en voor rapportzinnen die de niets-groep citeren
+# zonder een optiesleutel bij de hand (report_priority, A7 beslisronde 12-10).
+DIRECTION_NONE_TEXT: dict[str, str] = _t("Niets, dit zit hier goed", "Niets, dit zat hier goed")
+
+
 def _none(prefix: str) -> dict[str, Any]:
     return {"key": f"{prefix}_none",
-            "text": _t("Niets, dit zit hier goed", "Niets, dit zat hier goed"),
+            "text": dict(DIRECTION_NONE_TEXT),
             "imperative": None}
 
 
@@ -817,17 +823,18 @@ WORK_QUESTION_VARIANTS: dict[str, dict[str, str]] = {
         "exit": "Deze vertrekkers kozen verschillend; de verdeling staat bij ‘Wat er moet gebeuren’. Welke van de meest gekozen richtingen pakken jullie op voor wie er nu werkt, en welke laten jullie bewust liggen?",
     },
     "split_none": {
-        "retention": "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kan kloppen. Waar zouden jullie met de meest gekozen richting beginnen?",
-        "exit": "Deze vertrekkers waren verdeeld: een deel vroeg om verandering, een even groot deel zei dat het goed zat. Beide kan kloppen. Waar zouden jullie voor wie er nu werkt met de meest gekozen richting beginnen?",
+        "retention": "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kunnen kloppen. Waar zouden jullie met de meest gekozen richting beginnen?",
+        "exit": "Deze vertrekkers waren verdeeld: een deel vroeg om verandering, een even groot deel zei dat het goed zat. Beide kunnen kloppen. Waar zouden jullie voor wie er nu werkt met de meest gekozen richting beginnen?",
     },
     # Spec 2026-10-09 par. 3 (besluit Lars 9-10): de niets-groep is minstens zo
     # groot als de grootste richting (direction_none_at_least_top_shown). Niet
     # "een even groot deel": de niets-groep kan ook groter zijn. De vraag laat
     # beide uitkomsten open, zodat hij de kaart niet tegenspreekt door het MT
-    # toch een route te laten kiezen. CONCEPT: nog ter review bij Lars.
+    # toch een route te laten kiezen. Goedgekeurd door Lars op 12-10
+    # (beslisronde na de polijstronde, A1).
     "none_at_least_top": {
-        "retention": "Bij deze groep zeggen minstens zoveel mensen dat het hier goed zit als er om de meest gekozen richting vragen. Beide kan kloppen. Pakken jullie hier toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
-        "exit": "Bij deze vertrekkers zeiden minstens zoveel mensen dat het hier goed zat als er om de meest gekozen richting vroegen. Beide kan kloppen. Pakken jullie hier voor wie er nu werkt toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
+        "retention": "Bij deze groep zeggen minstens zoveel mensen dat het hier goed zit als er om de meest gekozen richting vragen. Beide kunnen kloppen. Pakken jullie hier toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
+        "exit": "Bij deze vertrekkers zeiden minstens zoveel mensen dat het hier goed zat als er om de meest gekozen richting vroegen. Beide kunnen kloppen. Pakken jullie hier voor wie er nu werkt toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
     },
 }
 

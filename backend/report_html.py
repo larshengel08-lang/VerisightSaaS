@@ -532,7 +532,8 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
                        direction_state_key: str | None,
                        primary_is_lowest: bool,
                        gelijk_met: list[str] | None = None,
-                       indicatief: bool = False) -> str:
+                       indicatief: bool = False,
+                       niets_tekst: str | None = None) -> str:
     """Welk onderwerp Loep als startpunt kiest, met de grond erbij.
 
     Elke tak eist zijn eigen grond expliciet, zodat geen enkele zin iets beweert
@@ -563,6 +564,12 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     `indicatief` (respons onder RESPONSE_INDICATIVE_RATE, spec par. 6.1) laat
     elke tak zichzelf voorzichtiger formuleren. Achteraf een tekenreeks
     vervangen werkte alleen in de takken waarin die reeks letterlijk voorkwam.
+
+    `niets_tekst` (A7, beslisronde 12-10): de niets-tekst van de scan als de
+    richtingkaart van het startpunt de verdeeld-staat toont met een niets-groep
+    die minstens zo groot is als de grootste richting (_p02_niets_even_groot,
+    zelfde poort als de kaart). Alleen de richtingtak gebruikt hem: daar zou
+    "meer mensen vragen om verandering" anders de kaart tegenspreken.
     """
     kiest = "Als mogelijk startpunt kiest Loep" if indicatief else "Als startpunt kiest Loep"
     if direction_state_key == "none_needed":
@@ -575,9 +582,11 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     if tie_break_kind == "direction" and change and change_other:
         a, b = change
         ander_label, c, d = change_other
+        staart = (", al kiest daar een even grote of grotere groep ‘" + niets_tekst + "’"
+                  if niets_tekst else "")
         return (f"{kiest} {primary_label}: daar vragen meer mensen "
                 f"om verandering dan bij {ander_label} ({a} van de {b} tegen {c} van "
-                f"de {d}).")
+                f"de {d})" + staart + ".")
     if tie_break_kind is None and primary_is_lowest and next_delta is not None:
         # next_delta is het verschil tussen GETOONDE scores (B15), dus 0 als de
         # lezer twee keer hetzelfde getal ziet. De gelijke onderwerpen komen uit
@@ -622,7 +631,8 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
                  change_other: tuple[str, int, int] | None = None,
                  next_delta: float | None = None,
                  direction_state_key: str | None = None,
-                 indicatief: bool = False) -> str:
+                 indicatief: bool = False,
+                 niets_tekst: str | None = None) -> str:
     """De eerste zin van pagina twee (spec ronde 2 par. 2.2 en par. 5.2).
 
     Beweegt mee met hoeveel onderwerpen kwetsbaar scoren, en zegt het expliciet
@@ -717,7 +727,8 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         direction_state_key=direction_state_key,
         primary_is_lowest=primary_is_lowest,
         gelijk_met=gelijk_met,
-        indicatief=indicatief)
+        indicatief=indicatief,
+        niets_tekst=niets_tekst)
     # C11: "...: Groeiperspectief (4.5/10). Als startpunt kiest Loep
     # Groeiperspectief." is één mededeling in twee zinnen. Alleen als de kop
     # precies één kwetsbaar onderwerp noemt, dat het startpunt is, er geen
@@ -831,6 +842,20 @@ def _p02_startpunt_gronden(
     delta = (_getoond_verschil(top["score"], raster_rows[1]["score"])
              if len(raster_rows) > 1 else None)
     return kind, change, change_other, delta
+
+
+def _p02_niets_even_groot(raster_rows: list[dict[str, Any]]) -> str | None:
+    """De niets-tekst voor de halve zin achter de richting-grond op p.02 (A7,
+    beslisronde 12-10), of None.
+
+    Leest het veld dat rank_factors op de startpuntrij zette, met dezelfde
+    poort als de richtingkaart (report_priority._direction_niets_even_groot).
+    Zo zeggen pagina twee en de markeringsregel onder de rasterrij altijd
+    hetzelfde, en geen van beide spreekt de kaart tegen.
+    """
+    if not raster_rows:
+        return None
+    return raster_rows[0].get("direction_niets_even_groot")
 
 
 # Uitleg onder de tegel Werkbeeld op p.02 (polijstronde R20). Waar: de score is
@@ -7362,7 +7387,8 @@ def render_exit_report_html(data: dict) -> str:
         scan_type="exit", shape=_shape, labels=_raster_labels, primary_key=_primary,
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
-        indicatief=_indicatief)
+        indicatief=_indicatief,
+        niets_tekst=_p02_niets_even_groot(_raster_rows))
     _signal_cell = _p02_signal_cell("Frictiescore", rdsp if avg_risk else "",
                                     fl if avg_risk else "")
     # Blok 2 (spec par. 4): vertrekreden met noemer en gelijkspel, respons met
@@ -7903,7 +7929,8 @@ def render_retention_report_html(data: dict) -> str:
         scan_type=ST, shape=_shape, labels=_raster_labels, primary_key=_primary,
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
-        indicatief=_indicatief)
+        indicatief=_indicatief,
+        niets_tekst=_p02_niets_even_groot(_raster_rows))
     _signal_cell = _p02_signal_cell("Werkbeeld", _score_str(signal) if signal else "",
                                     band_lbl or "", note=WERKBEELD_UITLEG)
     _stay_scores = (data.get("intent_resp") or {}).get("stay") or []
