@@ -18,6 +18,8 @@
 - [Homepage](https://www.getloep.nl): positionering, werkwijze en kennismaking
 - [Producten](https://www.getloep.nl/producten): overzicht van Loep Behoud, Loep Vertrek en Loep Start, plus werkwijze en tarieven
 - [Loep Behoud](https://www.getloep.nl/producten#loep-behoud): zien waar behoud onder druk staat, voor uitstroom zichtbaar wordt
+  Het korte medewerkersonderzoek: een alternatief voor het grote jaarlijkse MTO. Geen benchmark met andere
+  organisaties; het rapport zegt waar jouw organisatie begint. Invultijd: ongeveer 6 minuten.
 - [Loep Vertrek](https://www.getloep.nl/producten#loep-vertrek): vertrekpatronen scherp in beeld met prioriteiten
 - [Loep Start](https://www.getloep.nl/producten#loep-start): vroege meting van hoe nieuwe medewerkers landen
 - [Tarieven](https://www.getloep.nl/producten#tarieven): vaste prijs naar de grootte van de organisatie

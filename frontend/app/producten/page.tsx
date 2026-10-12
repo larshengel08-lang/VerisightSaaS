@@ -9,14 +9,14 @@ import { buildPricingOfferCatalog } from '@/lib/pricing'
 export const metadata: Metadata = {
   title: 'Producten',
   description:
-    'Loep Vertrek als vertrek de vraag is. Loep Behoud als behoud eerder zichtbaar moet zijn. Loep Start als vroege landing aandacht vraagt.',
+    'Loep Vertrek als vertrek de vraag is. Loep Behoud, een alternatief voor het grote jaarlijkse MTO. Loep Start als vroege landing aandacht vraagt.',
   alternates: {
     canonical: '/producten',
   },
   openGraph: {
     title: 'Producten | Loep',
     description:
-      'Loep Vertrek als vertrek de vraag is. Loep Behoud als behoud eerder zichtbaar moet zijn. Loep Start als vroege landing aandacht vraagt.',
+      'Loep Vertrek als vertrek de vraag is. Loep Behoud, een alternatief voor het grote jaarlijkse MTO. Loep Start als vroege landing aandacht vraagt.',
     url: 'https://www.getloep.nl/producten',
     images: ['/opengraph-image'],
   },
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Producten | Loep',
     description:
-      'Loep Vertrek als vertrek de vraag is. Loep Behoud als behoud eerder zichtbaar moet zijn. Loep Start als vroege landing aandacht vraagt.',
+      'Loep Vertrek als vertrek de vraag is. Loep Behoud, een alternatief voor het grote jaarlijkse MTO. Loep Start als vroege landing aandacht vraagt.',
     images: ['/opengraph-image'],
   },
 }

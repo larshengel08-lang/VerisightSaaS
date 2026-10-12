@@ -15,7 +15,7 @@ describe('paginatitel en beschrijving (besluit Lars 20-9-2026)', () => {
 
   it('draagt het geldanker en zegt eerlijk wat je koopt en wat je zelf doet', () => {
     expect(SITE_DESCRIPTION).toBe(
-      "Eén vertrokken medewerker vervangen kost al snel tienduizenden euro's. Loep laat zien waar behoud onder druk staat, waarom volgens je mensen zelf, en waar je begint. Meting en rapport; het gesprek voer je zelf.",
+      "Eén vertrokken medewerker vervangen kost al snel tienduizenden euro's. Loep laat zien waar behoud onder druk staat, waarom volgens je mensen zelf, en waar je begint. Meting en rapport; het gesprek voer je zelf. Een alternatief voor het grote jaarlijkse MTO.",
     )
   })
 

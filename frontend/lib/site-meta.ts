@@ -8,8 +8,8 @@
 export const SITE_TITLE = 'Loep | Zie waar behoud onder druk staat, voordat mensen gaan'
 
 export const SITE_DESCRIPTION =
-  "Eén vertrokken medewerker vervangen kost al snel tienduizenden euro's. Loep laat zien waar behoud onder druk staat, waarom volgens je mensen zelf, en waar je begint. Meting en rapport; het gesprek voer je zelf."
+  "Eén vertrokken medewerker vervangen kost al snel tienduizenden euro's. Loep laat zien waar behoud onder druk staat, waarom volgens je mensen zelf, en waar je begint. Meting en rapport; het gesprek voer je zelf. Een alternatief voor het grote jaarlijkse MTO."
 
 /** Beschrijving in de WebPage-JSON-LD van de homepage. */
 export const HOME_SCHEMA_DESCRIPTION =
-  'Meting van behoud, vertrek en onboarding voor HR en management: waar het wringt, waarom volgens je mensen, en waar je begint. Het rapport leidt het gesprek met je MT; dat gesprek voer je zelf.'
+  'Meting van behoud, vertrek en onboarding voor HR en management: waar het wringt, waarom volgens je mensen, en waar je begint. Het rapport leidt het gesprek met je MT; dat gesprek voer je zelf. Een alternatief voor het grote jaarlijkse MTO.'
