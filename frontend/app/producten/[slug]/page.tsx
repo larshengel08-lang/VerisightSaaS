@@ -45,6 +45,10 @@ const REDIRECTED_PRODUCT_ANCHORS: Record<string, string> = {
   exitscan: '/producten#loep-vertrek',
   retentiescan: '/producten#loep-behoud',
   'onboarding-30-60-90': '/producten#loep-start',
+  // Cultuurbeeld is sinds 11-10-2026 uit het aanbod (besluit Lars); next.config.ts
+  // geeft al een 308 naar /producten#loep-behoud. Hier staat hetzelfde vangnet als
+  // bij de andere scans hierboven, mocht die redirect ooit verdwijnen.
+  cultuurbeeld: '/producten#loep-behoud',
 }
 
 export async function generateStaticParams() {
