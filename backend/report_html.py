@@ -1880,9 +1880,10 @@ SECTION_INTROS: dict[str, str] = {
         "gebundeld onder &ldquo;Overige afdelingen&rdquo;, zodat antwoorden nooit herleidbaar "
         "zijn tot personen. Verschillen tussen afdelingen zijn gesprekstof: ze vertellen waar "
         "je als eerste gaat kijken, niet welke afdeling het &ldquo;slecht doet&rdquo;. "
-        "De kolom met het laagste onderwerp noemt per afdeling het laagst scorende onderwerp; "
-        "bij kleine afdelingen (5 tot 9 antwoorden) staat daar alleen een label zoals "
-        "&lsquo;aandachtspunt&rsquo;, geen cijfer achter de komma. Vanaf 10 antwoorden staan "
+        "De kolom met het laagste onderwerp noemt per afdeling het laagst scorende onderwerp. "
+        "Bij kleine afdelingen (5 tot 9 antwoorden) staat in die kolom en in de scorekolom "
+        "alleen een label, geen cijfer achter de komma; de kolom Band zegt hoe de afdeling "
+        "scoort. Vanaf 10 antwoorden staan "
         "alle onderwerpen met hun scores onder de tabel, bij "
         "&lsquo;Alle onderwerpen per afdeling&rsquo;."
         # Die naam is de openingsregel van _segment_factor_subblocks.
@@ -5412,6 +5413,51 @@ def _segment_cijfer_mag(row: dict) -> bool:
     return row["n"] >= MIN_DISTRIBUTION_N
 
 
+# A8 (beslisronde 12-10): Loep Vertrek toont per afdeling de frictiescore zelf,
+# op dezelfde schaal als pagina twee (hoger is slechter). De segmentrijen staan
+# intern op de gezondheidsschaal (11 min de frictiescore, zie _segment_input in
+# build_report_data); daarop blijven sorteren, de verschilgrens en de keuze
+# van de genoemde afdeling ongewijzigd. Alleen wat de lezer ziet, wordt hier
+# teruggerekend. Omrekenen vanaf de GETOONDE score (_shown), zodat twee
+# afdelingen die op de gezondheidsschaal gelijk staan ook als gelijke
+# frictiescore op de pagina staan en een getoond verschil van 0,3 ook 0,3
+# blijft.
+def _seg_getoond(avg: float, scan_type: str) -> float:
+    """Het afdelingscijfer zoals de lezer het ziet, op de schaal van het product."""
+    sc = _shown(avg)
+    return round(11.0 - sc, 1) if scan_type == "exit" else sc
+
+
+def _seg_band(avg: float, scan_type: str) -> tuple[str, str]:
+    """(label, kleur) van de kolom Band en de scorecel van een afdelingsrij.
+
+    Exit: de frictiebanden (_band, "exit") op de getoonde frictiescore.
+    Retention en onboarding: de onderwerpladder, ongewijzigd."""
+    if scan_type == "exit":
+        return _band(_seg_getoond(avg, "exit"), "exit")
+    return _factor_label(avg), _factor_color(avg)
+
+
+# De woorden waarmee de conclusie en de brugzin "de laagste afdeling" noemen.
+# Op de frictieschaal is de genoemde afdeling die met de HOOGSTE frictiescore;
+# "scoort het laagst" naast een hoog getal klopt daar niet (A8). Welke afdeling
+# genoemd wordt, verandert niet.
+_SEG_WOORDEN = {
+    "exit": {"laagst": "heeft de hoogste frictiescore",
+             "laagste_score": "heeft de hoogste frictiescore",
+             "twee": "De twee afdelingen met de hoogste frictiescore",
+             "lager": "heeft een hogere frictiescore"},
+    "_": {"laagst": "scoort het laagst",
+          "laagste_score": "heeft de laagste score",
+          "twee": "De twee laagste afdelingen",
+          "lager": "scoort lager"},
+}
+
+
+def _seg_woord(scan_type: str, sleutel: str) -> str:
+    return _SEG_WOORDEN.get(scan_type, _SEG_WOORDEN["_"])[sleutel]
+
+
 def _naam_cijfer(row: dict, sc: float, met: bool) -> str:
     """Afdelingsnaam, met haar score erachter als `met` (S9, zie _segment_cijfer_mag)."""
     return _h(row["department"]) + (" " + _score_str(sc) if met else "")
@@ -5616,12 +5662,12 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
         org_start = f"Organisatiebreed begint het gesprek bij {startpunt_label}."
         ook_start = "daar begint het gesprek ook."
         na_start = "na het startpunt"
-    dept, score = seg["department"], _score_str(seg["score"])
-    rest_zin = (" De restgroep scoort lager, maar bestaat uit kleine afdelingen en "
-                "telt daarom niet als startpunt." if seg.get("rest_lager") else "")
+    dept, score = seg["department"], _score_str(_seg_getoond(seg["score"], scan_type))
+    rest_zin = (" De restgroep " + _seg_woord(scan_type, "lager") + ", maar bestaat uit kleine "
+                "afdelingen en telt daarom niet als startpunt." if seg.get("rest_lager") else "")
     if seg["low_fk"] is None:
-        return (f"{org_start} {dept} scoort het "
-                f"laagst van de afdelingen die apart getoond worden ({score}); welk onderwerp "
+        return (f"{org_start} {dept} {_seg_woord(scan_type, 'laagst')} "
+                f"van de afdelingen die apart getoond worden ({score}); welk onderwerp "
                 f"daar het zwaarst weegt is niet te zeggen, te weinig antwoorden per "
                 f"onderwerp.{rest_zin}")
     low_lbl = _fl(seg["low_fk"], scan_type)
@@ -5717,8 +5763,9 @@ def _segment_start_note(segment_rows: list[dict],
                            f"uitgenodigd is niet volledig vastgelegd")
             samenstelling = f' ({_h(", ".join(leden))}{noemer})'
         rest_sentence = (
-            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} scoort lager'
-            f'{_cijfer_tussen_haakjes(pooled, _shown(pooled["avg"]))}, maar is samengesteld uit kleine '
+            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} '
+            f'{_seg_woord(scan_type, "lager")}'
+            f'{_cijfer_tussen_haakjes(pooled, _seg_getoond(pooled["avg"], scan_type))}, maar is samengesteld uit kleine '
             f'afdelingen en wordt daarom niet als startpunt genoemd.')
 
     # Eén gate voor staat 3, gedeeld met de brugzin (_segment_startpunt).
@@ -5732,17 +5779,22 @@ def _segment_start_note(segment_rows: list[dict],
         # laten staan zou bij "dezelfde score" en "dicht bij elkaar" het andere
         # cijfer alsnog verraden.
         met_cijfers = _segment_cijfer_mag(lowest) and _segment_cijfer_mag(runner_up)
+        # Getoonde cijfers op de schaal van het product (A8); de vergelijking
+        # zelf blijft op de interne gezondheidsschaal.
+        low_d = _seg_getoond(lowest["avg"], scan_type)
+        run_d = _seg_getoond(runner_up["avg"], scan_type)
+        twee = _seg_woord(scan_type, "twee")
         if low_sc == run_sc:
-            beide = ", beide " + _score_str(low_sc) if met_cijfers else ""
+            beide = ", beide " + _score_str(low_d) if met_cijfers else ""
             vergelijking = (
-                f'De twee laagste afdelingen komen op dezelfde score uit '
+                f'{twee} komen op dezelfde score uit '
                 f'({_h(lowest["department"])} en {_h(runner_up["department"])}'
                 f'{beide}).')
         else:
             vergelijking = (
-                f'De twee laagste afdelingen liggen dicht bij elkaar '
-                f'({_naam_cijfer(lowest, low_sc, met_cijfers)} en '
-                f'{_naam_cijfer(runner_up, run_sc, met_cijfers)}).')
+                f'{twee} liggen dicht bij elkaar '
+                f'({_naam_cijfer(lowest, low_d, met_cijfers)} en '
+                f'{_naam_cijfer(runner_up, run_d, met_cijfers)}).')
         # "Geen eerste afdeling aan te wijzen", niet "geen afdeling vraagt
         # aandacht": vastgesteld is alleen dat de twee laagste niet van elkaar
         # te onderscheiden zijn. Bij 5,0 / 5,1 / 9,0 vragen die twee ten
@@ -5761,8 +5813,9 @@ def _segment_start_note(segment_rows: list[dict],
         # MIN_DISTRIBUTION_N, dus hier staat nooit een cijfer (S9). De
         # controle blijft expliciet: zo hangt het cijfer aan dezelfde regel als
         # elders in dit blok, ook als de gate van staat 2 ooit verandert.
-        body = (f'{_h(lowest["department"])} scoort het laagst van de afdelingen die '
-                f'apart getoond worden{_cijfer_tussen_haakjes(lowest, low_sc)}, maar '
+        body = (f'{_h(lowest["department"])} {_seg_woord(scan_type, "laagst")} van de afdelingen die '
+                f'apart getoond worden'
+                f'{_cijfer_tussen_haakjes(lowest, _seg_getoond(lowest["avg"], scan_type))}, maar '
                 f'heeft {lowest["n"]} antwoorden. Loep wijst een afdeling pas aan vanaf '
                 f'{MIN_DISTRIBUTION_N} antwoorden, zodat de conclusie niet op een handvol '
                 f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
@@ -5801,9 +5854,11 @@ def _segment_start_note(segment_rows: list[dict],
             theme_sentence = (f' Het laagst scorende onderwerp daar is '
                               f'{_h(_lc(_fl(aangewezen["low_fk"], scan_type)))} '
                               f'({aangewezen["low_avg"]:.1f}/10).{_voorbehoud}')
-        body = (f'<strong>{_h(aangewezen["department"])}</strong> heeft de laagste score '
+        body = (f'<strong>{_h(aangewezen["department"])}</strong> '
+                f'{_seg_woord(scan_type, "laagste_score")} '
                 f'van de afdelingen die apart getoond worden '
-                f'({aangewezen["score"]:.1f}/10; {_low_basis}). Gebruik dit om te toetsen wat hier '
+                f'({_seg_getoond(aangewezen["score"], scan_type):.1f}/10; {_low_basis}). '
+                f'Gebruik dit om te toetsen wat hier '
                 f'speelt, geen ranking of oordeel.{theme_sentence}')
 
     # C8/B2: dit blok gaat over de afdelingen, niet over het ene startpunt van
@@ -5820,8 +5875,9 @@ def _segment_start_note(segment_rows: list[dict],
 # krijgen (gemeten: de uitsplitsing schoof in scenario 03 en 06 naar een eigen,
 # voor 21% gevulde pagina). Daarom zachte afbreekstreepjes in de kop: de kop
 # loopt over twee of drie regels ("WERK-/BEELD"), de rijen blijven gelijk.
-# Exit: de segmentrijen staan op de gezondheidsschaal (_signal_health, zie
-# _segment_input in build_report_data), dus per afdeling 11 min de frictiescore.
+# Exit (A8, beslisronde 12-10): de kolom toont de frictiescore zelf, op de
+# schaal van pagina twee (hoger is slechter), met de frictiebanden. Intern
+# staan de segmentrijen op de gezondheidsschaal; _seg_getoond rekent terug.
 # Alleen geldig voor exit, retention en onboarding: de drie renderers die
 # _segment_block aanroepen. Een ander scan_type geeft bewust een KeyError.
 _P02 = "pagina " + _pref("p02")
@@ -5831,9 +5887,9 @@ SEGMENT_SCOREKOLOM = {
     "onboarding": {"kop": "Check&shy;point&shy;score",
                    "zin": "De kolom Checkpointscore is de checkpointscore van " + _P02
                           + ", per afdeling."},
-    "exit": {"kop": "Score",
-             "zin": "De kolom Score is per afdeling de frictiescore van " + _P02
-                    + ", maar omgedraaid: hier is hoger beter."},
+    "exit": {"kop": "Frictie&shy;score",
+             "zin": "De kolom Frictiescore is de frictiescore van " + _P02
+                    + ", per afdeling: hoger is slechter."},
 }
 
 
@@ -5871,8 +5927,9 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     krijgt nooit een strip (samengestelde restgroep).
 
     scan_type is geïntroduceerd voor de product-specifieke factorlabels van
-    de themalaag (_fl; spec 2026-07-16) — de rest van de tabel blijft
-    scanbreed identiek. Zonder factor_rows (oude aanroepen) toont de
+    de themalaag (_fl; spec 2026-07-16), de kolomkop (SEGMENT_SCOREKOLOM) en,
+    bij exit, de frictiescore met frictiebanden in cel, band en strook (A8,
+    _seg_getoond / _seg_band). Zonder factor_rows (oude aanroepen) toont de
     themakolom "n.b." en verschijnen er geen subblokken: geen crash,
     geen fake data.
 
@@ -5890,10 +5947,24 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     rows_html = ""
     for row in segment_rows:
         dept, n_, avg, scores = row["department"], row["n"], row["avg"], row["scores"]
-        col = _factor_color(avg)
+        band_lbl, col = _seg_band(avg, scan_type)
+        # A4 (beslisronde 12-10): bij 5 tot 9 antwoorden geen cijfer achter de
+        # komma, net als in de themakolom en de conclusie (_segment_cijfer_mag);
+        # de kolom Band draagt het label. De restgroep volgt haar eigen n.
+        if _segment_cijfer_mag(row):
+            score_cell = f'{_seg_getoond(avg, scan_type):.1f}'
+        else:
+            score_cell = f'<span style="{_SEG_MONO}">kleine afdeling</span>'
         is_rest = row.get("is_pooled", False)
         if is_rest:
             strip = f'<span style="{_SEG_MONO}">spreiding niet getoond: samengestelde restgroep</span>'
+        elif len(scores) >= MIN_DISTRIBUTION_N and scan_type == "exit":
+            # A8: dezelfde schaal en dezelfde banden als de cel ernaast, zodat
+            # GEM in de strook het getal uit de kolom Frictiescore is.
+            # gem: hetzelfde getal als de cel, ook op een afrondingsgrens.
+            strip = distribution_svg([round(11.0 - v, 2) for v in scores], width=200, height=22,
+                                     invert_scale=True, zone_bounds=(RISK_MEDIUM, RISK_HIGH),
+                                     gem=_seg_getoond(avg, "exit"))
         elif len(scores) >= MIN_DISTRIBUTION_N:
             strip = distribution_svg(scores, width=200, height=22)
         else:
@@ -5924,8 +5995,8 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
         rows_html += (
             f'<tbody class="seg-grp"><tr><td class="iq" style="width:17%;">{name_html}</td>'
             f'<td style="width:9%;">{n_cell}</td>'
-            f'<td class="is" style="width:8%;text-align:left;color:{col};">{avg:.1f}</td>'
-            f'<td style="width:13%;color:{col};font-size:9.5px;">{_h(_factor_label(avg))}</td>'
+            f'<td class="is" style="width:8%;text-align:left;color:{col};">{score_cell}</td>'
+            f'<td style="width:13%;color:{col};font-size:9.5px;">{_h(band_lbl)}</td>'
             f'<td class="lt" style="width:27%;">{theme_cell}</td>'
             f'<td style="width:26%;">{strip}</td></tr></tbody>'
         )

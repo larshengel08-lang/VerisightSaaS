@@ -157,6 +157,19 @@ def dot_color(value: float, invert_scale: bool = False) -> str:
     return _zone_color(value, invert_scale)
 
 
+def _stipkleur(value: float, invert_scale: bool,
+               zone_bounds: tuple[float, float] | None) -> str:
+    """dot_color, of met eigen zonegrenzen (zie distribution_svg, zone_bounds).
+
+    Zelfde regel als _zone_index: op de exacte waarde, strikt kleiner-dan, dus
+    een grens zelf hoort in het hogere vak (vanaf RISK_HIGH is sterk)."""
+    if zone_bounds is None:
+        return dot_color(value, invert_scale)
+    lo, hi = zone_bounds
+    low, high = _zone_ends(invert_scale)
+    return (low, _C_MID, high)[0 if value < lo else 1 if value < hi else 2]
+
+
 # Inset zodat stippen (r=3.5) en de gemiddelde-marker op de schaaluitersten
 # (score 1.0 / 10.0) niet half buiten de SVG-viewport vallen.
 _X_PAD = 5
@@ -187,17 +200,34 @@ def _jitter_offset(i: int, denom: int) -> int:
 
 def distribution_svg(values: list[float], width: int = 440, height: int = 34,
                      dot_r: float = 3.5, label_size: int = 7,
-                     invert_scale: bool = False) -> str:
+                     invert_scale: bool = False,
+                     zone_bounds: tuple[float, float] | None = None,
+                     gem: float | None = None) -> str:
     """Stippen-op-zone-as: zone-tinten, stippen, gemiddelde-marker.
 
     invert_scale: alleen de kleurschaal draait om (laag wordt teal, hoog rood).
     De x-posities, de stippen en de gemiddelde-marker blijven op hun echte
     waarde staan; zie de toelichting bij _ZONE_LABELS_INVERT.
+
+    zone_bounds: andere zonegrenzen dan ZONE_LOW / ZONE_HIGH, alleen voor de
+    tekening (zonevakken en stipkleur). Nodig voor de frictiescore van Loep
+    Vertrek per afdeling (beslisronde 12-10, A8): die staat op de risicoschaal
+    met de frictiebanden (gemengd vanaf RISK_MEDIUM, sterk vanaf RISK_HIGH),
+    en de strook moet dezelfde kleur geven als de cel en de band in de rij.
+    Zonder zone_bounds verandert er niets.
+
+    gem: het getal achter "GEM", als dat het getal uit een kolom ernaast moet
+    zijn. Alleen het label; de marker blijft op het echte gemiddelde (het
+    verschil is hooguit 0,05, minder dan een pixel). Nodig voor dezelfde
+    frictiescore (A8): de cel rekent terug vanaf de getoonde score op de
+    gezondheidsschaal, en op een afrondingsgrens (gemiddelde x,x5) rondt het
+    omgerekende gemiddelde de andere kant op af. Zonder gem verandert er niets.
     """
     dist = score_distribution(values)
     if dist["mean"] is None:
         return ""
-    x_low, x_high = _x(ZONE_LOW, width), _x(ZONE_HIGH, width)
+    lo, hi = zone_bounds if zone_bounds is not None else (ZONE_LOW, ZONE_HIGH)
+    x_low, x_high = _x(lo, width), _x(hi, width)
     band_y, band_h = 6, height - 12
     c_low, c_high = _zone_ends(invert_scale)
     bg_low, bg_high = ((_TRACK_BG["high"], _TRACK_BG["low"]) if invert_scale
@@ -217,14 +247,15 @@ def distribution_svg(values: list[float], width: int = 440, height: int = 34,
     for i, v in enumerate(dist["dots"]):
         cy = band_y + 5 + _jitter_offset(i, jitter_range)
         parts.append(f'<circle cx="{_x(v, width)}" cy="{cy}" r="{dot_r}" '
-                     f'fill="{dot_color(v, invert_scale)}" fill-opacity="0.9"/>')
+                     f'fill="{_stipkleur(v, invert_scale, zone_bounds)}" fill-opacity="0.9"/>')
     # gemiddelde-marker: navy lijn + mono-label
     mx = _x(dist["mean"], width)
+    gem_lbl = dist["mean"] if gem is None else gem
     parts.append(f'<rect x="{mx - 1}" y="0" width="2" height="{height}" fill="#0D1B2A"/>')
     anchor = "end" if mx > width - 40 else "start"
     tx = mx - 4 if anchor == "end" else mx + 4
     parts.append(f'<text x="{tx}" y="{max(5, label_size - 2)}" font-family="JetBrains Mono, monospace" '
-                 f'font-size="{label_size}" fill="#0D1B2A" text-anchor="{anchor}">GEM {dist["mean"]:.1f}</text>')
+                 f'font-size="{label_size}" fill="#0D1B2A" text-anchor="{anchor}">GEM {gem_lbl:.1f}</text>')
     parts.append('</svg>')
     return "".join(parts)
 

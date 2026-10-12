@@ -132,9 +132,10 @@ _P02 = "pagina " + _pref("p02")
      "De kolom Werkbeeld is het werkbeeld van " + _P02 + ", per afdeling."),
     ("onboarding", "Checkpointscore",
      "De kolom Checkpointscore is de checkpointscore van " + _P02 + ", per afdeling."),
-    ("exit", "Score",
-     "De kolom Score is per afdeling de frictiescore van " + _P02
-     + ", maar omgedraaid: hier is hoger beter."),
+    # A8 (beslisronde 12-10): de frictiescore zelf, hoger is slechter.
+    ("exit", "Frictiescore",
+     "De kolom Frictiescore is de frictiescore van " + _P02
+     + ", per afdeling: hoger is slechter."),
 ])
 def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
     html = _block(*_GROOT, scan_type=scan_type)
@@ -142,9 +143,10 @@ def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
     intro = re.search(r'<p class="sec-intro">(.*?)</p>', html, re.S).group(1)
     assert intro.endswith(zin)
     # De staffelzin gaat expliciet over de kolom met het laagste onderwerp.
+    # A4 (beslisronde 12-10): de staffelzin geldt nu voor die kolom en de scorekolom.
     assert ("De kolom met het laagste onderwerp noemt per afdeling het laagst scorende "
-            "onderwerp; bij kleine afdelingen (5 tot 9 antwoorden) staat daar alleen een "
-            "label") in intro
+            "onderwerp. Bij kleine afdelingen (5 tot 9 antwoorden) staat in die kolom en in "
+            "de scorekolom alleen een label") in intro
     assert "tonen we" not in intro
     # De uitsplitsing met alle onderwerpen staat onder de tabel, onder de naam
     # waarmee _segment_factor_subblocks haar opent.
