@@ -23,5 +23,5 @@ export const retentionScanDefinition: ScanDefinition = {
   reliabilityText:
     'Grafieken en patroonanalyse tonen we pas vanaf minimaal 10 responses. Individuele scores blijven uit beeld; segmentvergelijkingen tonen we alleen bij voldoende aantallen. De uitkomst is bedoeld voor prioritering en verificatie op groepsniveau, niet als gevalideerde voorspeller van vrijwillig vertrek.',
   segmentText:
-    'Als segment deep dive aanstaat, laat Verisight zien welke afdelingen of functieniveaus relatief sterker afwijken op het retentiesignaal. De vergelijking is beschrijvend en bedoeld voor prioritering, niet als causaal bewijs.',
+    'Als segment deep dive aanstaat, laat Loep zien welke afdelingen of functieniveaus relatief sterker afwijken op het retentiesignaal. De vergelijking is beschrijvend en bedoeld voor prioritering, niet als causaal bewijs.',
 }
