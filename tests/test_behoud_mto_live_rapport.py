@@ -19,7 +19,9 @@ def test_live_behoud_rapport_bevat_geen_mto():
 
 
 def test_report_html_bron_noemt_geen_mto():
-    bron = Path("backend/report_html.py").read_text(encoding="utf-8")
+    bron = (Path(__file__).resolve().parents[1] / "backend" / "report_html.py").read_text(
+        encoding="utf-8"
+    )
     assert "MTO" not in bron
 
 
