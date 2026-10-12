@@ -170,7 +170,7 @@ OUD_TIJDSANKER = "toen de vertrekkers er nog werkten"
 # mensen die vertrokken. Mag ook niet meer voorkomen.
 TUSSENVORM_TIJDSANKER = "deze mensen vertrokken"
 NIEUW_TIJDSANKER = "in de periode waar deze meting over gaat"
-A1_SLOTEN = {
+TIJDSANKER_SLOTEN = {
     "ldd_feedback": "En in de periode waar deze meting over gaat?",
     "ldd_escalation": "En in de periode waar deze meting over gaat?",
     "ldd_availability": "En in de periode waar deze meting over gaat?",
@@ -206,7 +206,7 @@ A1_SLOTEN = {
 # sha256 over json.dumps({"<factor>.<route>": tekst}, sort_keys=True,
 # ensure_ascii=False). RETENTION: de Behoud-teksten op main 37059706 (vóór de
 # fixronde). EXIT: de Vertrek-teksten van 37059706 met precies de
-# negenentwintig vervangingen uit A1_SLOTEN toegepast (veertien uit A1,
+# negenentwintig vervangingen uit TIJDSANKER_SLOTEN toegepast (veertien uit A1,
 # grd_visibility uit polijstronde V11, veertien uit A3 van de beslisronde),
 # en verder niets. De A3-hash is onafhankelijk berekend: de teksten van
 # 65325881 (hash 1eee205e...) met alleen de veertien staarten vervangen.
@@ -236,13 +236,13 @@ def test_vertrek_noemt_geen_een_jaar_geleden_meer():
 
 
 def test_precies_de_negenentwintig_vragen_dragen_het_nieuwe_tijdsanker():
-    assert len(A1_SLOTEN) == 29
+    assert len(TIJDSANKER_SLOTEN) == 29
     met_anker = {rk for _fk, rk, scan, tekst in _alle_vragen()
                  if scan == "exit" and NIEUW_TIJDSANKER in tekst}
-    assert met_anker == set(A1_SLOTEN)
+    assert met_anker == set(TIJDSANKER_SLOTEN)
     for fk, rk, scan, tekst in _alle_vragen():
-        if scan == "exit" and rk in A1_SLOTEN:
-            assert tekst.endswith(" " + A1_SLOTEN[rk]), (fk, rk, tekst)
+        if scan == "exit" and rk in TIJDSANKER_SLOTEN:
+            assert tekst.endswith(" " + TIJDSANKER_SLOTEN[rk]), (fk, rk, tekst)
             assert tekst.count(NIEUW_TIJDSANKER) == 1, (fk, rk, tekst)
 
 

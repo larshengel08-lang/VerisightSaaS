@@ -27,12 +27,16 @@ def _exit_teksten() -> list[tuple[str, str]]:
     return teksten
 
 
+def _met_anker() -> list[tuple[str, str]]:
+    return [(naam, t) for naam, t in _exit_teksten() if KERN in t]
+
+
 def test_constante_bevat_de_kern():
     assert KERN in WERKVRAGEN_TIJDSANKER
 
 
 def test_elke_vraag_met_het_anker_draagt_precies_de_constante():
-    met_anker = [(naam, t) for naam, t in _exit_teksten() if KERN in t]
+    met_anker = _met_anker()
     # Niet vacuüm: op 11-10 dragen vijftien Vertrek-vragen het anker, na A3
     # (beslisronde 12-10) negenentwintig.
     assert len(met_anker) >= 29
@@ -42,9 +46,7 @@ def test_elke_vraag_met_het_anker_draagt_precies_de_constante():
 
 
 def test_vervanging_raakt_elke_vraag_met_het_anker():
-    for naam, tekst in _exit_teksten():
-        if KERN not in tekst:
-            continue
+    for naam, tekst in _met_anker():
         uit = _werkvraag_tijdsanker(tekst, ("oktober 2025", "maart 2026"))
         assert KERN not in uit, naam
         assert "in de uitstroomperiode (tussen oktober 2025 en maart 2026)" in uit, naam
@@ -53,19 +55,17 @@ def test_vervanging_raakt_elke_vraag_met_het_anker():
 # ── A3 (beslisronde 12-10): extra controles, eis Lars ───────────────────────
 # Dezelfde aanroepketen als _werkvragen_block: _uitstroom_bereik over de
 # vertrekmaanden, daarna _werkvraag_tijdsanker per vraag.
-BEREIK_TWEE_MAANDEN = ["2025-10", "2025-10", "2025-12", "2026-03", "2026-03"]
+BEREIK_MEERDERE_MAANDEN = ["2025-10", "2025-10", "2025-12", "2026-03", "2026-03"]
 BEREIK_EEN_MAAND = ["2026-03"] * 5
-GEEN_BEREIK = ["2025-10", "2025-12", "2026-03", "2026-03"]  # te weinig maanden
+# Bewust alleen de tak "te weinig bekende maanden"; de randmaand-tak van
+# _uitstroom_bereik staat in tests/test_polijstronde_vertrek.py.
+GEEN_BEREIK = ["2025-10", "2025-12", "2026-03", "2026-03"]
 
 VERDWAALD = (" ?", ",?", ", ?", " ,", " .", "..", "( ", " )", "()", "?.", ".?", ",,")
 
 
-def _met_anker() -> list[tuple[str, str]]:
-    return [(naam, t) for naam, t in _exit_teksten() if KERN in t]
-
-
 def _laatste_zin(tekst: str) -> str:
-    """Alles na het laatste zinseinde vóór het slot-vraagteken."""
+    """De laatste zin van de vraag, inclusief het slot-vraagteken."""
     delen = re.split(r"(?<=[.?!])\s+", tekst)
     return delen[-1]
 
@@ -85,12 +85,8 @@ def _controleer_lopende_vraag(naam: str, voor: str, na: str, periode: str):
     assert "—" not in na and "–" not in na, (naam, na)
 
 
-def test_a3_negenentwintig_vragen_met_het_anker():
-    assert len(_met_anker()) == 29
-
-
 def test_a3_vervanging_met_twee_maanden_blijft_een_lopende_vraag():
-    uitstroom = _uitstroom_bereik(BEREIK_TWEE_MAANDEN)
+    uitstroom = _uitstroom_bereik(BEREIK_MEERDERE_MAANDEN)
     assert uitstroom == ("oktober 2025", "maart 2026")
     periode = "in de uitstroomperiode (tussen oktober 2025 en maart 2026)"
     for naam, tekst in _met_anker():
