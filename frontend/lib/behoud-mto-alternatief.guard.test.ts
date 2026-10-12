@@ -62,6 +62,14 @@ function mtoSentences(text: string): string[] {
   return text.split(/(?<=[.!?])\s+|['"`]\s*,\s*['"`]/).filter((s) => /\bMTO\b|medewerkersonderzoek/i.test(s))
 }
 
+/**
+ * Een "bedrag" voor de bedrag-per-medewerker-regel: letterlijk €-teken, de
+ * HTML-entity &euro; (gerenderd in e-mails/HTML), of een aanroep van de
+ * formatEur(...)-helper (code die zelf een bedrag opbouwt, nog geen tekst).
+ */
+const BEDRAG_PATROON = '(?:€\\s?\\d[\\d.,]*|&euro;\\s?\\d[\\d.,]*|formatEur\\([^)]*\\))'
+const PER_EENHEID_PATROON = '\\b(per medewerker|p\\.p\\.|per persoon)\\b'
+
 const FORBIDDEN: Array<[string, RegExp]> = [
   ['MTO als productnaam', /\bLoep[\s-]?MTO\b|\bhet Loep-MTO\b/i],
   ['vervangingsclaim', /vervangt\s+(je|jouw|het|uw)\s+MTO/i],
@@ -72,7 +80,10 @@ const FORBIDDEN: Array<[string, RegExp]> = [
   ['benchmarkclaim', /branchegemiddelde|branchevergelijking|benchmarkscore|normscore|\b(Loep|we|wij|het rapport)\s+vergelijk\w*\s+(je\s+)?met\s+(de markt|andere organisaties|je branche)/i],
   [
     'bedrag per medewerker',
-    /€\s?\d[\d.,]*[^.;]{0,60}\b(per medewerker|p\.p\.|per persoon)\b|\b(per medewerker|p\.p\.|per persoon)\b[^.;]{0,60}€\s?\d/i,
+    new RegExp(
+      `${BEDRAG_PATROON}[^.;]{0,60}${PER_EENHEID_PATROON}|${PER_EENHEID_PATROON}[^.;]{0,60}${BEDRAG_PATROON}`,
+      'i',
+    ),
   ],
 ]
 
@@ -122,5 +133,30 @@ describe('Loep Behoud als MTO-alternatief: copyregels', () => {
   it('de keuzehulp noemt grootte niet als reden voor een groot MTO', () => {
     const producten = read('components/marketing/producten-content.tsx')
     expect(producten).not.toMatch(/1\.000 of meer medewerkers[^']{0,40}MTO|MTO[^']{0,80}1\.000/i)
+  })
+})
+
+describe('bedrag-per-medewerker-patroon (fixronde-punt 4)', () => {
+  const [, bedragPerMedewerker] = FORBIDDEN.find(([naam]) => naam === 'bedrag per medewerker')!
+
+  const treffers = [
+    '€ 25 per medewerker',
+    '€25 per medewerker',
+    '&euro; 25 per medewerker is te duur',
+    'formatEur(25) per medewerker als je het zo uitrekent',
+    'per persoon kost dit €18',
+  ]
+  const geenTreffers = [
+    'Geen licenties per medewerker, geen jaarlijkse verhogingen.',
+    'Je betaalt nooit per persoon.',
+    '€4.500 excl. btw voor de hele organisatie.',
+  ]
+
+  it.each(treffers)('herkent een bedrag naast per-eenheid in: %s', (zin) => {
+    expect(bedragPerMedewerker.test(zin)).toBe(true)
+  })
+
+  it.each(geenTreffers)('laat zinnen zonder bedrag met per-eenheid door: %s', (zin) => {
+    expect(bedragPerMedewerker.test(zin)).toBe(false)
   })
 })
