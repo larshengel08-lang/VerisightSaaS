@@ -70,6 +70,7 @@ from backend.report_priority import (
     CELL_CAP_REACHED, CELL_NO_MAJORITY, CELL_NOT_TRIGGERED, CELL_TOO_FEW,
     FLAT_PROFILE_SPAN,
     PRIORITY_TIE_MARGIN,
+    direction_niets_zin,
     rank_factors,
 )
 from backend.scan_definitions import get_scan_definition
@@ -533,7 +534,8 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
                        primary_is_lowest: bool,
                        gelijk_met: list[str] | None = None,
                        indicatief: bool = False,
-                       niets_tekst: str | None = None) -> str:
+                       niets_feiten: dict[str, int] | None = None,
+                       scan_type: str | None = None) -> str:
     """Welk onderwerp Loep als startpunt kiest, met de grond erbij.
 
     Elke tak eist zijn eigen grond expliciet, zodat geen enkele zin iets beweert
@@ -565,11 +567,15 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     elke tak zichzelf voorzichtiger formuleren. Achteraf een tekenreeks
     vervangen werkte alleen in de takken waarin die reeks letterlijk voorkwam.
 
-    `niets_tekst` (A7, beslisronde 12-10): de niets-tekst van de scan als de
-    richtingkaart van het startpunt de verdeeld-staat toont met een niets-groep
-    die minstens zo groot is als de grootste richting (_p02_niets_even_groot,
-    zelfde poort als de kaart). Alleen de richtingtak gebruikt hem: daar zou
-    "meer mensen vragen om verandering" anders de kaart tegenspreken.
+    `niets_feiten` (A7, beslisronde 12-10): de tellingen van de niets-groep
+    als de richtingkaart van het startpunt de verdeeld-staat toont met een
+    niets-groep die minstens zo groot is als de grootste richting
+    (_p02_niets_feiten, zelfde poort als de kaart). Alleen de richtingtak
+    gebruikt ze, met een losse zin (report_priority.direction_niets_zin, "bij
+    <startpunt>"): daar zou "meer mensen vragen om verandering" anders de kaart
+    tegenspreken. Die zin is een telling en blijft bij `indicatief` gelijk; de
+    voorzichtige vorm zit in "Als mogelijk startpunt". `scan_type` levert de
+    niets-tekst en is dan verplicht.
     """
     kiest = "Als mogelijk startpunt kiest Loep" if indicatief else "Als startpunt kiest Loep"
     if direction_state_key == "none_needed":
@@ -582,11 +588,14 @@ def _p02_startpunt_zin(primary_label: str, *, tie_break_kind: str | None,
     if tie_break_kind == "direction" and change and change_other:
         a, b = change
         ander_label, c, d = change_other
-        staart = (", al kiest daar een even grote of grotere groep ‘" + niets_tekst + "’"
-                  if niets_tekst else "")
+        staart = ""
+        if niets_feiten:
+            if scan_type is None:
+                raise ValueError("_p02_startpunt_zin: niets_feiten zonder scan_type")
+            staart = " " + direction_niets_zin(niets_feiten, scan_type, "bij " + primary_label)
         return (f"{kiest} {primary_label}: daar vragen meer mensen "
                 f"om verandering dan bij {ander_label} ({a} van de {b} tegen {c} van "
-                f"de {d})" + staart + ".")
+                f"de {d})." + staart)
     if tie_break_kind is None and primary_is_lowest and next_delta is not None:
         # next_delta is het verschil tussen GETOONDE scores (B15), dus 0 als de
         # lezer twee keer hetzelfde getal ziet. De gelijke onderwerpen komen uit
@@ -632,7 +641,7 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
                  next_delta: float | None = None,
                  direction_state_key: str | None = None,
                  indicatief: bool = False,
-                 niets_tekst: str | None = None) -> str:
+                 niets_feiten: dict[str, int] | None = None) -> str:
     """De eerste zin van pagina twee (spec ronde 2 par. 2.2 en par. 5.2).
 
     Beweegt mee met hoeveel onderwerpen kwetsbaar scoren, en zegt het expliciet
@@ -728,7 +737,8 @@ def _p02_opening(*, scan_type: str, shape: dict[str, Any], labels: dict[str, str
         primary_is_lowest=primary_is_lowest,
         gelijk_met=gelijk_met,
         indicatief=indicatief,
-        niets_tekst=niets_tekst)
+        niets_feiten=niets_feiten,
+        scan_type=scan_type)
     # C11: "...: Groeiperspectief (4.5/10). Als startpunt kiest Loep
     # Groeiperspectief." is één mededeling in twee zinnen. Alleen als de kop
     # precies één kwetsbaar onderwerp noemt, dat het startpunt is, er geen
@@ -844,18 +854,18 @@ def _p02_startpunt_gronden(
     return kind, change, change_other, delta
 
 
-def _p02_niets_even_groot(raster_rows: list[dict[str, Any]]) -> str | None:
-    """De niets-tekst voor de halve zin achter de richting-grond op p.02 (A7,
+def _p02_niets_feiten(raster_rows: list[dict[str, Any]]) -> dict[str, int] | None:
+    """De tellingen voor de niets-zin achter de richting-grond op p.02 (A7,
     beslisronde 12-10), of None.
 
     Leest het veld dat rank_factors op de startpuntrij zette, met dezelfde
-    poort als de richtingkaart (report_priority._direction_niets_even_groot).
+    poort als de richtingkaart (report_priority._direction_niets_feiten).
     Zo zeggen pagina twee en de markeringsregel onder de rasterrij altijd
     hetzelfde, en geen van beide spreekt de kaart tegen.
     """
     if not raster_rows:
         return None
-    return raster_rows[0].get("direction_niets_even_groot")
+    return raster_rows[0].get("direction_niets_feiten")
 
 
 # Uitleg onder de tegel Werkbeeld op p.02 (polijstronde R20). Waar: de score is
@@ -7388,7 +7398,7 @@ def render_exit_report_html(data: dict) -> str:
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
         indicatief=_indicatief,
-        niets_tekst=_p02_niets_even_groot(_raster_rows))
+        niets_feiten=_p02_niets_feiten(_raster_rows))
     _signal_cell = _p02_signal_cell("Frictiescore", rdsp if avg_risk else "",
                                     fl if avg_risk else "")
     # Blok 2 (spec par. 4): vertrekreden met noemer en gelijkspel, respons met
@@ -7930,7 +7940,7 @@ def render_retention_report_html(data: dict) -> str:
         tie_break_kind=_tk, change=_chg, change_other=_chg_other, next_delta=_delta,
         direction_state_key=_p02_direction_key(direction_agg, _primary),
         indicatief=_indicatief,
-        niets_tekst=_p02_niets_even_groot(_raster_rows))
+        niets_feiten=_p02_niets_feiten(_raster_rows))
     _signal_cell = _p02_signal_cell("Werkbeeld", _score_str(signal) if signal else "",
                                     band_lbl or "", note=WERKBEELD_UITLEG)
     _stay_scores = (data.get("intent_resp") or {}).get("stay") or []
