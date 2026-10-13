@@ -14,12 +14,6 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'Loep Behoud Baseline',
   },
   {
-    value: 'culture_assessment',
-    label: 'Loep Culture Assessment',
-    description: 'We willen een brede jaarlijkse cultuur- en engagementbaseline voor de organisatie.',
-    firstStepLabel: 'Loep Culture Assessment Baseline',
-  },
-  {
     value: 'combinatie',
     label: 'Combinatie',
     description: 'We willen beide kernvragen bewust naast elkaar organiseren.',
@@ -57,6 +51,12 @@ const LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS = [
     label: 'TeamScan',
     description: 'Verborgen legacy route voor interne of historische teamreads.',
     firstStepLabel: 'een legacy TeamScan-route na een bestaand signaal',
+  },
+  {
+    value: 'culture_assessment',
+    label: 'Loep Cultuurbeeld',
+    description: 'Verborgen route voor oude Cultuurbeeld-leads; Cultuurbeeld is sinds 11-10-2026 uit het aanbod.',
+    firstStepLabel: 'Loep Cultuurbeeld Baseline',
   },
 ] as const
 
@@ -178,6 +178,7 @@ const CULTURE_ASSESSMENT_KEYWORDS = [
   'jaarlijkse baseline',
   'brede baseline',
   'mto',
+  'medewerkersonderzoek',
 ]
 
 const PULSE_SIGNAL_KEYWORDS = [
@@ -271,6 +272,21 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
   return 'exitscan'
 }
 
+const visibleRouteValues = new Set<ContactRouteInterest>(CONTACT_ROUTE_OPTIONS.map((option) => option.value))
+
+/**
+ * De route die het formulier mag TONEN in de <select>. `normalizeContactRouteInterest`
+ * houdt legacy routes (zoals 'culture_assessment') bewust geldig zodat oude leads en de
+ * API ze blijven accepteren, maar die waarden staan niet in CONTACT_ROUTE_OPTIONS. Zonder
+ * deze helper toont de select dan stilzwijgend de eerste optie terwijl de verzonden
+ * waarde de onzichtbare legacy-route blijft (zie fixronde-punt 1, 2026-10-11/12).
+ * Cultuurbeeld verwijst sinds 11-10-2026 naar Loep Behoud; teamscan valt mee onder
+ * dezelfde regel.
+ */
+export function visibleContactRouteInterest(value: ContactRouteInterest): ContactRouteInterest {
+  return visibleRouteValues.has(value) ? value : 'retentiescan'
+}
+
 export function getContactRouteLabel(value: string | null | undefined) {
   return routeOptionMap.get(normalizeContactRouteInterest(value))?.label ?? 'Loep Vertrek'
 }
@@ -335,11 +351,14 @@ export function getContactQualificationGuidance({
     recommendedCoreRoute = 'combinatie'
   } else if (hasRetentionSignal && !hasExitSignal) {
     recommendedCoreRoute = 'retentiescan'
-  } else if (
-    normalizedRoute === 'culture_assessment' ||
-    (hasCultureAssessmentSignal && !hasExitSignal && !hasRetentionSignal)
-  ) {
+  } else if (normalizedRoute === 'culture_assessment') {
     recommendedCoreRoute = 'culture_assessment'
+  } else if (hasCultureAssessmentSignal && !hasExitSignal) {
+    // Besluit Lars 11-10-2026: een brede vraag (cultuur, betrokkenheid,
+    // tevredenheid, medewerkersonderzoek) landt op Loep Behoud, het alternatief
+    // voor het grote jaarlijkse MTO. Alleen oude leads die zelf Cultuurbeeld
+    // kozen, houden die route.
+    recommendedCoreRoute = 'retentiescan'
   }
 
   if (onboardingCandidate) {
@@ -402,11 +421,11 @@ export function getContactQualificationGuidance({
       status: 'culture_primary',
       recommendedCoreRoute,
       followOnCandidateRoute: null,
-      headline: 'Loep Culture Assessment lijkt nu de logische eerste route.',
+      headline: 'Loep Cultuurbeeld is sinds oktober 2026 uit het aanbod.',
       detail:
-        'De vraag leest als een brede organisatievraag rond cultuur, engagement, werkbeleving, vertrouwen of leiderschap. Daardoor toetsen we eerst een jaarlijkse Loep Culture Assessment baseline met board-read en governed drilldown, niet Pulse, TeamScan of een generieke MTO-light route.',
+        'De vraag leest als een brede organisatievraag rond cultuur, engagement, werkbeleving, vertrouwen of leiderschap. Loep Cultuurbeeld bieden we niet meer aan; we toetsen in plaats daarvan Loep Behoud, het korte medewerkersonderzoek dat geldt als alternatief voor het grote jaarlijkse MTO.',
       operatorSummary:
-        'Brede cultuur- en engagementvraag zichtbaar; toets Loep Culture Assessment als primaire board-level baseline en bewaak dat de intake niet vernauwt naar behoudsdruk, exitduiding of een lokale follow-on route.',
+        'Brede cultuur- en engagementvraag zichtbaar via een oude Cultuurbeeld-route; Cultuurbeeld is sinds oktober 2026 uit het aanbod. Toets Loep Behoud als primaire route en bewaak dat de intake niet vernauwt naar behoudsdruk, exitduiding of een lokale follow-on route.',
     }
   }
 

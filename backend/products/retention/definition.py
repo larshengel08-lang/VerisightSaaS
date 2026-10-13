@@ -20,7 +20,7 @@ SCAN_DEFINITION: dict[str, Any] = {
             "te maken waar behoud aandacht vraagt in actieve populaties."
         ),
         "what_it_is_not": (
-            "Geen brede MTO, geen individuele voorspeller, geen performance-instrument en geen "
+            "Geen breed MTO met benchmark, geen individuele voorspeller, geen performance-instrument en geen "
             "selectie- of interventietool op persoonsniveau."
         ),
         "how_to_read": (

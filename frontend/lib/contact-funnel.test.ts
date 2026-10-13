@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildContactHref,
+  CONTACT_ROUTE_OPTIONS,
   getContactQualificationGuidance,
   getContactRouteLabel,
   inferRouteInterestFromSource,
   normalizeContactRouteInterest,
+  visibleContactRouteInterest,
 } from '@/lib/contact-funnel'
 
 describe('contact qualification guidance', () => {
@@ -86,7 +88,7 @@ describe('contact qualification guidance', () => {
   it('preserves culture_assessment as an explicit route interest instead of remapping it to Loep Vertrek', () => {
     expect(normalizeContactRouteInterest('culture_assessment')).toBe('culture_assessment')
     expect(inferRouteInterestFromSource('culture_assessment_primary_cta')).toBe('culture_assessment')
-    expect(getContactRouteLabel('culture_assessment')).toBe('Loep Culture Assessment')
+    expect(getContactRouteLabel('culture_assessment')).toBe('Loep Cultuurbeeld')
     expect(buildContactHref({ routeInterest: 'culture_assessment' })).toContain(
       'route_interest=culture_assessment',
     )
@@ -103,6 +105,21 @@ describe('contact qualification guidance', () => {
     expect(guidance.status).toBe('culture_primary')
     expect(guidance.recommendedCoreRoute).toBe('culture_assessment')
     expect(guidance.followOnCandidateRoute).toBeNull()
-    expect(guidance.detail.toLowerCase()).toContain('board-read')
+    expect(guidance.detail.toLowerCase()).toContain('cultuurbeeld')
+    expect(guidance.detail.toLowerCase()).toContain('loep behoud')
+    expect(guidance.headline.toLowerCase()).toContain('uit het aanbod')
+  })
+})
+
+describe('visibleContactRouteInterest', () => {
+  it('maps legacy routes not shown in the select to retentiescan', () => {
+    expect(visibleContactRouteInterest('culture_assessment')).toBe('retentiescan')
+    expect(visibleContactRouteInterest('teamscan')).toBe('retentiescan')
+  })
+
+  it('leaves every visible CONTACT_ROUTE_OPTIONS value unchanged', () => {
+    for (const option of CONTACT_ROUTE_OPTIONS) {
+      expect(visibleContactRouteInterest(option.value)).toBe(option.value)
+    }
   })
 })

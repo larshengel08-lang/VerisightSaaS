@@ -439,7 +439,7 @@ class TestRetentionReportContent:
         trust_rows = payload["trust_rows"]
 
         assert "groepsniveau" in intro
-        assert "brede mto" in intro
+        assert "breed mto met benchmark" in intro
         assert "v1" in method
         assert "per response" in method
         assert "niet als causale voorspelling" in method

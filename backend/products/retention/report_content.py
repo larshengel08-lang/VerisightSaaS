@@ -143,7 +143,7 @@ def get_management_summary_payload(
     )
 
     trust_note = (
-        "Lees RetentieScan als groeps- en segmentduiding voor verificatie en opvolging. Het rapport is geen brede MTO, "
+        "Lees RetentieScan als groeps- en segmentduiding voor verificatie en opvolging. Het rapport is geen breed MTO met benchmark, "
         "geen individueel performance-instrument en geen gevalideerde voorspeller van vrijwillig vertrek. "
         "Dit blijft een v1-werkmodel: management ziet groepssignalen, geen individuele scores of persoonsgerichte interventieroutes. "
         "Detailweergave en segmentvergelijking blijven gekoppeld aan minimale n-grenzen zodat privacy, interpretatie en herleidbaarheid bewaakt blijven."
@@ -295,7 +295,7 @@ def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
             "Dit rapport vertaalt RetentieScan naar een bestuurlijk leesbaar behoudsbeeld op groepsniveau. "
-            "De methodiek is compact en nadrukkelijk geen brede MTO of diagnostisch instrument; de uitkomst is bedoeld voor prioritering, verificatie en actie. "
+            "De methodiek is compact en nadrukkelijk geen breed MTO met benchmark en geen diagnostisch instrument; de uitkomst is bedoeld voor prioritering, verificatie en actie. "
             "De labels hieronder zijn managementtaal bovenop ongewijzigde interne scorebanden."
         ),
         "method_text": (

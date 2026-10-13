@@ -26,9 +26,13 @@ describe('/producten na besluit A: wie doet wat', () => {
     expect(bron()).toContain(
       "lead: 'Loep brengt vertrekpatronen scherp in beeld, en het rapport brengt je MT tot één duidelijke keuze.',",
     )
+    // Behoud-als-MTO-alternatief (besluiten Lars 11-10 en 13-10-2026): de lead
+    // van Loep Behoud begint met de categorie plus invultijd uit de bron, dan de
+    // alternatief-zin; de rest ongewijzigd. Eyebrow is weer het probleemlabel.
     expect(bron()).toContain(
-      "lead: 'Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',",
+      'lead: `Het korte medewerkersonderzoek (${SURVEY_DURATION_LABEL.retention}). Een alternatief voor het grote jaarlijkse MTO. Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.`,',
     )
+    expect(bron()).toContain("eyebrow: 'Behoud onder druk',")
     expect(bron()).toContain(
       "lead: 'Loep meet vroeg hoe nieuwe medewerkers landen. Het rapport geeft je MT een helder groepsbeeld om één eerste stap op te kiezen.',",
     )

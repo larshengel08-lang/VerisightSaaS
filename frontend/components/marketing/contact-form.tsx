@@ -13,6 +13,7 @@ import {
   normalizeContactCtaSource,
   normalizeContactDesiredTiming,
   normalizeContactRouteInterest,
+  visibleContactRouteInterest,
   type ContactDesiredTiming,
   type ContactRouteInterest,
 } from '@/lib/contact-funnel'
@@ -64,7 +65,7 @@ export function ContactForm({
   const searchParams = useSearchParams()
   const [form, setForm] = useState<FormState>({
     ...initialState,
-    routeInterest: defaultRouteInterest,
+    routeInterest: visibleContactRouteInterest(defaultRouteInterest),
   })
   const [ctaSource, setCtaSource] = useState(normalizeContactCtaSource(defaultCtaSource))
   const [loading, setLoading] = useState(false)
@@ -80,10 +81,11 @@ export function ContactForm({
     const routeFromQuery = searchParams.get('route_interest')
     const desiredTimingFromQuery = searchParams.get('desired_timing')
     const resolvedSource = normalizeContactCtaSource(sourceFromQuery ?? defaultCtaSource)
-    const resolvedRoute =
+    const resolvedRoute = visibleContactRouteInterest(
       routeFromQuery?.trim()
         ? normalizeContactRouteInterest(routeFromQuery)
-        : inferRouteInterestFromSource(resolvedSource) || defaultRouteInterest
+        : inferRouteInterestFromSource(resolvedSource) || defaultRouteInterest,
+    )
 
     setForm((current) => ({
       ...current,

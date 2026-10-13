@@ -152,8 +152,8 @@ describe('besluit A: geen bespreking, geen "begeleid", geen "geen zelfbedienings
 
 /**
  * Elk Loep-bedrag komt uit lib/pricing.ts. Concurrentieprijzen ("€25.000 tot
- * €100.000") en de rekensom "€30 per medewerker" zijn geen Loep-prijs en vallen
- * buiten het patroon. public/llms.txt is een statisch tekstbestand en kan niet
+ * €100.000") zijn geen Loep-prijs en vallen buiten het patroon. Een bedrag per
+ * medewerker staat sinds 11-10-2026 nergens meer (behoud-mto-alternatief.guard.test.ts). public/llms.txt is een statisch tekstbestand en kan niet
  * importeren; dat wordt hieronder tegen de staffel gelegd.
  */
 const LOOSE_LOEP_AMOUNT = /(€|EUR|&euro;)\s?(3\.500|4\.500|6\.900|6\.500|950|1\.250|1\.750)(?![\d.])/

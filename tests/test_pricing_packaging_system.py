@@ -78,7 +78,11 @@ def test_pricing_claims_stay_inside_trust_and_output_boundaries():
 
     assert "claims mogen commercieel scherp zijn, maar nooit harder dan de repo-basis draagt" in sales_playbook
     assert "niet toegestaan" in trust_matrix
-    assert "geen individuele signalen naar management" in site_content
+    # Behoud-als-MTO-alternatief (besluit Lars 11-10-2026): de letterlijke zin
+    # "geen individuele signalen naar management" leefde alleen in de dode
+    # export approachRoutes (0 gerenderde importeurs), die Taak 2 verwijderde.
+    # Dezelfde grens staat nog gerenderd in processHighlights.
+    assert "geen individuele signalen of persoonsgerichte actieroutes" in site_content
     assert "geen brede mto" in retention_one_pager
     assert "geen individuele predictor" in retention_one_pager
 
