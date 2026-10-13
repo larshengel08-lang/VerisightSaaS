@@ -124,7 +124,7 @@ Zelf bekeken (PyMuPDF naar PNG): Behoud p.2 (intentieregel met "pagina 10", past
 - 14: werkvragenpagina p.13 32%
 - 19: verdiepingspagina p.7 36%
 
-Paginatallen gelijk aan de eindmeting van de polijstronde: 01 18, 02 18, 03 18, 04 16, 05 19, 06 19, 07 8, 08 14, 09 18, 10 19, 11 20, 12 18, 13 18, 14 18, 15 18, 16 19, 16b 19, 17 19, 18 14, 19 17, 20 13, 21 14, 22 14, de acht `zz_besluitmax_*`-bestanden per scan 19 (Behoud), 14 (Start), 17 (Vertrek), voorbeelden Vertrek 17, Behoud 19, Start 13. Het intentieblok en de nieuwe tabelcellen kosten nergens een pagina.
+Paginatallen gelijk aan de eindmeting van de polijstronde: 01 18, 02 18, 03 18, 04 16, 05 19, 06 19, 07 8, 08 14, 09 18, 10 19, 11 20, 12 18, 13 18, 14 18, 15 18, 16 19, 16b 19, 17 19, 18 14, 19 17, 20 13, 21 14, 22 14, de acht `zz_besluitmax_*`-bestanden 19 (de drie varianten van 06), 14 (de twee varianten van 08) en 17 (de drie varianten van vx_vertrek_afdeling), voorbeelden Vertrek 17, Behoud 19, Start 13. Het intentieblok en de nieuwe tabelcellen kosten nergens een pagina.
 
 ### Richtingstaten (stap 4)
 
