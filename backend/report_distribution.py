@@ -68,7 +68,10 @@ MIN_DISTRIBUTION_N = 10  # zelfde drempel als patroonanalyse
 # slecht. De waarden blijven ongemoeid, alleen de kleur en de tellingnamen
 # draaien om, zodat de strook hetzelfde getal toont als de rij erboven. Eerder
 # werd de waarde zelf gespiegeld (11 - v): de kleuren klopten, maar de rij zei
-# 3.4 en de strook 7.6 voor dezelfde vraag.
+# 3.4 en de strook 7.6 voor dezelfde vraag. Dezelfde regel (strook en rij tonen
+# hetzelfde getal) is de reden dat de afdelingsstrook van Loep Vertrek wel
+# spiegelt (A8, beslisronde 12-10): daar toont de rij de frictiescore, dus zet
+# _seg_strip in report_html de waarden op die schaal.
 _ZONE_LABELS = ("Kwetsbaar", "Aandacht", "Sterk")
 _ZONE_LABELS_INVERT = ("Weinig vertrekgedachten", "Aandacht", "Veel vertrekgedachten")
 
@@ -200,7 +203,7 @@ def _jitter_offset(i: int, denom: int) -> int:
 
 def distribution_svg(values: list[float], width: int = 440, height: int = 34,
                      dot_r: float = 3.5, label_size: int = 7,
-                     invert_scale: bool = False,
+                     invert_scale: bool = False, *,
                      zone_bounds: tuple[float, float] | None = None,
                      gem: float | None = None) -> str:
     """Stippen-op-zone-as: zone-tinten, stippen, gemiddelde-marker.

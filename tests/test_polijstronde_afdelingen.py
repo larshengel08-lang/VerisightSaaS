@@ -95,7 +95,7 @@ def test_s9_staat_2_noemt_geen_cijfer_van_de_kleine_laagste_afdeling():
     # Staat 2 heeft per definitie een laagste afdeling onder de 10.
     a = _anchor(_block(("Operations", 8, 4.5), ("Sales", 20, 7.0)))
     assert ("Operations scoort het laagst van de afdelingen die apart getoond "
-            "worden, maar heeft 8 antwoorden.") in a
+            "worden, maar telt 8 antwoorden.") in a
     assert "/10" not in a
 
 

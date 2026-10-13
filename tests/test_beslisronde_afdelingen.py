@@ -16,11 +16,12 @@ import re
 import pytest
 
 from backend.report_css import RAG_HIGH, RAG_LOW, RAG_MID
-from backend.report_distribution import MIN_DISTRIBUTION_N, distribution_svg
+from backend.report_distribution import MIN_DISTRIBUTION_N, _x, distribution_svg
 from backend.report_html import (
     SECTION_INTROS,
     SEGMENT_SCOREKOLOM,
     _brugzin,
+    _seg_woord,
     _department_segment_rows,
     _pref,
     _segment_block,
@@ -49,7 +50,8 @@ def _cellen(html, dept):
 
 
 def _tekst(fragment):
-    return re.sub(r"<[^>]+>", "", fragment).strip()
+    """Zichtbare tekst: tags weg, een <br> telt als spatie, zachte afbreekstreepjes weg."""
+    return re.sub(r"<[^>]+>", "", fragment.replace("<br>", " ")).replace("&shy;", "").strip()
 
 
 def _anchor(html):
@@ -66,6 +68,12 @@ def test_a4_kleine_afdeling_toont_label_in_plaats_van_cijfer(scan_type):
     score, band = _cellen(html, "Operations")[2:4]
     assert _tekst(score) == "kleine afdeling"
     assert "color:#94A3B8" in score  # klein en grijs, zoals de andere duidingsregels
+    # Twee regels, afbreekbaar (langste stuk 6 tekens) en niet vet (de cel zelf
+    # is .is, vet): anders verbreedt de smalle scorekolom (8%) ten koste van
+    # Band en Laagste onderwerp (gemeten in het productie-image).
+    assert "kleine<br>af&shy;de&shy;ling" in score
+    assert "font-weight:400" in score
+    assert "text-transform:uppercase" not in score
     # De kolom Band draagt het label nog.
     assert _tekst(band)
 
@@ -118,7 +126,9 @@ _P02 = "pagina " + _pref("p02")
 
 
 def test_a8_exit_kop_en_scanzin():
-    assert SEGMENT_SCOREKOLOM["exit"]["kop"].replace("&shy;", "") == "Frictiescore"
+    assert SEGMENT_SCOREKOLOM["exit"]["kop"] == "Fric&shy;tie&shy;score"
+    # Langste stuk hooguit 6 tekens, zodat de kop in de kolom van 8% past.
+    assert max(len(d) for d in SEGMENT_SCOREKOLOM["exit"]["kop"].split("&shy;")) <= 6
     assert SEGMENT_SCOREKOLOM["exit"]["zin"] == (
         "De kolom Frictiescore is de frictiescore van " + _P02 + ", per afdeling: hoger is slechter.")
     html = _block(("Operations", 12, 5.0), ("Sales", 12, 7.0), scan_type="exit")
@@ -191,6 +201,45 @@ def test_a8_exit_strook_kleurt_stippen_met_de_frictiebanden():
     assert f'fill="{RAG_LOW}" fill-opacity' in _cellen(html, "Operations")[5]
 
 
+def test_a8_exit_grens_gezond_4_is_frictiescore_7_sterk_rood_in_cel_en_strook():
+    # Gezondheid 4,0 is frictiescore 7,0 = RISK_HIGH: de grens hoort bij "sterk".
+    html = _block(("Operations", 12, 4.0), ("Sales", 12, 9.5), scan_type="exit")
+    cellen = _cellen(html, "Operations")
+    score, band, strook = cellen[2], cellen[3], cellen[5]
+    assert _tekst(score) == "7.0"
+    assert f"color:{RAG_HIGH}" in score
+    assert _tekst(band) == "Sterk frictiebeeld"
+    assert f'fill="{RAG_HIGH}" fill-opacity' in strook
+    assert f'fill="{RAG_MID}" fill-opacity' not in strook
+
+
+def test_distribution_svg_zonevakken_volgen_zone_bounds():
+    vals = [5.0] * 12
+    std = distribution_svg(vals)
+    eigen = distribution_svg(vals, zone_bounds=(4.5, 7.0))
+    for grens in (4.5, 7.0):
+        assert f'<rect x="{_x(grens, 440)}" y="6"' in eigen
+        assert f'<rect x="{_x(grens, 440)}" y="6"' not in std
+    for grens in (5.0, 6.5):
+        assert f'<rect x="{_x(grens, 440)}" y="6"' in std
+
+
+def test_distribution_svg_zone_bounds_en_gem_alleen_als_trefwoord():
+    vals = [5.0] * 12
+    with pytest.raises(TypeError):
+        distribution_svg(vals, 440, 34, 3.5, 7, False, (4.5, 7.0))
+    with pytest.raises(TypeError):
+        distribution_svg(vals, 440, 34, 3.5, 7, False, None, 5.0)
+
+
+def test_seg_woord_kent_alleen_de_drie_producten():
+    assert _seg_woord("retention", "laagst") == "scoort het laagst"
+    assert _seg_woord("onboarding", "laagst") == "scoort het laagst"
+    assert _seg_woord("exit", "laagst") == "heeft de hoogste frictiescore"
+    with pytest.raises(KeyError):
+        _seg_woord("culture_assessment", "laagst")
+
+
 def test_distribution_svg_zonegrenzen_standaard_ongewijzigd():
     vals = [4.9, 5.0, 6.4, 6.5] * 3
     assert distribution_svg(vals) == distribution_svg(vals, zone_bounds=None, gem=None)
@@ -237,7 +286,7 @@ def test_a8_exit_staat_1_dezelfde_score():
 def test_a8_exit_staat_2_zonder_cijfer():
     a = _anchor(_block(("Operations", 8, 4.5), ("Sales", 20, 7.0), scan_type="exit"))
     assert ("Operations heeft de hoogste frictiescore van de afdelingen die apart getoond "
-            "worden, maar heeft 8 antwoorden.") in a
+            "worden, maar telt 8 antwoorden.") in a
     assert "/10" not in a
     _geen_laagst_taal(a)
 

@@ -204,7 +204,7 @@ def test_kleine_laagste_afdeling_met_groot_verschil_wordt_niet_aangewezen():
     assert "dicht bij elkaar" not in a
     # S9 (polijstronde): geen cijfer van een afdeling met 8 antwoorden.
     assert ("Operations scoort het laagst van de afdelingen die apart getoond "
-            "worden, maar heeft 8 antwoorden. Loep wijst een afdeling pas "
+            "worden, maar telt 8 antwoorden. Loep wijst een afdeling pas "
             "aan vanaf 10 antwoorden, zodat de conclusie niet op een handvol "
             "antwoorden rust. Kijk voor de eerste prioriteit naar het "
             "organisatiebeeld.") in a
@@ -222,7 +222,7 @@ def test_net_onder_de_omvangdrempel_wijst_niet_aan():
         _rows(("Operations", MIN_DISTRIBUTION_N - 1, 4.5),
               ("Sales", MIN_DISTRIBUTION_N, 7.0))), scan_type="retention")
     assert "heeft de laagste score" not in html
-    assert "maar heeft 9 antwoorden." in _anchor(html)
+    assert "maar telt 9 antwoorden." in _anchor(html)
 
 
 def test_startpunt_gaat_over_de_twee_laagste_niet_over_de_hele_reeks():
@@ -328,7 +328,7 @@ def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
               ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
     a = _anchor(_segment_block(rows, scan_type="retention"))
     assert ("Sales scoort het laagst van de afdelingen die apart getoond worden, "
-            "maar heeft 8 antwoorden.") in a
+            "maar telt 8 antwoorden.") in a
     # S9 (polijstronde): de restgroep heeft er 6, dus geen cijfer.
     assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
             "6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "

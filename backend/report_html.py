@@ -5422,10 +5422,18 @@ def _segment_cijfer_mag(row: dict) -> bool:
 # afdelingen die op de gezondheidsschaal gelijk staan ook als gelijke
 # frictiescore op de pagina staan en een getoond verschil van 0,3 ook 0,3
 # blijft.
+def _naar_frictie(v: float) -> float:
+    """Eén waarde van de gezondheidsschaal terug naar de frictiescore (11 min v).
+
+    De enige spiegeling in de afdelingslaag (A8): cel, conclusie en strook
+    gebruiken allemaal deze functie."""
+    return 11.0 - v
+
+
 def _seg_getoond(avg: float, scan_type: str) -> float:
     """Het afdelingscijfer zoals de lezer het ziet, op de schaal van het product."""
     sc = _shown(avg)
-    return round(11.0 - sc, 1) if scan_type == "exit" else sc
+    return round(_naar_frictie(sc), 1) if scan_type == "exit" else sc
 
 
 def _seg_band(avg: float, scan_type: str) -> tuple[str, str]:
@@ -5438,6 +5446,30 @@ def _seg_band(avg: float, scan_type: str) -> tuple[str, str]:
     return _factor_label(avg), _factor_color(avg)
 
 
+def _seg_strip(row: dict, scan_type: str) -> str:
+    """De spreidingscel van een afdelingsrij.
+
+    Strip-gate n>=10 (MIN_DISTRIBUTION_N); de restgroep krijgt nooit een strook.
+    Exit (A8): dezelfde schaal, banden en GEM als de cel ernaast: de stippen
+    gespiegeld naar de frictiescore, kleur en zonevakken uit de frictiebanden
+    (RISK_MEDIUM, RISK_HIGH), en GEM het getal uit de kolom Frictiescore, ook
+    op een afrondingsgrens (gemiddelde x,x5). Retention en onboarding: de
+    gezondheidsschaal, ongewijzigd."""
+    from backend.report_distribution import distribution_svg
+
+    scores = row["scores"]
+    if row.get("is_pooled", False):
+        return f'<span style="{_SEG_MONO}">spreiding niet getoond: samengestelde restgroep</span>'
+    if len(scores) < MIN_DISTRIBUTION_N:
+        return f'<span style="{_SEG_MONO}">spreiding vanaf 10 antwoorden</span>'
+    if scan_type == "exit":
+        return distribution_svg([round(_naar_frictie(v), 2) for v in scores], width=200,
+                                height=22, invert_scale=True,
+                                zone_bounds=(RISK_MEDIUM, RISK_HIGH),
+                                gem=_seg_getoond(row["avg"], "exit"))
+    return distribution_svg(scores, width=200, height=22)
+
+
 # De woorden waarmee de conclusie en de brugzin "de laagste afdeling" noemen.
 # Op de frictieschaal is de genoemde afdeling die met de HOOGSTE frictiescore;
 # "scoort het laagst" naast een hoog getal klopt daar niet (A8). Welke afdeling
@@ -5447,15 +5479,19 @@ _SEG_WOORDEN = {
              "laagste_score": "heeft de hoogste frictiescore",
              "twee": "De twee afdelingen met de hoogste frictiescore",
              "lager": "heeft een hogere frictiescore"},
-    "_": {"laagst": "scoort het laagst",
-          "laagste_score": "heeft de laagste score",
-          "twee": "De twee laagste afdelingen",
-          "lager": "scoort lager"},
 }
+_SEG_WOORDEN["retention"] = _SEG_WOORDEN["onboarding"] = {
+    "laagst": "scoort het laagst",
+    "laagste_score": "heeft de laagste score",
+    "twee": "De twee laagste afdelingen",
+    "lager": "scoort lager"}
 
 
 def _seg_woord(scan_type: str, sleutel: str) -> str:
-    return _SEG_WOORDEN.get(scan_type, _SEG_WOORDEN["_"])[sleutel]
+    """Alleen exit, retention en onboarding, net als SEGMENT_SCOREKOLOM: een
+    ander scan_type geeft bewust een KeyError in plaats van stil de woorden
+    van de gezondheidsschaal."""
+    return _SEG_WOORDEN[scan_type][sleutel]
 
 
 def _naam_cijfer(row: dict, sc: float, met: bool) -> str:
@@ -5816,7 +5852,7 @@ def _segment_start_note(segment_rows: list[dict],
         body = (f'{_h(lowest["department"])} {_seg_woord(scan_type, "laagst")} van de afdelingen die '
                 f'apart getoond worden'
                 f'{_cijfer_tussen_haakjes(lowest, _seg_getoond(lowest["avg"], scan_type))}, maar '
-                f'heeft {lowest["n"]} antwoorden. Loep wijst een afdeling pas aan vanaf '
+                f'telt {lowest["n"]} antwoorden. Loep wijst een afdeling pas aan vanaf '
                 f'{MIN_DISTRIBUTION_N} antwoorden, zodat de conclusie niet op een handvol '
                 f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
                 f'organisatiebeeld.')
@@ -5887,7 +5923,7 @@ SEGMENT_SCOREKOLOM = {
     "onboarding": {"kop": "Check&shy;point&shy;score",
                    "zin": "De kolom Checkpointscore is de checkpointscore van " + _P02
                           + ", per afdeling."},
-    "exit": {"kop": "Frictie&shy;score",
+    "exit": {"kop": "Fric&shy;tie&shy;score",
              "zin": "De kolom Frictiescore is de frictiescore van " + _P02
                     + ", per afdeling: hoger is slechter."},
 }
@@ -5906,7 +5942,7 @@ def _segment_intro(scan_type: str) -> str:
 # Het rapport kan dat niet toetsen en zegt dat eerlijk: toelichtingen staan er
 # alleen organisatiebreed (per afdeling zijn het er te weinig om te tonen).
 SEGMENT_TOELICHTING_GRENS = (
-    "Een lage score zegt niet waarom. Vraag de afdeling zelf naar de toelichting; "
+    "Een cijfer per afdeling zegt niet waarom. Vraag de afdeling zelf naar de toelichting; "
     "het rapport toont die alleen organisatiebreed.")
 
 
@@ -5938,37 +5974,32 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     Loep Start bestaan geen toelichtingen, en dan zou "het rapport toont die
     alleen organisatiebreed" iets beloven dat er niet is.
     """
-    from backend.report_distribution import distribution_svg
-
     if not segment_rows:
         return _segment_status_block(0, has_segment_data=False, opener_html=opener_html,
                                     scan_type=scan_type)
 
     rows_html = ""
     for row in segment_rows:
-        dept, n_, avg, scores = row["department"], row["n"], row["avg"], row["scores"]
+        dept, n_, avg = row["department"], row["n"], row["avg"]
         band_lbl, col = _seg_band(avg, scan_type)
         # A4 (beslisronde 12-10): bij 5 tot 9 antwoorden geen cijfer achter de
         # komma, net als in de themakolom en de conclusie (_segment_cijfer_mag);
         # de kolom Band draagt het label. De restgroep volgt haar eigen n.
+        # Kolombreedte (gemeten in het productie-image, beslisronde 12-10): een
+        # tabelcel krijgt in WeasyPrint de breedte van haar langste regel. In
+        # de mono-labelstijl (hoofdletters, letterafstand) stond "kleine
+        # afdeling" op één regel en werd de kolom van 8% zo'n 12pt breder, ten
+        # koste van Band en Laagste onderwerp. Daarom twee regels (<br>), een
+        # smallere letter dan mono, niet vet (de cel is .is) en afbreekbaar
+        # (langste stuk 6 tekens): dan blijft de kolom even breed als met een
+        # cijfer erin. Klein en grijs, zoals de andere duidingsregels.
         if _segment_cijfer_mag(row):
             score_cell = f'{_seg_getoond(avg, scan_type):.1f}'
         else:
-            score_cell = f'<span style="{_SEG_MONO}">kleine afdeling</span>'
+            score_cell = ('<span style="font-size:8px;font-weight:400;color:#94A3B8;">'
+                          'kleine<br>af&shy;de&shy;ling</span>')
         is_rest = row.get("is_pooled", False)
-        if is_rest:
-            strip = f'<span style="{_SEG_MONO}">spreiding niet getoond: samengestelde restgroep</span>'
-        elif len(scores) >= MIN_DISTRIBUTION_N and scan_type == "exit":
-            # A8: dezelfde schaal en dezelfde banden als de cel ernaast, zodat
-            # GEM in de strook het getal uit de kolom Frictiescore is.
-            # gem: hetzelfde getal als de cel, ook op een afrondingsgrens.
-            strip = distribution_svg([round(11.0 - v, 2) for v in scores], width=200, height=22,
-                                     invert_scale=True, zone_bounds=(RISK_MEDIUM, RISK_HIGH),
-                                     gem=_seg_getoond(avg, "exit"))
-        elif len(scores) >= MIN_DISTRIBUTION_N:
-            strip = distribution_svg(scores, width=200, height=22)
-        else:
-            strip = f'<span style="{_SEG_MONO}">spreiding vanaf 10 antwoorden</span>'
+        strip = _seg_strip(row, scan_type)
         if is_rest:
             # H20: de restgroep noemt haar leden, zodat "Overige afdelingen"
             # geen naamloze groep is waarover het rapport wel conclusies trekt.

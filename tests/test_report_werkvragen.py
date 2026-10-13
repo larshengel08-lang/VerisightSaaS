@@ -398,5 +398,5 @@ def test_afdelingspagina_zegt_waar_de_toelichting_vandaan_moet_komen():
     assert SEGMENT_TOELICHTING_GRENS in met
     assert SEGMENT_TOELICHTING_GRENS not in zonder
     assert SEGMENT_TOELICHTING_GRENS == (
-        "Een lage score zegt niet waarom. Vraag de afdeling zelf naar de toelichting; "
+        "Een cijfer per afdeling zegt niet waarom. Vraag de afdeling zelf naar de toelichting; "
         "het rapport toont die alleen organisatiebreed.")
