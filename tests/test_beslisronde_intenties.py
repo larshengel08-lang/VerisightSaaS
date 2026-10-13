@@ -556,6 +556,9 @@ def test_gerenderd_weggelaten_afdeling():
     assert "Finance (11 antwoorden) staat hier niet in" in _plain(blok)
     assert ("; Finance staat er niet in, zodat een kleine groep niet herleidbaar wordt."
             in _p02_tekst(body))
+    # Methodiekpagina: met blok noemt de drempelrij van tien ook de intenties.
+    d = body.index('id="' + LEIDRAAD_ANKERS["drempels"] + '"')
+    assert "blijf- en vertrekintentie per afdeling" in _plain(body[d:])
 
 
 def test_gerenderd_herleidbaar():

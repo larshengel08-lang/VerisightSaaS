@@ -1072,13 +1072,13 @@ INTENTIE_DUIDING_KERN = (
     "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet waarom, en ook "
     "niet wie er vertrekt.")
 
-# De zin na de kern, per staat van het afdelingsblok (_department_intent_rows,
-# reason). "blok" heeft een paginaverwijzing en wordt in _intentie_duiding
-# samengesteld; de andere drie zijn gewone tekst.
 # Reden "afdelingen niet vastgelegd" (_segment_absent_reason); één bron voor de
 # regel bij de meetgegevens en de afdelingszin op pagina twee.
 SEGMENT_NIET_VASTGELEGD = "niet vastgelegd bij deze meting"
 
+# De zin na de kern, per staat van het afdelingsblok (_department_intent_rows,
+# reason). "blok" heeft een paginaverwijzing en wordt in _intentie_duiding
+# samengesteld; de vijf redenen hieronder zijn gewone tekst.
 INTENTIE_AFDELING_ZIN = {
     "niet_vastgelegd": ("Per afdeling staan ze niet in dit rapport: afdelingen zijn "
                         + SEGMENT_NIET_VASTGELEGD + "."),
@@ -1122,7 +1122,9 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     intenties_afdeling (A5): "blok" als het afdelingsblok echt gerenderd is (de
     renderer leidt dit af uit de HTML van _intentie_afdelingen_block, dezelfde
     waarde die hij op de afdelingspagina zet), anders de reason uit
-    _department_intent_rows ("geen", "geen_tabel", "herleidbaar"). None: geen
+    _department_intent_rows: een sleutel van INTENTIE_AFDELING_ZIN
+    ("niet_vastgelegd", "geen", "te_weinig_intentie", "geen_tabel",
+    "herleidbaar"). None: geen
     gegevens over afdelingen (oude data); dan zegt de alinea niets over
     afdelingen in plaats van iets te beweren wat niet vaststaat. Verplicht
     keyword, zodat geen aanroep hem stil vergeet. Zie _intent_staat.
