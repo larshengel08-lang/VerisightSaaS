@@ -12,8 +12,11 @@ uitkiezen zonder de andere te hoeven halen):
                     plan 3b). De hoeveelheid data bepaalt hoe vol die staart is;
                     geen lay-outmaat lost dat op. En de vastgelegde dunne
                     pagina's in VULLING_UITZONDERINGEN (besluit Lars 12-10):
-                    per bestand en paginabegin een ondergrens; zakt de pagina
-                    daaronder, dan is het weer een bevinding;
+                    per bestand en paginakop een ondergrens; zakt de pagina
+                    daaronder, dan is het weer een bevinding. Die gelden
+                    alleen via check_met_uitzonderingen (de CLI en
+                    scripts/render_in_image.py), op bestandsnaam; check()
+                    past ze niet toe;
   besluit-op-een-a4 belooft de gespreksagenda een besluitpagina, dan is er precies
                     één pagina die met de kop "Besluit van het MT" begint, staat
                     het laatste vaste label ("Waaraan zien we ...") op diezelfde
@@ -70,6 +73,7 @@ worden, dan zegt het dat in plaats van te zwijgen.
 from __future__ import annotations
 
 import argparse
+import math
 import re
 import sys
 from dataclasses import dataclass
@@ -105,16 +109,18 @@ class VullingUitzondering:
     voorvoegsel   begin van de bestandsnaam (zonder .pdf), zoals de selectie van
                   scripts/render_in_image.py; "01_" en niet "01", zodat een
                   scenario 010 er niet onder valt;
-    paginabegin   begin van de eerste tekstregel van de pagina. Vergeleken
-                  zonder witruimte en hoofdletterongevoelig, want de tekstlaag
-                  draagt koppen met letterspatiëring als "Z O M A A K J E ..."
-                  en in hoofdletters (text-transform);
+    paginakop     de hele kop waarmee de pagina begint (first_text: het eerste
+                  tekstblok), niet een begin ervan: een vervolgpagina met
+                  "..., vervolg" valt er dus niet onder. Vergeleken zonder
+                  witruimte en hoofdletterongevoelig, want de tekstlaag draagt
+                  koppen met letterspatiëring als "Z O M A A K J E ..." en in
+                  hoofdletters (text-transform);
     ondergrens    de huidige meting van page_fill, naar beneden afgerond op
                   een promille; daaronder telt de pagina weer als bevinding;
     naam          hoe de uitvoer de uitzondering noemt.
     """
     voorvoegsel: str
-    paginabegin: str
+    paginakop: str
     ondergrens: float
     naam: str
 
@@ -137,6 +143,10 @@ class VullingUitzondering:
 # Ondergrenzen gemeten op 13-10 in het productie-image (WeasyPrint 70.0) op de
 # stand na A5 (4a21b90a): 01 p.7 0,3558 en p.13 0,3863; 09 p.7 0,2575 en p.13
 # 0,3863; 14 p.13 0,3211; 19 p.7 0,3558.
+#
+# De speling is bewust nul (ondergrens = meting, naar beneden op een promille):
+# een lay-outwijziging die zo'n pagina dunner maakt, brengt hem expres terug als
+# bevinding, zodat iemand opnieuw kijkt en de lijst bewust bijwerkt.
 VULLING_UITZONDERINGEN: tuple[VullingUitzondering, ...] = (
     VullingUitzondering("01_", "Verdieping: Werkdruk en herstelruimte", 0.355, "verdiepingspagina"),
     VullingUitzondering("01_", "Zo maak je er een besluit van", 0.386, "werkvragenpagina"),
@@ -233,13 +243,22 @@ def _zonder_witruimte(tekst: str) -> str:
 
 
 def _uitzondering_voor(naam: str | None, kop: str) -> VullingUitzondering | None:
+    """De uitzondering voor deze bestandsnaam en paginakop, of None. Zonder naam
+    geldt er nooit een uitzondering."""
     if not naam:
         return None
-    begin = _zonder_witruimte(kop)
+    gemeten = _zonder_witruimte(kop)
     for u in VULLING_UITZONDERINGEN:
-        if naam.startswith(u.voorvoegsel) and begin.startswith(_zonder_witruimte(u.paginabegin)):
+        if naam.startswith(u.voorvoegsel) and gemeten == _zonder_witruimte(u.paginakop):
             return u
     return None
+
+
+def _promille_omlaag(f: float) -> str:
+    """Een vulling als percentage met één decimaal, naar beneden afgerond, net
+    als de ondergrens: een pagina onder de grens toont zo nooit hetzelfde getal
+    als de grens."""
+    return f"{math.floor(f * 1000) / 10:.1f}%"
 
 
 def _tekstblokken(page: pymupdf.Page) -> list[tuple[float, float, float, float, str]]:
@@ -362,35 +381,46 @@ def check(path: str, thead: str | None = None,
     `thead` is nodig voor de regel `tabelkop`; zonder die tekst valt er niets te
     herhalen en wordt die ene regel overgeslagen (de CLI weigert de combinatie
     `--regel tabelkop` zonder `--thead`, zodat niemand denkt dat er gemeten is).
-    De uitzonderingen in VULLING_UITZONDERINGEN gelden ook hier; wie wil zien
-    welke er gebruikt zijn, roept check_met_uitzonderingen aan.
+    Zonder bestandsnaam en dus zonder de uitzonderingen in
+    VULLING_UITZONDERINGEN: elke dunne pagina is hier een bevinding. Wie de
+    vastgelegde uitzonderingen wil toepassen (de CLI en
+    scripts/render_in_image.py), roept check_met_uitzonderingen aan; die geeft
+    ze ook terug, zodat geen uitzondering ongemeld blijft.
     """
-    return check_met_uitzonderingen(path, thead, regels)[0]
+    doc = pymupdf.open(path)
+    try:
+        return _check_doc(doc, thead, regels)[0]
+    finally:
+        doc.close()
 
 
 def check_met_uitzonderingen(path: str, thead: str | None = None,
                              regels: tuple[str, ...] = ALLE_REGELS,
                              naam: str | None = None,
                              ) -> tuple[list[Bevinding], list[ToegepasteUitzondering]]:
-    """Als check, plus de dunne pagina's die een vastgelegde uitzondering zijn.
+    """Als check, maar met de vastgelegde uitzonderingen op de vullingsregel:
+    geeft de bevindingen en de toegepaste uitzonderingen terug.
 
     `naam` is de naam waarop de uitzonderingen matchen; standaard de
     bestandsnaam zonder .pdf (zoals scripts/render_in_image.py hem schrijft).
     """
     if naam is None:
         naam = Path(path).stem
-    toegepast: list[ToegepasteUitzondering] = []
     doc = pymupdf.open(path)
     try:
-        return _check_doc(doc, thead, regels, naam, toegepast), toegepast
+        return _check_doc(doc, thead, regels, naam)
     finally:
         doc.close()
 
 
-def _check_doc(doc: pymupdf.Document, thead: str | None,
-               regels: tuple[str, ...], naam: str | None = None,
-               toegepast: list[ToegepasteUitzondering] | None = None) -> list[Bevinding]:
+def _check_doc(doc: pymupdf.Document, thead: str | None, regels: tuple[str, ...],
+               naam: str | None = None,
+               ) -> tuple[list[Bevinding], list[ToegepasteUitzondering]]:
+    """Bevindingen plus de toegepaste uitzonderingen, altijd samen: een
+    uitzondering kan zo niet gelden zonder dat de aanroeper hem ziet. Zonder
+    `naam` geldt er geen enkele uitzondering."""
     bevindingen: list[Bevinding] = []
+    toegepast: list[ToegepasteUitzondering] = []
     n = doc.page_count
 
     # Het paginaformaat en een te kort document worden altijd gemeld, ook als de
@@ -408,7 +438,7 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
     if n < 3:
         bevindingen.append(Bevinding(
             REGEL_P02, f"het document heeft {n} pagina('s); pagina 2 en 3 zijn niet te meten"))
-        return bevindingen
+        return bevindingen, toegepast
 
     p2 = _pagina_tekst(doc[1])
     p3_eerste = first_text(doc[2])
@@ -435,15 +465,19 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
             kop = first_text(doc[i])
             u = _uitzondering_voor(naam, kop)
             if u is not None and f >= u.ondergrens:
-                if toegepast is not None:
-                    toegepast.append(ToegepasteUitzondering(u.naam, i + 1, f))
+                toegepast.append(ToegepasteUitzondering(u.naam, i + 1, f))
                 continue
-            onder = ("" if u is None else
-                     f", en onder de ondergrens {u.ondergrens:.1%} van de uitzondering {u.naam}")
-            bevindingen.append(Bevinding(
-                REGEL_VULLING,
-                f"pagina {i + 1} is {f:.0%} gevuld (< {MIN_FILL:.0%}{onder}); "
-                f"begint met {kop[:50]!r}"))
+            if u is None:
+                bevindingen.append(Bevinding(
+                    REGEL_VULLING,
+                    f"pagina {i + 1} is {f:.0%} gevuld (< {MIN_FILL:.0%}); "
+                    f"begint met {kop[:50]!r}"))
+            else:
+                bevindingen.append(Bevinding(
+                    REGEL_VULLING,
+                    f"pagina {i + 1} is {_promille_omlaag(f)} gevuld, onder de ondergrens "
+                    f"{u.ondergrens:.1%} van de uitzondering {u.naam} (< {MIN_FILL:.0%}); "
+                    f"begint met {kop[:50]!r}"))
 
     if REGEL_BESLUIT in regels:
         bevindingen += _besluit(doc)
@@ -477,7 +511,7 @@ def _check_doc(doc: pymupdf.Document, thead: str | None,
                 REGEL_THEAD,
                 f"tabelkop {thead!r} staat op {pages_with}, niet op twee pagina's"))
 
-    return bevindingen
+    return bevindingen, toegepast
 
 
 _LINK_KINDS = (pymupdf.LINK_GOTO, pymupdf.LINK_NAMED)

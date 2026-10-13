@@ -77,7 +77,7 @@ def main() -> int:
         paginas = doc.page_count
         doc.close()
         streepjes = tekst.count("—") + tekst.count("–")
-        bevindingen, uitzonderingen = cpr.check_met_uitzonderingen(str(pdf))
+        bevindingen, uitzonderingen = cpr.check_met_uitzonderingen(str(pdf), naam=bron.stem)
         schoon = not teller.regels and not streepjes and not bevindingen
         print(("OK " if schoon else "NIET OK ") + bron.stem
               + " paginas=" + str(paginas)

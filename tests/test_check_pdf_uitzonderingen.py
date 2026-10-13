@@ -1,9 +1,10 @@
 """Vastgelegde dunne pagina's in scripts/check_pdf_report.py (plan 2026-10-12,
 Taak 4, besluit A2 van Lars op 12-10).
 
-Een uitzondering geldt alleen voor het genoemde bestand en paginabegin, en
-alleen zolang de vulling niet onder de ondergrens zakt. Alle andere regels
-blijven meten. Gemeten op PDF's die PyMuPDF zelf bouwt; de echte render loopt
+Een uitzondering geldt alleen voor het genoemde bestand en de hele paginakop,
+alleen zolang de vulling niet onder de ondergrens zakt, en alleen via
+check_met_uitzonderingen (check() en _check_doc zonder naam passen er geen
+toe). Alle andere regels blijven meten. Gemeten op PDF's die PyMuPDF zelf bouwt; de echte render loopt
 via het productie-image.
 """
 import subprocess
@@ -70,13 +71,14 @@ def _vulling(pad: str, pagina: int) -> float:
 
 
 def _met_uitzondering(monkeypatch, pad: str, *, voorvoegsel: str = "01_",
-                      marge: float) -> None:
+                      marge: float) -> float:
     """Zet één uitzondering voor de werkvragenpagina, met de ondergrens `marge`
-    onder (negatief: boven) de gemeten vulling van pagina 4."""
+    onder (negatief: boven) de gemeten vulling van pagina 4. Geeft de grens."""
     grens = _vulling(pad, 4) - marge
     monkeypatch.setattr(cpr, "VULLING_UITZONDERINGEN", (
         cpr.VullingUitzondering(voorvoegsel, "Zo maak je er een besluit van", grens,
                                 "werkvragenpagina"),))
+    return grens
 
 
 def _vulmeldingen(bevindingen: list) -> list[str]:
@@ -95,23 +97,78 @@ def test_uitgezonderde_pagina_telt_niet_en_staat_bij_naam(tmp_path, monkeypatch)
     assert str(toegepast[0]) == f"werkvragenpagina p.4 {_vulling(pad, 4):.0%}"
 
 
-def test_check_past_de_uitzondering_ook_toe(tmp_path, monkeypatch):
-    """`check` is wat bestaande aanroepers gebruiken; die mag niet strenger
-    meten dan de lijst zegt."""
+def test_check_zonder_naam_past_geen_uitzondering_toe(tmp_path, monkeypatch):
+    """`check` geeft geen naam door: daar is elke dunne pagina een bevinding.
+    Alleen check_met_uitzonderingen (CLI, render_in_image) past de lijst toe."""
     pad = _pdf(tmp_path / "01_vlak_middelmatig.pdf", _rapport())
     _met_uitzondering(monkeypatch, pad, marge=0.01)
-    assert cpr.check(pad) == []
+    meldingen = _vulmeldingen(cpr.check(pad))
+    assert len(meldingen) == 1 and meldingen[0].startswith("pagina 4 is ")
+
+
+def test_check_doc_zonder_naam_past_geen_uitzondering_toe(tmp_path, monkeypatch):
+    pad = _pdf(tmp_path / "01_vlak_middelmatig.pdf", _rapport())
+    _met_uitzondering(monkeypatch, pad, marge=0.01)
+    doc = pymupdf.open(pad)
+    try:
+        bevindingen, toegepast = cpr._check_doc(doc, None, cpr.ALLE_REGELS)
+    finally:
+        doc.close()
+    assert toegepast == []
+    assert len(_vulmeldingen(bevindingen)) == 1
 
 
 def test_onder_de_ondergrens_is_weer_een_bevinding(tmp_path, monkeypatch):
+    """De melding toont vulling en grens met dezelfde precisie (een decimaal,
+    beide naar beneden), zodat ze nooit hetzelfde getal tonen: 0,3859 tegen
+    een grens van 0,386 is 38.5% tegen 38.6%, niet twee keer 38.6%."""
     pad = _pdf(tmp_path / "01_vlak_middelmatig.pdf", _rapport())
-    _met_uitzondering(monkeypatch, pad, marge=-0.01)
+    echt = cpr.page_fill
+    monkeypatch.setattr(cpr, "page_fill", lambda page: (
+        0.3859 if cpr.first_text(page) == WERKVRAGEN_KOP else echt(page)))
+    monkeypatch.setattr(cpr, "VULLING_UITZONDERINGEN", (
+        cpr.VullingUitzondering("01_", "Zo maak je er een besluit van", 0.386,
+                                "werkvragenpagina"),))
     bevindingen, toegepast = cpr.check_met_uitzonderingen(pad)
     assert toegepast == []
-    meldingen = _vulmeldingen(bevindingen)
-    assert len(meldingen) == 1
-    assert meldingen[0].startswith("pagina 4 is ")
-    assert "onder de ondergrens" in meldingen[0] and "werkvragenpagina" in meldingen[0]
+    assert _vulmeldingen(bevindingen) == [
+        "pagina 4 is 38.5% gevuld, onder de ondergrens 38.6% van de uitzondering "
+        "werkvragenpagina (< 40%); begint met " + repr(WERKVRAGEN_KOP)]
+
+
+def test_vulling_en_grens_tonen_vlak_onder_de_grens_verschillende_getallen():
+    """0,3859 ligt onder 0,386; gewoon afronden zou beide als 38.6% tonen."""
+    assert cpr._promille_omlaag(0.3859) == "38.5%"
+    assert f"{0.386:.1%}" == "38.6%"
+    assert cpr._promille_omlaag(0.3211) == "32.1%"
+
+
+def test_twee_uitzonderingen_in_een_bestand(tmp_path, monkeypatch):
+    paginas = _rapport()
+    paginas[4] = _dun("Verdieping: Werkdruk en herstelruimte")
+    pad = _pdf(tmp_path / "01_vlak_middelmatig.pdf", paginas)
+    monkeypatch.setattr(cpr, "VULLING_UITZONDERINGEN", (
+        cpr.VullingUitzondering("01_", "Zo maak je er een besluit van",
+                                _vulling(pad, 4) - 0.01, "werkvragenpagina"),
+        cpr.VullingUitzondering("01_", "VERDIEPING: WERKDRUK EN HERSTELRUIMTE",
+                                _vulling(pad, 5) - 0.01, "verdiepingspagina"),))
+    bevindingen, toegepast = cpr.check_met_uitzonderingen(pad)
+    assert bevindingen == []
+    assert [(u.naam, u.pagina) for u in toegepast] == [("werkvragenpagina", 4),
+                                                       ("verdiepingspagina", 5)]
+
+
+def test_vervolgpagina_valt_niet_onder_de_uitzondering(tmp_path):
+    """De hele kop moet gelijk zijn, niet alleen het begin."""
+    assert cpr._uitzondering_voor("01_vlak_middelmatig",
+                                  "VERDIEPING: WERKDRUK EN HERSTELRUIMTE") is not None
+    assert cpr._uitzondering_voor("01_vlak_middelmatig",
+                                  "VERDIEPING: WERKDRUK EN HERSTELRUIMTE, VERVOLG") is None
+    pad = _pdf(tmp_path / "01_vlak_middelmatig.pdf",
+               _rapport("VERDIEPING: WERKDRUK EN HERSTELRUIMTE, VERVOLG"))
+    bevindingen, toegepast = cpr.check_met_uitzonderingen(pad)
+    assert toegepast == []
+    assert len(_vulmeldingen(bevindingen)) == 1
 
 
 def test_zelfde_dunne_pagina_in_een_ander_bestand_is_een_bevinding(tmp_path, monkeypatch):
@@ -129,7 +186,7 @@ def test_voorvoegsel_matcht_niet_op_een_langer_scenarionummer(tmp_path, monkeypa
     pad_lijst = _pdf(tmp_path / "01_vlak_middelmatig.pdf", _rapport())
     _met_uitzondering(monkeypatch, pad_lijst, marge=0.01)
     pad = _pdf(tmp_path / "010_nieuw.pdf", _rapport())
-    assert len(_vulmeldingen(cpr.check(pad))) == 1
+    assert len(_vulmeldingen(cpr.check_met_uitzonderingen(pad)[0])) == 1
 
 
 def test_andere_dunne_pagina_in_hetzelfde_bestand_blijft_een_bevinding(tmp_path, monkeypatch):
@@ -157,7 +214,7 @@ def test_een_andere_regel_blijft_meten(tmp_path, monkeypatch):
 def test_naam_is_te_overschrijven(tmp_path, monkeypatch):
     pad = _pdf(tmp_path / "anders.pdf", _rapport())
     _met_uitzondering(monkeypatch, pad, marge=0.01)
-    assert len(_vulmeldingen(cpr.check(pad))) == 1
+    assert len(_vulmeldingen(cpr.check_met_uitzonderingen(pad)[0])) == 1
     bevindingen, toegepast = cpr.check_met_uitzonderingen(pad, naam="01_vlak_middelmatig")
     assert bevindingen == [] and len(toegepast) == 1
 
