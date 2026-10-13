@@ -256,6 +256,9 @@ def test_lijst_is_precies_het_besluit_van_12_10():
         # De ondergrens is de huidige meting (naar beneden op een promille),
         # niet ruimer.
         assert u.ondergrens <= vulling < u.ondergrens + 0.001, (naam, u.ondergrens, vulling)
+        # En hij staat op een hele promille, zodat de melding (die op een
+        # promille afrondt) nooit een getal toont dat boven de grens lijkt.
+        assert abs(u.ondergrens * 1000 - round(u.ondergrens * 1000)) < 1e-9, (naam, u.ondergrens)
 
 
 def test_lijst_dekt_geen_andere_bestanden():
