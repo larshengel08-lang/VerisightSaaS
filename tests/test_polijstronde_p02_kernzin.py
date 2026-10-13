@@ -71,10 +71,11 @@ def _labels(scan: str = "retention") -> dict[str, str]:
 # ── R27: geen voorspelling, geen verzonnen reden ─────────────────────────────
 
 def test_r27_kern_zegt_ook_niet_wie_er_vertrekt():
+    # A5 (beslisronde 12-10): "niet bij welke afdeling" vervalt, de intenties
+    # staan nu per afdeling in een eigen blok.
     assert INTENTIE_DUIDING_KERN == (
-        "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke "
-        "afdeling het speelt of waarom, en ook niet wie er vertrekt: dit rapport splitst "
-        "ze niet per afdeling uit.")
+        "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet waarom, en ook "
+        "niet wie er vertrekt.")
 
 
 def test_r27_staat_op_pagina_twee():
