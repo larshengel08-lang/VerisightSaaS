@@ -61,9 +61,9 @@ const scans = [
   {
     id: 'loep-behoud',
     index: '02',
-    eyebrow: 'Het korte medewerkersonderzoek',
+    eyebrow: 'Behoud onder druk',
     title: 'Loep Behoud',
-    lead: 'Een alternatief voor het grote jaarlijkse MTO. Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.',
+    lead: `Het korte medewerkersonderzoek (${SURVEY_DURATION_LABEL.retention}). Een alternatief voor het grote jaarlijkse MTO. Loep laat zien waar behoud onder druk staat, vóór uitstroom zichtbaar wordt, en het rapport brengt je MT tot één eerste keuze.`,
     when: [
       'Verloop loopt op maar de oorzaak is onduidelijk',
       'Je wilt bijsturen vóór mensen vertrekbesluiten hebben genomen',
@@ -404,8 +404,7 @@ function MtoComparisonSection() {
   // (gecontroleerd tegen de stellingen, scoring_config.py en deepening.py).
   const mtoFits = [
     'Je wilt je scores vergelijken met andere organisaties of je branche (een benchmark)',
-    'Je wilt onderwerpen meten die Loep Behoud niet meet, zoals communicatie als eigen onderwerp, arbeidsomstandigheden of ongewenst gedrag',
-    'Je wilt een vast meetritme dat een intern team zelf beheert in een eigen platform',
+    'Je wilt onderwerpen meten die Loep Behoud niet meet, zoals communicatie als eigen onderwerp, de fysieke werkplek en veiligheid of ongewenst gedrag',
   ] as const
   const loepFits = [
     'Je wilt weten waar het wringt bij de mensen die je wilt houden, en waarom volgens henzelf',

@@ -75,7 +75,7 @@ const routeCards = [
     index: '01',
     eyebrow: 'Behoud onder druk',
     title: 'Loep Behoud',
-    body: `Het korte medewerkersonderzoek, in ${SURVEY_DURATION_LABEL.retention} ingevuld: waar het wringt bij de mensen die je wilt houden, waarom volgens henzelf, en waar je begint. Een alternatief voor het grote jaarlijkse MTO.`,
+    body: `Het korte medewerkersonderzoek (${SURVEY_DURATION_LABEL.retention}): waar het wringt en waar je begint. Een alternatief voor het grote jaarlijkse MTO.`,
     href: '/producten#loep-behoud',
     accent: SURFACE.teal,
   },

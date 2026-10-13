@@ -89,12 +89,22 @@ Kleine punten, ook opgelost:
 
 **Niet opgelost, ter info:** wie expliciet Loep Vertrek kiest en het over samenwerking of leiderschap heeft, zonder een woord over vertrek, krijgt in het beheeradvies Loep Behoud als aanbevolen route. Voorheen werd dat Cultuurbeeld. Alleen de operator ziet dit, en de bezoekerskeuze blijft opgeslagen.
 
-## Wat Lars moet beslissen
+## Besluiten Lars 13-10 (verwerkt)
 
-1. **Derde reden voor een groot MTO.** In de keuzehulp staat ook "Je wilt een vast meetritme dat een intern team zelf beheert in een eigen platform". Die reden komt uit het plan en staat niet in spec par. 5. Houden of schrappen?
-2. **"arbeidsomstandigheden".** Een HR-manager kan dit lezen alsof werkdruk eronder valt, terwijl Behoud werkdruk wel meet. Alternatief: "fysieke arbeidsomstandigheden" of "werkplek en arbo".
-3. **De eyebrow op `/producten`** ("Het korte medewerkersonderzoek") wijkt af van de probleemlabels van de andere scans ("Vertrek begrijpen", "Goed landen"). Zo laten, of de categorie in de lead zetten en de eyebrow een probleemlabel geven?
-4. **Lengte van de homepagekaart.** Op desktop zijn de kaarten even hoog, maar de Behoud-tekst is ongeveer twee keer zo lang als die van Vertrek en noemt het rapport niet meer.
+1. **Derde reden geschrapt.** De keuzehulp noemt nog twee redenen voor een groot MTO: een benchmark en onderwerpen die Behoud niet meet.
+2. **"arbeidsomstandigheden" wordt "de fysieke werkplek en veiligheid".** Werkdruk valt wettelijk onder arbeidsomstandigheden, en Behoud meet werkdruk. De term stond alleen op `/producten`. In Loep_Docs kwam hij nergens voor, dus er hoefde geen PDF opnieuw te worden geëxporteerd. De spec is bijgewerkt.
+3. **Eyebrow op `/producten` weer "Behoud onder druk"**, gelijk aan de homepage. De lead begint nu met "Het korte medewerkersonderzoek (ongeveer 6 minuten). Een alternatief voor het grote jaarlijkse MTO." De invultijd komt uit `SURVEY_DURATION_LABEL.retention`.
+4. **Homepagekaart Behoud ingekort tot 20 woorden** (Vertrek heeft er 17): "Het korte medewerkersonderzoek (ongeveer 6 minuten): waar het wringt en waar je begint. Een alternatief voor het grote jaarlijkse MTO."
+
+**Guard uitgebreid:** de keuzehulp heeft precies twee redenen, "arbeidsomstandigheden" en "intern team zelf beheert" komen niet meer voor, en "de fysieke werkplek en veiligheid" wel. De regel "korte medewerkersonderzoek staat altijd naast de invultijd" blijft gelden en is groen. `producten-besluit-a.test.ts` pint de nieuwe lead en eyebrow, bijgewerkt in lockstep.
+
+**Gates:** tsc 131, vitest 47 falend en per naam identiek aan de baseline, pytest `tests/` 24 falend en per naam identiek (2343 geslaagd), build groen.
+
+**Browser:**
+- Op 1440 px zijn de drie homepagekaarten even hoog (3× 285 px).
+- Op 375 px heeft de Behoud-kaart 4 regels tekst van 15 px op een breedte van 288 px, zonder overflow. De scrollbreedte is 375, ook op `/producten`.
+- `/producten` toont de eyebrow "Behoud onder druk", de nieuwe lead en een keuzehulp met twee redenen.
+- Screenshots op 375 px bleven leeg door de bekende valkuil van het verborgen browserpaneel. Daarom is daar met DOM-metingen gecontroleerd.
 
 ## Na de merge
 

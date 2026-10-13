@@ -130,6 +130,15 @@ describe('Loep Behoud als MTO-alternatief: copyregels', () => {
     }
   })
 
+  it('de keuzehulp noemt twee redenen en geen werkdruk-dubbelzinnige term (besluit Lars 13-10)', () => {
+    const producten = read('components/marketing/producten-content.tsx')
+    const blok = producten.slice(producten.indexOf('const mtoFits = ['), producten.indexOf('] as const', producten.indexOf('const mtoFits = [')))
+    expect(blok.match(/'Je wilt /g)?.length).toBe(2)
+    expect(producten).not.toMatch(/arbeidsomstandigheden/i)
+    expect(producten).not.toMatch(/intern team zelf beheert/i)
+    expect(producten).toContain('de fysieke werkplek en veiligheid')
+  })
+
   it('de keuzehulp noemt grootte niet als reden voor een groot MTO', () => {
     const producten = read('components/marketing/producten-content.tsx')
     expect(producten).not.toMatch(/1\.000 of meer medewerkers[^']{0,40}MTO|MTO[^']{0,80}1\.000/i)

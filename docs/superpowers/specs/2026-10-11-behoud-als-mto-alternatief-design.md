@@ -45,7 +45,7 @@ Voorbeeld van de kernregel: "Loep Behoud · het korte medewerkersonderzoek. Een 
 
 Het bestaande blok "Wanneer past een breed MTO beter?" op `/producten` blijft, en wordt herschreven tot een eerlijke keuzehulp. Kies een groot MTO als je:
 - een **benchmark** met andere organisaties of je branche nodig hebt;
-- onderwerpen wilt meten die Loep Behoud niet meet, zoals **communicatie als eigen onderwerp, arbeidsomstandigheden of ongewenst gedrag**. Niet "informatie": die komt in Behoud voor als verdiepingsoptie ("Ik mis informatie, context of overdracht") en als richtingoptie (`deepening.py`).
+- onderwerpen wilt meten die Loep Behoud niet meet, zoals **communicatie als eigen onderwerp, de fysieke werkplek en veiligheid of ongewenst gedrag**. Niet "arbeidsomstandigheden": werkdruk valt wettelijk onder arbeidsomstandigheden, en Behoud meet werkdruk (besluit Lars 13-10). Geen derde reden zoals een intern beheerd meetritme (besluit Lars 13-10). Niet "informatie": die komt in Behoud voor als verdiepingsoptie ("Ik mis informatie, context of overdracht") en als richtingoptie (`deepening.py`).
 
 Organisatiegrootte is geen reden: de staffel biedt 1.000 of meer medewerkers op aanvraag aan.
 
