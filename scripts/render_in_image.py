@@ -7,7 +7,9 @@ uitvoermap. Lokaal op Windows werkt dit niet: WeasyPrint heeft daar geen GTK.
 Wat het meet per bestand:
   warnings   WARNING/ERROR-records op de `weasyprint`-logger tijdens de render
   streepjes  em-dashes en en-dashes in de tekstlaag van de PDF
-  check      scripts/check_pdf_report.py, alle regels
+  check      scripts/check_pdf_report.py, alle regels; een vastgelegde dunne
+             pagina (VULLING_UITZONDERINGEN) telt niet, maar staat bij naam
+             achter de regel ("uitzondering: werkvragenpagina p.13 39%")
 
 Exitcode 0 als elk bestand schoon is, anders 1. Het script verzint niets: kan
 een bestand niet gerenderd worden, dan telt dat als een bevinding.
@@ -75,13 +77,15 @@ def main() -> int:
         paginas = doc.page_count
         doc.close()
         streepjes = tekst.count("—") + tekst.count("–")
-        bevindingen = cpr.check(str(pdf))
+        bevindingen, uitzonderingen = cpr.check_met_uitzonderingen(str(pdf))
         schoon = not teller.regels and not streepjes and not bevindingen
         print(("OK " if schoon else "NIET OK ") + bron.stem
               + " paginas=" + str(paginas)
               + " warnings=" + str(len(teller.regels))
               + " emdash=" + str(streepjes)
-              + " check=" + ("OK" if not bevindingen else str(len(bevindingen))))
+              + " check=" + ("OK" if not bevindingen else str(len(bevindingen)))
+              + ("" if not uitzonderingen else
+                 " uitzondering: " + ", ".join(str(u) for u in uitzonderingen)))
         for regel in teller.regels:
             print("   warning: " + regel)
         for b in bevindingen:
