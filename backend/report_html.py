@@ -1075,9 +1075,21 @@ INTENTIE_DUIDING_KERN = (
 # De zin na de kern, per staat van het afdelingsblok (_department_intent_rows,
 # reason). "blok" heeft een paginaverwijzing en wordt in _intentie_duiding
 # samengesteld; de andere drie zijn gewone tekst.
+# Reden "afdelingen niet vastgelegd" (_segment_absent_reason); één bron voor de
+# regel bij de meetgegevens en de afdelingszin op pagina twee.
+SEGMENT_NIET_VASTGELEGD = "niet vastgelegd bij deze meting"
+
 INTENTIE_AFDELING_ZIN = {
+    "niet_vastgelegd": ("Per afdeling staan ze niet in dit rapport: afdelingen zijn "
+                        + SEGMENT_NIET_VASTGELEGD + "."),
     "geen": ("Per afdeling staan ze alleen bij afdelingen met minstens "
              f"{MIN_DISTRIBUTION_N} antwoorden; die zijn er in deze meting niet."),
+    # Een afdeling heeft wel tien antwoorden, maar te weinig losse scores op
+    # blijf- of vertrekintentie: dan is "die zijn er niet" zonder "op deze
+    # vragen" onwaar (codereview taak 3).
+    "te_weinig_intentie": ("Per afdeling staan ze alleen bij afdelingen met minstens "
+                           f"{MIN_DISTRIBUTION_N} antwoorden op deze vragen; die zijn er "
+                           "in deze meting niet."),
     # Wel een afdeling van tien, maar geen afdelingstabel om het blok bij te
     # zetten: die vraagt minstens twee afdelingen met MIN_SEGMENT_N antwoorden.
     "geen_tabel": ("Per afdeling staan ze niet in dit rapport: er is geen overzicht per "
@@ -1094,7 +1106,8 @@ INTENTIE_AFDELING_ZIN = {
 def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
                       to_scores: list[float], *, startpunt_label: str | None,
                       startpunt_score: float | None, indicatief: bool = False,
-                      intenties_afdeling: str | None) -> str:
+                      intenties_afdeling: str | None,
+                      intenties_weggelaten: list[dict] | None = None) -> str:
     """Eén alinea onder de cijfers op pagina twee (R1), alleen bij Loep Behoud.
 
     Leeg zonder blijfintentie, zonder startpunt (degraded: daar draagt
@@ -1112,7 +1125,11 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     _department_intent_rows ("geen", "geen_tabel", "herleidbaar"). None: geen
     gegevens over afdelingen (oude data); dan zegt de alinea niets over
     afdelingen in plaats van iets te beweren wat niet vaststaat. Verplicht
-    keyword, zodat geen aanroep hem stil vergeet.
+    keyword, zodat geen aanroep hem stil vergeet. Zie _intent_staat.
+
+    intenties_weggelaten: de "dropped"-lijst van _department_intent_rows. Viel
+    er een afdeling van tien of meer weg om een kleine rest niet herleidbaar te
+    maken, dan noemt de verwijzing haar: anders zoekt de lezer haar in het blok.
 
     Slotzin (codereview taak 3):
     - "daar zie je waar het wringt" alleen als het startpunt zelf geen
@@ -1144,10 +1161,16 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
                             + " veel vertrekgedachten (vertrekintentie vanaf " + grens + ")."))
     delen.append(_h(INTENTIE_DUIDING_KERN))
     if intenties_afdeling == "blok":
+        weg = ""
+        if intenties_weggelaten:
+            namen = _opsomming([d["department"] for d in intenties_weggelaten])
+            weg = ("; " + namen + " "
+                   + _werkwoord(len(intenties_weggelaten), "staat", "staan")
+                   + " er niet in, zodat een kleine groep niet herleidbaar wordt")
         delen.append(_h("Per afdeling staan ze bij de afdelingen (pagina ")
                      + _pref(LEIDRAAD_ANKERS["intenties"])
                      + _h("), voor afdelingen met minstens " + str(MIN_DISTRIBUTION_N)
-                          + " antwoorden."))
+                          + " antwoorden" + weg + "."))
     elif intenties_afdeling is not None:
         delen.append(_h(INTENTIE_AFDELING_ZIN[intenties_afdeling]))
     wringt = (startpunt_score is not None
@@ -1160,6 +1183,35 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     else:
         delen.append(_h("Daarom begint het gesprek bij " + startpunt_label + ": " + staart))
     return '<p class="p02-duiding">' + " ".join(delen) + "</p>"
+
+
+def _intent_staat(info: dict | None, block_html: str) -> str | None:
+    """De staat van de afdelingszin op pagina twee (A5), uit dezelfde waarden die
+    de renderer op de afdelingspagina zet.
+
+    - "blok": het blok staat er (block_html niet leeg); info moet dan rijen
+      hebben.
+    - None: geen afdelingsgegevens (info None, oude data); dan ook geen blok.
+    - anders de reason uit _department_intent_rows; die moet bestaan in
+      INTENTIE_AFDELING_ZIN.
+
+    Fail Loud: rijen zonder blok (een afdelingsblok dat nergens kan staan), een
+    blok zonder rijen, of een lege of onbekende reden zijn onmogelijke staten;
+    dan liever een fout dan een zin op pagina twee die niet klopt.
+    """
+    rows = (info or {}).get("rows") or []
+    if block_html:
+        if not rows:
+            raise ValueError("intentieblok zonder rijen")
+        return "blok"
+    if info is None:
+        return None
+    if rows:
+        raise ValueError("intentierijen zonder blok: geen afdelingstabel om het bij te zetten")
+    reason = info.get("reason") or ""
+    if reason not in INTENTIE_AFDELING_ZIN:
+        raise ValueError(f"onbekende reden voor de afdelingszin: {reason!r}")
+    return reason
 
 
 def _frictie_duiding(avg_risk: float | None, *, met_onderwerpen: bool = True) -> str:
@@ -5591,14 +5643,16 @@ def _segment_theme_cell(row: dict, factor_rows: dict[str, dict] | None,
     return cell
 
 
-# Eén rij van het raster met subblokken (één tbody per paar). _segment_block
-# telt deze tag om te weten of het raster uit één rij bestaat (A5).
-_SUB_GRP = '<tbody class="sub-grp">'
-
-
 def _segment_factor_subblocks(segment_rows: list[dict],
                               factor_rows: dict[str, dict] | None,
                               scan_type: str, extra_cell: str = "") -> str:
+    """Alleen de HTML van _segment_factor_grid."""
+    return _segment_factor_grid(segment_rows, factor_rows, scan_type, extra_cell)[0]
+
+
+def _segment_factor_grid(segment_rows: list[dict],
+                         factor_rows: dict[str, dict] | None,
+                         scan_type: str, extra_cell: str = "") -> tuple[str, int]:
     """Factorbeeld per afdeling (spec 2026-07-16 §3.2 punt 2): volledige
     uitsplitsing alleen voor niet-gepoolde afdelingen met n >= MIN_DISTRIBUTION_N
     én factordata; laagste eerst (volgorde komt uit _department_factor_rows).
@@ -5608,11 +5662,18 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     elk Behoud-scenario met één afdeling van tien of meer het enige subblok naar
     een eigen vel van 21% (gemeten in het productie-image, beslisronde 12-10);
     naast het subblok kost het geen extra hoogte. Zonder subblokken staat het
-    blok alleen, over de volle breedte.
+    blok alleen, over de volle breedte. Het raster krijgt dan de klasse
+    met-intentie: alleen daar gelden de compactere rijen en het bandlabel op
+    één regel (report_css.py), zodat rasters zonder intentieblok (Vertrek,
+    Start, oude metingen) niet veranderen.
+
+    Geeft (html, aantal rasterrijen) terug; 0 als er geen raster van twee
+    kolommen is (alleen het subblok, alleen het intentieblok, of niets).
+    _segment_block gebruikt dat aantal (A5).
     """
     subs: list[str] = []
     if not factor_rows:
-        return extra_cell
+        return extra_cell, 0
     for row in segment_rows:
         if row.get("is_pooled", False) or row["n"] < MIN_DISTRIBUTION_N:
             continue
@@ -5634,7 +5695,7 @@ def _segment_factor_subblocks(segment_rows: list[dict],
                  f'font-size:11px;margin-bottom:4px;">{_h(row["department"])} (n={row["n"]})</div>'
                  f'<table class="item-tbl seg-tbl">{frows}</table>{omline}</div>')
     if not subs:
-        return extra_cell
+        return extra_cell, 0
     # Maten in .seg-sub-intro en .seg-sub (report_css.py, naast .seg-card).
     intro = ('<p class="seg-sub-intro">'
              'Alle onderwerpen per afdeling: dezelfde vaste drempels als in het '
@@ -5643,9 +5704,11 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     # De uitlegregel blijft bij het eerste subblok: los onderaan een pagina
     # beschrijft ze een uitsplitsing die pas op het volgende vel begint.
     if len(subs) == 1 and not extra_cell:
-        return f'<div class="no-break">{intro}{subs[0]}</div>'
+        return f'<div class="no-break">{intro}{subs[0]}</div>', 0
+    klasse = "sub-cols"
     if extra_cell:
         subs = subs + [extra_cell]
+        klasse = "sub-cols met-intentie"
     # Twee of meer afdelingen: twee subblokken naast elkaar. Elk subblok is een
     # smalle tabel (onderwerp, score, band); onder elkaar werd de sectie bij
     # een grote populatie drie vellen met een staart van 17% (scenario 11,
@@ -5656,9 +5719,9 @@ def _segment_factor_subblocks(segment_rows: list[dict],
     for i, paar in enumerate(paren):
         kop = f'<tr><td colspan="2">{intro}</td></tr>' if i == 0 else ""
         rechts = paar[1] if len(paar) > 1 else ""
-        groepen.append(f'{_SUB_GRP}{kop}<tr><td>{paar[0]}</td>'
+        groepen.append(f'<tbody class="sub-grp">{kop}<tr><td>{paar[0]}</td>'
                        f'<td>{rechts}</td></tr></tbody>')
-    return f'<table class="sub-cols">{"".join(groepen)}</table>'
+    return f'<table class="{klasse}">{"".join(groepen)}</table>', len(groepen)
 
 
 def _pooled_lager(segment_rows: list[dict], low_sc: float | None) -> dict | None:
@@ -6029,10 +6092,10 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
     Gemaakt voor een vak van halve breedte (naast een subblok, zie
     _segment_factor_subblocks): de grens van "veel vertrekgedachten" staat in
     de uitleg, niet in de smalle kolomkop. De telling "x van de n onder de 5"
-    (stay_low) staat er bewust niet in: in dat smalle vak werd de cel drie
-    regels hoog en schoof het raster in stresstest 04 naar een eigen vel
-    (gemeten in het productie-image). De plantekst vraagt in de tabel alleen
-    score en label. Eén geheel (no-break).
+    staat er bewust niet in (en wordt dus ook niet berekend): in dat smalle vak
+    werd de cel drie regels hoog en schoof het raster in stresstest 04 naar een
+    eigen vel (gemeten in het productie-image). De plantekst vraagt in de tabel
+    alleen score en label. Eén geheel (no-break).
     """
     rows = (info or {}).get("rows") or []
     if not rows:
@@ -6060,7 +6123,7 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
         namen = _opsomming([f'{d["department"]} ({d["n"]} antwoorden)' for d in dropped])
         werkwoord = "staat" if len(dropped) == 1 else "staan"
         weg = (f'<p class="seg-sub-intro">{_h(namen)} {werkwoord} hier niet in: met de cijfers '
-               f'voor de hele organisatie op ' + _P02 + ' zou je anders de antwoorden van een '
+               'voor de hele organisatie op ' + _P02 + ' zou je anders de antwoorden van een '
                f'groep van minder dan {MIN_DISTRIBUTION_N} mensen kunnen afleiden.</p>')
     return (f'<div class="no-break seg-sub" id="{LEIDRAAD_ANKERS["intenties"]}">'
             '<div style="font-family:&quot;Inter Tight&quot;, sans-serif;font-weight:700;'
@@ -6160,8 +6223,8 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
             f'<td style="width:26%;">{strip}</td></tr></tbody>'
         )
 
-    subblocks = _segment_factor_subblocks(segment_rows, factor_rows, scan_type,
-                                          extra_cell=intent_html)
+    subblocks, rasterrijen = _segment_factor_grid(segment_rows, factor_rows, scan_type,
+                                                  extra_cell=intent_html)
 
     # De conclusie staat direct onder de tabel, vóór de uitsplitsing per
     # afdeling. Onderaan paste ze in vijftien van de 21 stresstest-scenario's
@@ -6195,7 +6258,7 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     staart = (low_note
               + (f'<p class="trustline">{SEGMENT_TOELICHTING_GRENS}</p>' if toelichting_regel else '')
               + subblocks)
-    if intent_html and subblocks.count(_SUB_GRP) == 1:
+    if intent_html and rasterrijen == 1:
         staart = f'<div class="no-break">{staart}</div>'
 
     # C9: de tabel had geen kolomkoppen, dus was per kolom niet te zien wat er
@@ -6341,7 +6404,7 @@ def _segment_absent_reason(respondents: list[dict]) -> str:
     grouped = _department_grouping(respondents)
     if not grouped:
         # Leest in de regel als "afdelingen (niet vastgelegd bij deze meting)".
-        return "niet vastgelegd bij deze meting"
+        return SEGMENT_NIET_VASTGELEGD
     if len({d for d, v in grouped.items() if len(v) >= MIN_SEGMENT_N}) < 2:
         return "te weinig antwoorden per afdeling"
     return ""
@@ -6459,19 +6522,30 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
                             total_stay_n: int, total_to_n: int) -> dict:
     """Blijf- en vertrekintentie per afdeling (A5, beslisronde 12-10), Loep Behoud.
 
-    Input per afgeronde respondent: {"department": str|None, "stay": float|None
+    Input per afgeronde respondent: {"department": str|None, "signal_score":
+    float|None (het werkbeeld, zoals de afdelingstabel), "stay": float|None
     (al op 1-10, via _blijf_naar_10), "turnover": float|None}. total_stay_n en
     total_to_n zijn de noemers die pagina twee toont (alle losse scores van de
-    meting, ook zonder afdeling).
+    meting, ook zonder afdeling of werkbeeld).
+
+    Eén telbron met de afdelingstabel (codereview taak 3): een afdeling telt
+    de respondenten met een werkbeeldscore, zoals _department_grouping. Het
+    aantal "Ingevuld" in het blok is dus de n van de tabelrij, en de gate
+    vraagt die n plus evenveel losse scores op beide intenties.
 
     Output: {"rows": [...], "dropped": [...], "reason": str}
-    - rows, in de volgorde van de afdelingstabel (segment_rows): per afdeling
-      department, n, stay_avg, stay_n, stay_low (onder ZONE_LOW), to_n, to_high
-      (vanaf ZONE_HIGH). Dezelfde zones (score_distribution) als de cel
-      Blijfintentie en de zin over vertrekgedachten op pagina twee.
-    - reason "" zodra er rijen zijn; anders "geen" (geen afdeling haalt
-      MIN_DISTRIBUTION_N), "geen_tabel" (wel, maar er is geen afdelingstabel om
-      het blok bij te zetten) of "herleidbaar" (zie hieronder).
+    - rows, in de volgorde van de afdelingstabel: per afdeling department, n
+      (van de tabelrij), stay_avg, stay_n, to_n, to_high (vanaf ZONE_HIGH,
+      dezelfde zone als de zin over vertrekgedachten op pagina twee).
+    - reason "" zodra er rijen zijn, anders (voor de zin op pagina twee,
+      INTENTIE_AFDELING_ZIN):
+      "niet_vastgelegd"  geen respondent met werkbeeld heeft een afdeling;
+      "geen"             geen afdeling haalt MIN_DISTRIBUTION_N antwoorden;
+      "geen_tabel"       wel, maar er is geen afdelingstabel om het blok bij
+                         te zetten (die vraagt twee afdelingen van MIN_SEGMENT_N);
+      "te_weinig_intentie" wel een afdeling van tien, maar geen enkele met
+                         tien losse scores op blijf- én vertrekintentie;
+      "herleidbaar"      zie hieronder.
 
     Privacy (harde regel, niet verlagen):
     - Een afdeling doet alleen mee met minstens MIN_DISTRIBUTION_N antwoorden
@@ -6482,15 +6556,15 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
       dan zijn de antwoorden van die kleine groep af te leiden. Dan valt de
       kleinste getoonde afdeling weg (kleinste n, bij gelijke n de eerste op
       naam), tot elke rest 0 of minstens MIN_DISTRIBUTION_N is; elke weggevallen
-      afdeling komt in "dropped" en het blok meldt haar. Eén keer weglaten is
-      altijd genoeg: de rest groeit dan met minstens MIN_DISTRIBUTION_N.
-      Blijft er niets over, dan is de reason "herleidbaar".
+      afdeling komt in "dropped" en het blok en pagina twee melden haar. Eén
+      keer weglaten is altijd genoeg: de rest groeit dan met minstens
+      MIN_DISTRIBUTION_N. Blijft er niets over, dan is de reason "herleidbaar".
     """
     N = MIN_DISTRIBUTION_N
     grouped: dict[str, dict] = {}
     for r in respondents:
         dept = r.get("department")
-        if not dept:
+        if not dept or r.get("signal_score") is None:
             continue
         g = grouped.setdefault(str(dept), {"n": 0, "stay": [], "turnover": []})
         g["n"] += 1
@@ -6499,26 +6573,29 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
         if r.get("turnover") is not None:
             g["turnover"].append(float(r["turnover"]))
 
-    def _haalt(g: dict) -> bool:
-        return g["n"] >= N and len(g["stay"]) >= N and len(g["turnover"]) >= N
+    def _leeg(reason: str, dropped: list[dict] | None = None) -> dict:
+        return {"rows": [], "dropped": dropped or [], "reason": reason}
 
-    if not any(_haalt(g) for g in grouped.values()):
-        return {"rows": [], "dropped": [], "reason": "geen"}
-    tabel = [row["department"] for row in segment_rows if not row.get("is_pooled", False)]
+    if not grouped:
+        return _leeg("niet_vastgelegd")
+    if not any(g["n"] >= N for g in grouped.values()):
+        return _leeg("geen")
+    tabel = [row for row in segment_rows if not row.get("is_pooled", False)]
     if not tabel:
-        return {"rows": [], "dropped": [], "reason": "geen_tabel"}
+        return _leeg("geen_tabel")
 
     rows: list[dict] = []
-    for dept in tabel:
-        g = grouped.get(dept)
-        if not g or not _haalt(g):
+    for seg in tabel:
+        g = grouped.get(seg["department"])
+        if not g or not (seg["n"] >= N and len(g["stay"]) >= N and len(g["turnover"]) >= N):
             continue
-        low, _mid, _high = score_distribution(g["stay"])["zones"]
-        rows.append({"department": dept, "n": g["n"],
+        rows.append({"department": seg["department"], "n": seg["n"],
                      "stay_avg": round(sum(g["stay"]) / len(g["stay"]), 2),
-                     "stay_n": len(g["stay"]), "stay_low": low,
+                     "stay_n": len(g["stay"]),
                      "to_n": len(g["turnover"]),
                      "to_high": score_distribution(g["turnover"])["zones"][2]})
+    if not rows:
+        return _leeg("te_weinig_intentie")
 
     def _rest_veilig() -> bool:
         rest_stay = total_stay_n - sum(r["stay_n"] for r in rows)
@@ -6531,7 +6608,7 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
         rows.remove(kleinste)
         dropped.append({"department": kleinste["department"], "n": kleinste["n"]})
     if not rows:
-        return {"rows": [], "dropped": dropped, "reason": "herleidbaar"}
+        return _leeg("herleidbaar", dropped)
     return {"rows": rows, "dropped": dropped, "reason": ""}
 
 
@@ -6796,6 +6873,8 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     # scans tonen geen blijfintentie op pagina twee.
     segment_intent = (_department_intent_rows(
         [{"department": r.department,
+          # Zelfde telbron als de afdelingstabel (_segment_input hierboven).
+          "signal_score": _signal_health(r.response.risk_score),
           "stay": (_blijf_naar_10(r.response.stay_intent_score)
                    if r.response.stay_intent_score is not None else None),
           "turnover": r.response.turnover_intention_score}
@@ -8301,18 +8380,13 @@ def render_retention_report_html(data: dict) -> str:
     _intent_info = data.get("segment_intent")
     _intent_block = (_intentie_afdelingen_block(_intent_info)
                      if data.get("segment_rows") else "")
-    if _intent_block:
-        _intent_staat: str | None = "blok"
-    elif _intent_info is None:
-        _intent_staat = None
-    else:
-        _intent_staat = _intent_info.get("reason") or "geen_tabel"
     _intentie_html = _intentie_duiding(
         avg_si, _stay_scores, _to_scores,
         startpunt_label=None if _geen_profiel else _raster_primary_label,
         startpunt_score=_primary_score,
         indicatief=_indicatief,
-        intenties_afdeling=_intent_staat)
+        intenties_afdeling=_intent_staat(_intent_info, _intent_block),
+        intenties_weggelaten=(_intent_info or {}).get("dropped"))
     _cijfers_html += _intentie_html
     # Zelfde telling als _p02_opening: zonder kwetsbaar onderwerp zegt de kop
     # "Geen onderwerp scoort kwetsbaar.", dus geen "Ook".

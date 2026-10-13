@@ -224,15 +224,17 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sub-cols td + td { padding: 0 0 0 10px; }
 .sub-cols td[colspan] { padding: 0; }
 .sub-cols tbody.sub-grp { break-inside: avoid; }
-/* A5 (beslisronde 12-10): in een vak van halve breedte lopen de bandlabels
-   ("Kwetsbaar punt") over twee regels; met de regelhoogte van de lopende tekst
-   werd elk paar subblokken daardoor zo hoog dat het in Behoud-scenario's met
-   het nieuwe intentieblok naast het enige subblok naar een eigen vel schoof. */
-.sub-cols .item-tbl.seg-tbl td { padding: 3px 6px; line-height: 1.3; }
+/* A5 (beslisronde 12-10): alleen in het raster met het intentieblok van Loep
+   Behoud (klasse met-intentie, gezet door _segment_factor_grid). In een vak van
+   halve breedte lopen de bandlabels ("Kwetsbaar punt") over twee regels; met de
+   regelhoogte van de lopende tekst schoof het raster in Behoud-scenario's met
+   het intentieblok naast het enige subblok naar een eigen vel (gemeten in het
+   productie-image). Rasters zonder intentieblok blijven zoals ze waren. */
+.sub-cols.met-intentie .item-tbl.seg-tbl td { padding: 3px 6px; line-height: 1.3; }
 /* Het bandlabel op één regel, de onderwerpnaam mag afbreken: zo breekt hooguit
    de langste naam ("Cultuur en psychologische veiligheid") in plaats van elk
-   label, en blijft het paar even hoog als het subblok over de volle breedte. */
-.sub-cols .seg-sub td.sub-band { white-space: nowrap; }
+   label. */
+.sub-cols.met-intentie .seg-sub td.sub-band { white-space: nowrap; }
 .empty-state.seg-leeg { padding: 8px 14px; }
 /* Taak 11 (polijstronde): de afdelingskaart eindigt op een tabelrij of een
    subblok, dus de onderpadding verlengt alleen de linkerlijn. 6px in plaats van
