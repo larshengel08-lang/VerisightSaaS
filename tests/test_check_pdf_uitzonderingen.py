@@ -263,7 +263,7 @@ def test_lijst_is_precies_het_besluit_van_12_10():
 
 def test_lijst_dekt_geen_andere_bestanden():
     for naam in ("02_een_lage_factor", "14_veel_anders", "19_vlak_niets_nodig",
-                 "voorbeeldrapport_retentiescan", "zz_besluitmax_max_06_een_afdeling_laag"):
+                 "voorbeeldrapport_retentiescan", "zz_besluitmax_max_vb_behoud_afdeling"):
         for _, kop, _, _ in GEMETEN:
             u = cpr._uitzondering_voor(naam, kop)
             gedekt = any(n == naam and k == kop for n, k, _, _ in GEMETEN)

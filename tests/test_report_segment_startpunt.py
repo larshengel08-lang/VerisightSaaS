@@ -153,20 +153,20 @@ def test_gelijkspel_op_de_getoonde_score_is_ook_gelijkspel():
     assert "komen op dezelfde score uit (Sales en Finance, beide 6.0/10)" in _anchor(html)
 
 
-def test_kleine_tweede_afdeling_blokkeert_de_aanwijzing_niet():
-    # Scenario 06 en de resolutie van de tegenspraak tussen spec par. 3.1 en
-    # 3.3 (besluit Lars 2026-09-12): de omvangeis geldt voor de AANGEWEZEN
-    # afdeling. Operations (n=12) staat 2,5 punt onder Sales (n=6); die zes
-    # antwoorden hoeven de conclusie niet te dragen, ze stellen alleen vast
-    # dat het verschil er is.
+def test_kleine_tweede_afdeling_telt_niet_als_vergelijking():
+    # Was (besluit Lars 2026-09-12): de omvangeis gold alleen voor de
+    # AANGEWEZEN afdeling, en Operations (n=12) werd aangewezen omdat Sales
+    # (n=6) 2,5 punt hoger stond. Sinds A4 toont de tabel bij Sales geen cijfer
+    # meer, en fixronde 14-10 (punt 10, besluit Lars 14-10) laat alleen
+    # afdelingen met een cijfer meedoen aan de vergelijking. Met één afdeling
+    # met een cijfer valt er niets te vergelijken; dat zegt het blok eerlijk.
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 12, 4.5), ("Sales", 6, 7.0))), scan_type="retention")
     a = _anchor(html)
-    assert ("<strong>Operations</strong> heeft de laagste score van de afdelingen "
-            "die apart getoond worden (4.5/10") in html
+    assert "heeft de laagste score" not in html
+    assert "Alleen Operations heeft genoeg antwoorden voor een cijfer" in a
+    assert "Sales" not in a
     assert "dicht bij elkaar" not in a
-    # De omvang van de tweede afdeling is geen argument in de copy.
-    assert "6 responses" not in a
 
 
 def test_grote_afdeling_met_klein_verschil_wordt_nog_steeds_niet_aangewezen():
@@ -194,20 +194,21 @@ def test_conclusie_generaliseert_niet_verder_dan_de_vergelijking():
 
 
 def test_kleine_laagste_afdeling_met_groot_verschil_wordt_niet_aangewezen():
-    # De andere kant van het besluit: het verschil is 2,5 punt, maar de
-    # afdeling die genoemd zou worden heeft er 8. Dan draagt een handvol
-    # antwoorden de conclusie, en dat is precies wat de omvangeis tegenhoudt.
+    # Het verschil is 2,5 punt, maar de afdeling die genoemd zou worden heeft
+    # er 8. Dan draagt een handvol antwoorden de conclusie, en dat is precies
+    # wat de omvangeis tegenhoudt. Fixronde 14-10 (punt 10): de kleine
+    # afdeling wordt ook niet meer als laagste genoemd (geen cijfer in de
+    # tabel, dus niet te controleren).
     html = _segment_block(_department_segment_rows(
         _rows(("Operations", 8, 4.5), ("Sales", 20, 7.0))), scan_type="retention")
     a = _anchor(html)
     assert "heeft de laagste score" not in html
     assert "dicht bij elkaar" not in a
-    # S9 (polijstronde): geen cijfer van een afdeling met 8 antwoorden.
-    assert ("Operations scoort het laagst van de afdelingen die apart getoond "
-            "worden, maar telt 8 antwoorden. Loep wijst een afdeling pas "
-            "aan vanaf 10 antwoorden, zodat de conclusie niet op een handvol "
-            "antwoorden rust. Kijk voor de eerste prioriteit naar het "
-            "organisatiebeeld.") in a
+    assert "Operations" not in a
+    assert "laagst" not in a
+    assert ("Alleen Sales heeft genoeg antwoorden voor een cijfer (minstens 10). Er valt "
+            "dus niets te vergelijken, en Loep wijst hier geen eerste afdeling aan. Kijk "
+            "voor de eerste prioriteit naar het organisatiebeeld.") in a
 
 
 def test_omvangdrempel_precies_gehaald_wijst_wel_aan():
@@ -222,7 +223,9 @@ def test_net_onder_de_omvangdrempel_wijst_niet_aan():
         _rows(("Operations", MIN_DISTRIBUTION_N - 1, 4.5),
               ("Sales", MIN_DISTRIBUTION_N, 7.0))), scan_type="retention")
     assert "heeft de laagste score" not in html
-    assert "maar telt 9 antwoorden." in _anchor(html)
+    # Fixronde 14-10 (punt 10): de afdeling van 9 wordt niet genoemd.
+    assert "Operations" not in _anchor(html)
+    assert "niets te vergelijken" in _anchor(html)
 
 
 def test_startpunt_gaat_over_de_twee_laagste_niet_over_de_hele_reeks():
@@ -250,9 +253,15 @@ def test_zin_noemt_de_werkelijk_laagste_afdeling_ook_bij_ongesorteerde_rijen():
 
 # ─── 4. Gepoolde restgroep die lager uitkomt ─────────────────────────────────
 
-_POOLED_ZIN = ('De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; '
-               '6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig '
-               'vastgelegd) scoort lager, '
+# Fixronde 14-10 (punt 10): alleen een restgroep met een cijfer (minstens 10)
+# wordt nog vergeleken. Deze fixtures hebben daarom een restgroep van 10
+# (Marketing 4, Customer Success 3, HR 3; was 3 + 3 = 6), zodat ze blijven
+# toetsen wat ze toetsten. Een kleinere restgroep: zie
+# tests/test_fixronde_1410_afdelingen.py.
+_KLEIN = (("Marketing", 4, 4.0), ("Customer Success", 3, 4.0), ("HR", 3, 4.0))
+_POOLED_ZIN = ('De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, HR, Marketing; '
+               '10 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig '
+               'vastgelegd) scoort lager (4.0/10), '
                'maar is samengesteld uit kleine afdelingen en wordt daarom niet als '
                'startpunt genoemd.')
 
@@ -260,8 +269,7 @@ _POOLED_ZIN = ('De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success,
 def test_restgroep_wordt_genoemd_als_die_lager_uitkomt():
     # Scenario 01: "Overige afdelingen" onder de aangewezen laagste afdeling.
     rows = _department_segment_rows(
-        _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0),
-              ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
+        _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0), *_KLEIN))
     html = _segment_block(rows, scan_type="retention")
     assert ("Sales</strong> heeft de laagste score van de afdelingen die apart "
             "getoond worden (5.0/10") in html
@@ -272,8 +280,7 @@ def test_restgroep_wordt_ook_genoemd_als_er_geen_afdeling_wordt_aangewezen():
     # Scenario 01 in het echt: klein verschil én een lagere restgroep. Zonder
     # deze zin spreekt de tabel ("Overige afdelingen 4.0") de zin erboven tegen.
     rows = _department_segment_rows(
-        _rows(("Sales", 13, 6.02), ("Finance", 12, 6.10),
-              ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
+        _rows(("Sales", 13, 6.02), ("Finance", 12, 6.10), *_KLEIN))
     html = _segment_block(rows, scan_type="retention")
     assert "dicht bij elkaar" in _anchor(html)
     assert _POOLED_ZIN in html
@@ -285,7 +292,7 @@ def test_restgroep_niet_genoemd_als_die_tussen_de_twee_laagsten_ligt():
     # scoort dan de laagste, terwijl ze in de tabel hoger staat.
     rows = _department_segment_rows(
         _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0),
-              ("Marketing", 3, 6.0), ("Customer Success", 3, 6.0)))
+              *((d, n, 6.0) for d, n, _s in _KLEIN)))
     html = _segment_block(rows, scan_type="retention")
     pooled = next(r for r in rows if r["is_pooled"])
     assert pooled["avg"] == 6.0                       # tussen 5.0 en 7.0
@@ -298,7 +305,7 @@ def test_restgroep_precies_gelijk_aan_de_laagste_afdeling():
     # omdat ze beperkt is tot de afdelingen die apart getoond worden.
     rows = _department_segment_rows(
         _rows(("Sales", 13, 4.5), ("Finance", 12, 7.0),
-              ("Marketing", 3, 4.5), ("Customer Success", 3, 4.5)))
+              *((d, n, 4.5) for d, n, _s in _KLEIN)))
     html = _segment_block(rows, scan_type="retention")
     pooled = next(r for r in rows if r["is_pooled"])
     assert pooled["avg"] == 4.5
@@ -311,28 +318,28 @@ def test_aanwijzende_zin_wordt_niet_weersproken_door_de_restgroep():
     # De zin die deze taak bestaat om te repareren: "laagste" naast een rij die
     # lager staat. De kwalificatie maakt de claim waar in dezelfde alinea.
     rows = _department_segment_rows(
-        _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0),
-              ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
+        _rows(("Sales", 13, 5.0), ("Finance", 12, 7.0), *_KLEIN))
     a = _anchor(_segment_block(rows, scan_type="retention"))
     assert ("Sales heeft de laagste score van de afdelingen die apart getoond "
             "worden (5.0/10") in a
-    # S9 (polijstronde): de restgroep heeft er 6, dus geen cijfer.
-    assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
-            "6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
-            "vastgelegd) scoort lager, maar") in a
+    # S9 (polijstronde): de restgroep heeft er 10, dus het cijfer staat erbij.
+    assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, HR, Marketing; "
+            "10 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
+            "vastgelegd) scoort lager (4.0/10), maar") in a
 
 
 def test_te_kleine_laagste_afdeling_wordt_ook_niet_weersproken():
     rows = _department_segment_rows(
-        _rows(("Sales", 8, 5.0), ("Finance", 12, 7.0),
-              ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
+        _rows(("Sales", 8, 5.0), ("Finance", 12, 7.0), *_KLEIN))
     a = _anchor(_segment_block(rows, scan_type="retention"))
-    assert ("Sales scoort het laagst van de afdelingen die apart getoond worden, "
-            "maar telt 8 antwoorden.") in a
-    # S9 (polijstronde): de restgroep heeft er 6, dus geen cijfer.
-    assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, Marketing; "
-            "6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
-            "vastgelegd) scoort lager, maar") in a
+    # Fixronde 14-10 (punt 10): Sales (8) wordt niet genoemd; alleen Finance
+    # heeft een cijfer. De restgroep (10, met cijfer) staat lager dan Finance
+    # en wordt dus wel genoemd, zodat de tabel de zin niet tegenspreekt.
+    assert "Sales" not in a
+    assert "Alleen Finance heeft genoeg antwoorden voor een cijfer" in a
+    assert ("De restgroep &ldquo;Overige afdelingen&rdquo; (Customer Success, HR, Marketing; "
+            "10 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
+            "vastgelegd) scoort lager (4.0/10), maar") in a
 
 
 # ─── 4b. Responses die buiten de tabel vallen (Fail Loud) ────────────────────

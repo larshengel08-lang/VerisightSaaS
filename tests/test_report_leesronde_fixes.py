@@ -652,8 +652,11 @@ from backend.report_html import (  # noqa: E402
     _fl,
 )
 
+# "kwalificatie" (fixronde 14-10): welke afdelingen "de laagste" omvat, zoals
+# _segment_startpunt hem zet.
 SEG_OPS = {"department": "Operations", "score": 6.0, "n": 17, "invited": 21,
-           "low_fk": "workload", "low_avg": 4.9, "rest_lager": False}
+           "low_fk": "workload", "low_avg": 4.9, "kwalificatie": "die apart getoond worden",
+           "rest_lager": False}
 
 
 def test_brugzin_noemt_het_tweede_punt_als_het_hetzelfde_onderwerp_is():

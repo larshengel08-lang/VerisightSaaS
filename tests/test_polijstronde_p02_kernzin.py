@@ -140,12 +140,34 @@ def test_r21_zonder_tweede_punt_geen_parkeerregel():
     assert "parkeer" not in slot
 
 
+# Fixronde 14-10 (punt 10): alleen afdelingen met een cijfer (minstens 10
+# antwoorden) doen mee aan de vergelijking. In scenario 06 heeft alleen
+# Operations er tien of meer, dus daar wordt geen afdeling meer aangewezen.
+# Deze variant geeft Sales er 10 (Marketing 3, totaal blijft 45), zodat een
+# vergelijking kan en Operations weer de aangewezen afdeling is.
+_06_MET_TWEE = st.Scenario(
+    "06_met_twee_afdelingen", "Eén afdeling laag, twee met een cijfer (n=45)",
+    "Operations 4.5 op alles, Sales 10 antwoorden: er valt iets te vergelijken.",
+    factors=st.flat(7.3, 0.8),
+    depts=[("Operations", 14), ("Sales", 10), ("Finance", 7), ("IT", 6),
+           ("Customer Success", 5), ("Marketing", 3)],
+    dept_shift={"Operations": -2.8})
+
+
 def test_r21_renderer_zet_de_vlag_uit_het_afdelingsblok():
-    """Scenario 06: Operations is de aangewezen afdeling en de besluitpagina
-    krijgt een afdelingsblok; de leidraad noemt dan de afdelingsafspraak."""
-    html = _html("06_een_afdeling_laag")
+    """Operations is de aangewezen afdeling en de besluitpagina krijgt een
+    afdelingsblok; de leidraad noemt dan de afdelingsafspraak."""
+    html = open(st.run_scenario(_06_MET_TWEE)["html"], encoding="utf-8").read()
     assert "Afspraak per afdeling" in html
     assert VUL_AFDELING in _slot(html)
+
+
+def test_r21_scenario_06_heeft_geen_aangewezen_afdeling_meer():
+    """Scenario 06: alleen Operations heeft een cijfer, dus geen vergelijking
+    en geen afdelingsblok (fixronde 14-10, punt 10)."""
+    html = _html("06_een_afdeling_laag")
+    assert "Afspraak per afdeling" not in html
+    assert "Alleen Operations heeft genoeg antwoorden voor een cijfer" in html
 
 
 def test_r21_renderer_zonder_afdelingsblok_noemt_alleen_de_terugkoppeling():

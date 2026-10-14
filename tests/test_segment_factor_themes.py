@@ -200,7 +200,9 @@ def test_navy_anchor_wijst_geen_afdeling_aan_bij_n5_9():
     html = _segment_block(rows, factor_rows=fr, scan_type="retention")
     anchor = html[html.index("Waar het per afdeling begint"):]
     assert "Het laagst scorende onderwerp daar is" not in anchor
-    assert "maar telt 6 antwoorden" in anchor
+    # Fixronde 14-10 (punt 10): afdelingen zonder cijfer worden niet genoemd.
+    assert "Marketing" not in anchor and "Sales" not in anchor
+    assert "Geen afzonderlijke afdeling heeft genoeg antwoorden voor een cijfer" in anchor
     assert not re.search(r"3\.9/10", anchor)
     # De kolomstaffel is onveranderd: label + duiding, geen decimale score.
     marketing_cell = next(c for c in _theme_cells(html)

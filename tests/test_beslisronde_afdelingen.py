@@ -285,10 +285,13 @@ def test_a8_exit_staat_1_dezelfde_score():
             "(Finance en Sales, beide 5.0/10).") in a
 
 
-def test_a8_exit_staat_2_zonder_cijfer():
+def test_a8_exit_kleine_afdeling_wordt_niet_genoemd():
+    # Fixronde 14-10 (punt 10): de oude staat 2 bestaat niet meer; een
+    # afdeling zonder cijfer wordt niet genoemd of gerangschikt.
     a = _anchor(_block(("Operations", 8, 4.5), ("Sales", 20, 7.0), scan_type="exit"))
-    assert ("Operations heeft de hoogste frictiescore van de afdelingen die apart getoond "
-            "worden, maar telt 8 antwoorden.") in a
+    assert "Operations" not in a
+    assert "hoogste frictiescore" not in a
+    assert "Alleen Sales heeft genoeg antwoorden voor een cijfer" in a
     assert "/10" not in a
     _geen_laagst_taal(a)
 

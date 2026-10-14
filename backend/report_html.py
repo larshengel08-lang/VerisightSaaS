@@ -5550,12 +5550,16 @@ _SEG_WOORDEN = {
     "exit": {"laagst": "heeft de hoogste frictiescore",
              "laagste_score": "heeft de hoogste frictiescore",
              "twee": "De twee afdelingen met de hoogste frictiescore",
+             # Fixronde 14-10 (punt 10): als er ook kleine afdelingen zonder
+             # cijfer in de tabel staan, zie _seg_vergelijkbaar.
+             "twee_cijfer": "De twee afdelingen met een cijfer en de hoogste frictiescore",
              "lager": "heeft een hogere frictiescore"},
 }
 _SEG_WOORDEN["retention"] = _SEG_WOORDEN["onboarding"] = {
     "laagst": "scoort het laagst",
     "laagste_score": "heeft de laagste score",
     "twee": "De twee laagste afdelingen",
+    "twee_cijfer": "De twee laagste afdelingen met een cijfer",
     "lager": "scoort lager"}
 
 
@@ -5704,11 +5708,42 @@ def _pooled_lager(segment_rows: list[dict], low_sc: float | None) -> dict | None
     Eén bron voor het navy blok en voor de brugzin: beide moeten precies in dit
     geval de claim "de laagste afdeling" kwalificeren, anders wordt die door de
     tabel eronder weerlegd.
+
+    Fixronde 14-10 (punt 10): alleen een restgroep met een cijfer in de tabel
+    (_segment_cijfer_mag). Bij 5 tot 9 antwoorden toont de tabel geen cijfer,
+    en dan kan de lezer "scoort lager" niet controleren; de conclusie
+    vergelijkt dan alleen afdelingen met een cijfer en zegt dat.
     """
     pooled = next((r for r in segment_rows if r.get("is_pooled", False)), None)
-    if pooled and low_sc is not None and _shown(pooled["avg"]) < low_sc:
+    if (pooled and low_sc is not None and _segment_cijfer_mag(pooled)
+            and _shown(pooled["avg"]) < low_sc):
         return pooled
     return None
+
+
+def _seg_vergelijkbaar(segment_rows: list[dict]) -> tuple[list[dict], bool]:
+    """De afdelingen die meedoen aan een vergelijking, laagste eerst, en of er
+    kleine afdelingen naast staan (fixronde 14-10, punt 10, besluit Lars 14-10).
+
+    Alleen afdelingen met een eigen rij (niet de restgroep) en een getoond
+    cijfer (_segment_cijfer_mag): sinds A4 staat bij 5 tot 9 antwoorden geen
+    cijfer in de tabel, en een conclusie die zulke afdelingen rangschikt kan de
+    lezer op de pagina niet controleren. Dezelfde sorteersleutel als
+    _department_segment_rows.
+
+    Het tweede element is True als er ook afdelingen zonder cijfer in de tabel
+    staan: dan zegt de conclusie "met een cijfer" in plaats van "die apart
+    getoond worden" (die woorden omvatten dan ook de kleine afdelingen).
+    """
+    named = [r for r in segment_rows if not r.get("is_pooled", False)]
+    met_cijfer = sorted((r for r in named if _segment_cijfer_mag(r)),
+                        key=lambda r: (r["avg"], -r["n"], r["department"]))
+    return met_cijfer, len(met_cijfer) < len(named)
+
+
+def _seg_kwalificatie(klein_ernaast: bool) -> str:
+    """Welke afdelingen "de laagste" omvat (zie _seg_vergelijkbaar)."""
+    return "met een cijfer" if klein_ernaast else "die apart getoond worden"
 
 
 def _segment_startpunt(segment_rows: list[dict],
@@ -5716,18 +5751,23 @@ def _segment_startpunt(segment_rows: list[dict],
     """De aangewezen afdeling, of None.
 
     De enige gate voor staat 3 van `_segment_start_note` (verschil >=
-    SEGMENT_START_MIN_DELTA met de volgende én n >= MIN_DISTRIBUTION_N), zodat
-    de brugzin op pagina twee en het navy blok onder de tabel nooit uiteen
-    kunnen lopen: dat blok leest deze functie ook (een tweede kopie van de
-    gates zou stil kunnen afwijken).
+    SEGMENT_START_MIN_DELTA met de volgende), zodat de brugzin op pagina twee
+    en het navy blok onder de tabel nooit uiteen kunnen lopen: dat blok leest
+    deze functie ook (een tweede kopie van de gates zou stil kunnen afwijken).
+
+    Fixronde 14-10 (punt 10): de vergelijking gaat alleen over afdelingen met
+    een cijfer in de tabel (_seg_vergelijkbaar, n >= MIN_DISTRIBUTION_N). Dat
+    is ook de omvangeis voor de aangewezen afdeling, en de volgende afdeling
+    moet er nu zelf ook aan voldoen: een verschil met een afdeling zonder
+    cijfer kan de lezer niet nagaan. "kwalificatie" zegt de brugzin welke
+    afdelingen "de laagste" omvat.
     """
-    named = sorted((r for r in segment_rows if not r.get("is_pooled", False)),
-                   key=lambda r: (r["avg"], -r["n"], r["department"]))
-    if len(named) < 2:
+    vergelijkbaar, klein_ernaast = _seg_vergelijkbaar(segment_rows)
+    if len(vergelijkbaar) < 2:
         return None
-    lowest, runner_up = named[0], named[1]
+    lowest, runner_up = vergelijkbaar[0], vergelijkbaar[1]
     low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
-    if round(run_sc - low_sc, 1) < SEGMENT_START_MIN_DELTA or lowest["n"] < MIN_DISTRIBUTION_N:
+    if round(run_sc - low_sc, 1) < SEGMENT_START_MIN_DELTA:
         return None
     info = (factor_rows or {}).get(lowest["department"]) or {}
     factors = info.get("factors") or []
@@ -5735,6 +5775,7 @@ def _segment_startpunt(segment_rows: list[dict],
             "invited": lowest.get("invited"),
             "low_fk": factors[0][0] if factors else None,
             "low_avg": factors[0][1] if factors else None,
+            "kwalificatie": _seg_kwalificatie(klein_ernaast),
             # Staat de restgroep lager, dan mag ook de brugzin niet kaal "de
             # laagste afdeling" zeggen (codereview taak 7, defect 1).
             "rest_lager": _pooled_lager(segment_rows, low_sc) is not None}
@@ -5801,7 +5842,7 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
                 "afdelingen en telt daarom niet als startpunt." if seg.get("rest_lager") else "")
     if seg["low_fk"] is None:
         return (f"{org_start} {dept} {_seg_woord(scan_type, 'laagst')} "
-                f"van de afdelingen die apart getoond worden ({score}); welk onderwerp "
+                f"van de afdelingen {seg['kwalificatie']} ({score}); welk onderwerp "
                 f"daar het zwaarst weegt is niet te zeggen, te weinig antwoorden per "
                 f"onderwerp.{rest_zin}")
     low_lbl = _fl(seg["low_fk"], scan_type)
@@ -5852,83 +5893,69 @@ def _segment_start_note(segment_rows: list[dict],
     samengesteld uit kleine afdelingen), maar kan wel de laagste score van de
     tabel hebben; dan zegt een slotzin dat ze lager staat en waarom ze geen
     startpunt is. Zonder die zin spreekt de tabel de conclusie erboven tegen.
+
+    Fixronde 14-10 (punt 10, besluit Lars 14-10): sinds A4 staat bij 5 tot 9
+    antwoorden geen cijfer in de tabel. Alleen afdelingen MET een cijfer doen
+    nog mee aan de vergelijking (_seg_vergelijkbaar); de restgroep alleen met
+    een cijfer (_pooled_lager). Daardoor vervalt de oude staat 2 (laagste
+    afdeling te klein): een afdeling zonder cijfer wordt nooit meer genoemd.
+    Zijn er geen of maar één afdeling met een cijfer, dan zegt het blok
+    eerlijk dat er niets te vergelijken is. Staan er kleine afdelingen naast,
+    dan zegt de conclusie "met een cijfer" in plaats van "die apart getoond
+    worden".
     """
-    # Zelf sorteren, niet vertrouwen op de invoervolgorde: bestaande aanroepen
-    # geven ook ongesorteerde rijen door (zie tests/test_segment_report.py), en
-    # dan zou "de laagste" de verkeerde afdeling noemen. Dezelfde sorteersleutel
-    # als _department_segment_rows, zodat "de laagste" hier hetzelfde betekent
-    # als daar (de tabel rendert in de volgorde die hij binnenkrijgt).
-    named = sorted((r for r in segment_rows if not r.get("is_pooled", False)),
-                   key=lambda r: (r["avg"], -r["n"], r["department"]))
-    if len(named) < 2:
-        # Uit _department_segment_rows komen altijd minstens twee benoemde
-        # afdelingen (onder twee kwalificerende afdelingen geeft die functie
-        # een lege lijst terug), en alle productie-aanroepen lopen daarlangs.
-        # Een tabel met één benoemde rij krijgt geen conclusie: een startpunt
-        # is per definitie een vergelijking. De degraded staat zonder
-        # segmentdata is afgedekt door _segment_status_block.
+    # Een tabel met één benoemde rij krijgt geen conclusie: een startpunt is
+    # per definitie een vergelijking. Uit _department_segment_rows komen altijd
+    # minstens twee benoemde afdelingen (onder twee kwalificerende afdelingen
+    # geeft die functie een lege lijst terug), en alle productie-aanroepen
+    # lopen daarlangs. De degraded staat zonder segmentdata is afgedekt door
+    # _segment_status_block.
+    if sum(1 for r in segment_rows if not r.get("is_pooled", False)) < 2:
         return ""
 
-    lowest, runner_up = named[0], named[1]
-    low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
-    delta = round(run_sc - low_sc, 1)
-    # Het verschil gaat over de twee laagste afdelingen, niet over de hele
-    # tabel: alleen die twee bepalen of er een onderscheid te maken is. De
-    # omvangeis geldt alleen voor de afdeling die genoemd zou worden en zit in
-    # _segment_startpunt; hier is `delta` alleen nog nodig om te weten WELKE van
-    # de twee redenen gold.
+    # Fixronde 14-10 (punt 10): alleen afdelingen met een cijfer in de tabel
+    # doen mee (_seg_vergelijkbaar), zelf gesorteerd: bestaande aanroepen
+    # geven ook ongesorteerde rijen door (zie tests/test_segment_report.py).
+    vergelijkbaar, klein_ernaast = _seg_vergelijkbaar(segment_rows)
+    kwal = _seg_kwalificatie(klein_ernaast)
     marge = str(SEGMENT_START_MIN_DELTA).replace(".", ",")
-
-    # H20: de restgroep krijgt haar samenstelling en haar noemer, zodat
-    # "scoort lager" niet over een naamloze groep gaat. Zonder volledige
-    # noemer (geen deelsom, zie _enrich_segment_rows_with_invited) alleen het
-    # aantal ingevulde vragenlijsten.
-    pooled = _pooled_lager(segment_rows, low_sc)
-    rest_sentence = ""
-    if pooled:
-        leden = pooled.get("members") or []
-        inv = pooled.get("invited")
-        samenstelling = ""
-        if leden:
-            # Zonder volledige noemer geen percentage, maar wél de reden: een
-            # deelsom zou een te hoog responspercentage geven (Fail Loud).
-            noemer = (f"; samen {inv} uitgenodigd, {pooled['n']} ingevuld" if inv
-                      else f"; {pooled['n']} ingevuld, hoeveel mensen hier zijn "
-                           f"uitgenodigd is niet volledig vastgelegd")
-            samenstelling = f' ({_h(", ".join(leden))}{noemer})'
-        rest_sentence = (
-            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} '
-            f'{_seg_woord(scan_type, "lager")}'
-            f'{_cijfer_tussen_haakjes(pooled, _seg_getoond(pooled["avg"], scan_type))}, maar is samengesteld uit kleine '
-            f'afdelingen en wordt daarom niet als startpunt genoemd.')
+    grens = f"minstens {MIN_DISTRIBUTION_N}"
 
     # Eén gate voor staat 3, gedeeld met de brugzin (_segment_startpunt).
-    # Is die None, dan is de reden hier per definitie een van de twee
-    # hieronder: de rij-eis (minstens twee benoemde afdelingen) is boven al
-    # afgevangen.
     aangewezen = _segment_startpunt(segment_rows, factor_rows)
 
-    if aangewezen is None and delta < SEGMENT_START_MIN_DELTA:
-        # S9: is een van de twee klein, dan geen van beide cijfers. Eén cijfer
-        # laten staan zou bij "dezelfde score" en "dicht bij elkaar" het andere
-        # cijfer alsnog verraden.
-        met_cijfers = _segment_cijfer_mag(lowest) and _segment_cijfer_mag(runner_up)
-        # Getoonde cijfers op de schaal van het product (A8); de vergelijking
-        # zelf blijft op de interne gezondheidsschaal.
+    low_sc: float | None = None
+    if not vergelijkbaar:
+        body = ('Geen afzonderlijke afdeling heeft genoeg antwoorden voor een cijfer '
+                f'({grens}), dus Loep vergelijkt de afdelingen hier niet. Kijk voor de '
+                'eerste prioriteit naar het organisatiebeeld.')
+    elif len(vergelijkbaar) == 1:
+        enige = vergelijkbaar[0]
+        low_sc = _shown(enige["avg"])
+        body = (f'Alleen {_h(enige["department"])} heeft genoeg antwoorden voor een cijfer '
+                f'({grens}). Er valt dus niets te vergelijken, en Loep wijst hier geen '
+                f'eerste afdeling aan. Kijk voor de eerste prioriteit naar het '
+                f'organisatiebeeld.')
+    elif aangewezen is None:
+        # Het verschil tussen de twee laagste afdelingen met een cijfer haalt
+        # SEGMENT_START_MIN_DELTA niet. Beide hebben een cijfer, dus beide
+        # cijfers staan erbij (S9); op de schaal van het product (A8), de
+        # vergelijking zelf blijft op de interne gezondheidsschaal.
+        lowest, runner_up = vergelijkbaar[0], vergelijkbaar[1]
+        low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
         low_d = _seg_getoond(lowest["avg"], scan_type)
         run_d = _seg_getoond(runner_up["avg"], scan_type)
-        twee = _seg_woord(scan_type, "twee")
+        twee = _seg_woord(scan_type, "twee_cijfer" if klein_ernaast else "twee")
         if low_sc == run_sc:
-            beide = ", beide " + _score_str(low_d) if met_cijfers else ""
             vergelijking = (
                 f'{twee} komen op dezelfde score uit '
                 f'({_h(lowest["department"])} en {_h(runner_up["department"])}'
-                f'{beide}).')
+                f', beide {_score_str(low_d)}).')
         else:
             vergelijking = (
                 f'{twee} liggen dicht bij elkaar '
-                f'({_naam_cijfer(lowest, low_d, met_cijfers)} en '
-                f'{_naam_cijfer(runner_up, run_d, met_cijfers)}).')
+                f'({_naam_cijfer(lowest, low_d, True)} en '
+                f'{_naam_cijfer(runner_up, run_d, True)}).')
         # "Geen eerste afdeling aan te wijzen", niet "geen afdeling vraagt
         # aandacht": vastgesteld is alleen dat de twee laagste niet van elkaar
         # te onderscheiden zijn. Bij 5,0 / 5,1 / 9,0 vragen die twee ten
@@ -5938,39 +5965,21 @@ def _segment_start_note(segment_rows: list[dict],
                 f'van minstens {marge} punt met de volgende. Er is hier dus geen '
                 f'eerste afdeling aan te wijzen. Kijk voor de eerste prioriteit '
                 f'naar het organisatiebeeld.')
-    elif aangewezen is None:
-        # "van de afdelingen die apart getoond worden": de gepoolde restgroep kan
-        # lager staan, en dan zou een kale "scoort het laagst" in dezelfde alinea
-        # worden weerlegd door de restgroep-zin eronder. Zonder restgroep is de
-        # toevoeging ook waar (elke getoonde afdeling staat apart in de tabel).
-        # Staat 2 heeft per definitie een laagste afdeling onder
-        # MIN_DISTRIBUTION_N, dus hier staat nooit een cijfer (S9). De
-        # controle blijft expliciet: zo hangt het cijfer aan dezelfde regel als
-        # elders in dit blok, ook als de gate van staat 2 ooit verandert.
-        body = (f'{_h(lowest["department"])} {_seg_woord(scan_type, "laagst")} van de afdelingen die '
-                f'apart getoond worden'
-                f'{_cijfer_tussen_haakjes(lowest, _seg_getoond(lowest["avg"], scan_type))}, maar '
-                f'telt {lowest["n"]} antwoorden. Loep wijst een afdeling pas aan vanaf '
-                f'{MIN_DISTRIBUTION_N} antwoorden, zodat de conclusie niet op een handvol '
-                f'antwoorden rust. Kijk voor de eerste prioriteit naar het '
-                f'organisatiebeeld.')
     else:
-        # Beide grenzen gehaald: verschil >= SEGMENT_START_MIN_DELTA en de
-        # laagste afdeling >= MIN_DISTRIBUTION_N. Dit is de enige staat die een
-        # afdeling aanwijst.
+        # Verschil >= SEGMENT_START_MIN_DELTA tussen de twee laagste afdelingen
+        # met een cijfer. Dit is de enige staat die een afdeling aanwijst.
         #
         # Noemer in de conclusie zelf (feedbackronde 2026-07-13): een manager
-        # met een lage score moet niet zelf hoeven ontdekken dat n klein is —
+        # met een lage score moet niet zelf hoeven ontdekken dat n klein is;
         # het rapport is de "n=5"-discussie voor, i.p.v. er munitie voor te zijn.
+        low_sc = aangewezen["score"]
         _low_inv = aangewezen["invited"]
         _low_basis = (f'{aangewezen["n"]} van de {_low_inv} uitgenodigden vulden in'
                       if _low_inv else f'{aangewezen["n"]} antwoorden')
-        # Themazin (spec 2026-07-16 §3.2 punt 3): geen factordata = geen zin
+        # Themazin (spec 2026-07-16 par. 3.2 punt 3): geen factordata = geen zin
         # (geen fake). Band-neutrale formulering: "de druk zit op X" overdrijft
-        # wanneer het laagste thema zelf nog relatief sterk scoort. De variant
-        # zonder decimaal (n=5-9) is hier vervallen: deze staat eist
-        # MIN_DISTRIBUTION_N, dus de score mag altijd getoond worden. De
-        # staffel zelf leeft door in de themakolom (_segment_theme_cell).
+        # wanneer het laagste thema zelf nog relatief sterk scoort. De score mag
+        # altijd getoond worden: de aangewezen afdeling heeft een cijfer.
         #
         # Zijn er thema's die de per-factor-gate niet haalden, dan staat het
         # getoonde thema onder voorbehoud: de themakolom meldt dat al, en die
@@ -5990,10 +5999,34 @@ def _segment_start_note(segment_rows: list[dict],
                               f'({aangewezen["low_avg"]:.1f}/10).{_voorbehoud}')
         body = (f'<strong>{_h(aangewezen["department"])}</strong> '
                 f'{_seg_woord(scan_type, "laagste_score")} '
-                f'van de afdelingen die apart getoond worden '
+                f'van de afdelingen {kwal} '
                 f'({_seg_getoond(aangewezen["score"], scan_type):.1f}/10; {_low_basis}). '
                 f'Gebruik dit om te toetsen wat hier '
                 f'speelt, geen ranking of oordeel.{theme_sentence}')
+
+    # H20: de restgroep krijgt haar samenstelling en haar noemer, zodat
+    # "scoort lager" niet over een naamloze groep gaat. Zonder volledige
+    # noemer (geen deelsom, zie _enrich_segment_rows_with_invited) alleen het
+    # aantal ingevulde vragenlijsten. Alleen een restgroep met een cijfer
+    # (_pooled_lager, punt 10).
+    pooled = _pooled_lager(segment_rows, low_sc)
+    rest_sentence = ""
+    if pooled:
+        leden = pooled.get("members") or []
+        inv = pooled.get("invited")
+        samenstelling = ""
+        if leden:
+            # Zonder volledige noemer geen percentage, maar wél de reden: een
+            # deelsom zou een te hoog responspercentage geven (Fail Loud).
+            noemer = (f"; samen {inv} uitgenodigd, {pooled['n']} ingevuld" if inv
+                      else f"; {pooled['n']} ingevuld, hoeveel mensen hier zijn "
+                           f"uitgenodigd is niet volledig vastgelegd")
+            samenstelling = f' ({_h(", ".join(leden))}{noemer})'
+        rest_sentence = (
+            f' De restgroep &ldquo;{_h(pooled["department"])}&rdquo;{samenstelling} '
+            f'{_seg_woord(scan_type, "lager")}'
+            f'{_cijfer_tussen_haakjes(pooled, _seg_getoond(pooled["avg"], scan_type))}, maar is samengesteld uit kleine '
+            f'afdelingen en wordt daarom niet als startpunt genoemd.')
 
     # C8/B2: dit blok gaat over de afdelingen, niet over het ene startpunt van
     # het rapport. Dat staat op pagina twee en op de gespreksagenda.
