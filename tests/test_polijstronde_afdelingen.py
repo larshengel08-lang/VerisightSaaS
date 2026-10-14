@@ -135,7 +135,8 @@ _P02 = "pagina " + _pref("p02")
     # A8 (beslisronde 12-10): de frictiescore zelf, hoger is slechter.
     ("exit", "Frictiescore",
      "De kolom Frictiescore is de frictiescore van " + _P02
-     + ", per afdeling: hoger is slechter."),
+     + ", per afdeling: hoger is slechter. De kolom Band gebruikt de grenzen van de "
+     "frictiescore: laag onder 4,5, sterk vanaf 7,0."),
 ])
 def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
     html = _block(*_GROOT, scan_type=scan_type)

@@ -130,7 +130,9 @@ def test_a8_exit_kop_en_scanzin():
     # Langste stuk hooguit 6 tekens, zodat de kop in de kolom van 8% past.
     assert max(len(d) for d in SEGMENT_SCOREKOLOM["exit"]["kop"].split("&shy;")) <= 6
     assert SEGMENT_SCOREKOLOM["exit"]["zin"] == (
-        "De kolom Frictiescore is de frictiescore van " + _P02 + ", per afdeling: hoger is slechter.")
+        "De kolom Frictiescore is de frictiescore van " + _P02 + ", per afdeling: hoger is slechter. "
+        # Fixronde 14-10 (punt 3).
+        "De kolom Band gebruikt de grenzen van de frictiescore: laag onder 4,5, sterk vanaf 7,0.")
     html = _block(("Operations", 12, 5.0), ("Sales", 12, 7.0), scan_type="exit")
     kop = re.sub(r"<[^>]+>", "|", re.search(r"<thead>(.*?)</thead>", html, re.S).group(1))
     assert "|Frictiescore|" in kop.replace("&shy;", "")

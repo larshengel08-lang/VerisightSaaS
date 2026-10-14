@@ -6049,9 +6049,15 @@ SEGMENT_SCOREKOLOM = {
     "onboarding": {"kop": "Check&shy;point&shy;score",
                    "zin": "De kolom Checkpointscore is de checkpointscore van " + _P02
                           + ", per afdeling."},
+    # Fixronde 14-10 (punt 3): de kolom Band gebruikt de frictiegrenzen, de
+    # uitsplitsing eronder de grenzen van de onderwerpen. Zonder deze zin leest
+    # "6.5 Gemengd frictiebeeld" boven onderwerpen die kwetsbaar scoren als een
+    # tegenspraak. Grenzen uit scoring_config, dezelfde als _frictie_duiding.
     "exit": {"kop": "Fric&shy;tie&shy;score",
              "zin": "De kolom Frictiescore is de frictiescore van " + _P02
-                    + ", per afdeling: hoger is slechter."},
+                    + ", per afdeling: hoger is slechter. De kolom Band gebruikt de grenzen "
+                    "van de frictiescore: laag onder " + f"{RISK_MEDIUM:.1f}".replace(".", ",")
+                    + ", sterk vanaf " + f"{RISK_HIGH:.1f}".replace(".", ",") + "."},
 }
 
 
