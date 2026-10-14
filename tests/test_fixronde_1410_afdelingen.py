@@ -145,3 +145,26 @@ def test_conclusie_noemt_nooit_een_kleine_afdeling(seed):
         seg = _segment_startpunt(rows, None)
         if seg:
             assert seg["n"] >= MIN_DISTRIBUTION_N
+
+
+# -- Punt 8: twee leesrichtingen in de navy alinea bij Loep Vertrek ----------------
+
+_FR = {"Operations": {"factors": [("leadership", 4.1, 14)], "omitted": 0}}
+
+
+def test_vertrek_navy_zegt_dat_bij_onderwerpen_hoger_beter_is():
+    rows = _rows(("Operations", 14, 4.5), ("Sales", 12, 7.0))
+    t = _anchor(_segment_block(rows, factor_rows=_FR, scan_type="exit"))
+    assert "Operations heeft de hoogste frictiescore" in t
+    assert ("Bij de onderwerpen is hoger juist beter: het laagst scorende onderwerp "
+            "daar is leiderschap en feedback (4.1/10).") in t
+    assert "thema" not in t.lower()
+    assert "—" not in t and "–" not in t
+
+
+@pytest.mark.parametrize("scan", ["retention", "onboarding"])
+def test_andere_scans_houden_de_korte_zin(scan):
+    rows = _rows(("Operations", 14, 4.5), ("Sales", 12, 7.0))
+    t = _anchor(_segment_block(rows, factor_rows=_FR, scan_type=scan))
+    assert " Het laagst scorende onderwerp daar is " in t
+    assert "hoger juist beter" not in t

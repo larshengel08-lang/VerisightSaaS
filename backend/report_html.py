@@ -5994,7 +5994,14 @@ def _segment_start_note(segment_rows: list[dict],
                 _woord = "onderwerp is" if _omitted == 1 else "onderwerpen zijn"
                 _voorbehoud = (f' Daarbij past een voorbehoud: {_omitted} {_woord} '
                                f'daar niet beoordeelbaar, te weinig antwoorden.')
-            theme_sentence = (f' Het laagst scorende onderwerp daar is '
+            # Fixronde 14-10 (punt 8): bij Loep Vertrek staat de afdeling op
+            # de frictiescore (hoger is slechter) en het onderwerp op de
+            # onderwerpschaal (hoger is beter). Twee leesrichtingen in één
+            # alinea; de zin zegt daarom dat het hier omdraait.
+            _inleiding = (' Bij de onderwerpen is hoger juist beter: het laagst scorende '
+                          'onderwerp daar is ' if scan_type == "exit"
+                          else ' Het laagst scorende onderwerp daar is ')
+            theme_sentence = (f'{_inleiding}'
                               f'{_h(_lc(_fl(aangewezen["low_fk"], scan_type)))} '
                               f'({aangewezen["low_avg"]:.1f}/10).{_voorbehoud}')
         body = (f'<strong>{_h(aangewezen["department"])}</strong> '
