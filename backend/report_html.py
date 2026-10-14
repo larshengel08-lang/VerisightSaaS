@@ -6220,12 +6220,15 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
         # smallere letter dan mono, niet vet (de cel is .is) en afbreekbaar
         # (langste stuk 6 tekens): dan blijft de kolom even breed als met een
         # cijfer erin. Klein en grijs, zoals de andere duidingsregels.
+        is_rest = row.get("is_pooled", False)
         if _segment_cijfer_mag(row):
             score_cell = f'{_seg_getoond(avg, scan_type):.1f}'
         else:
+            # Fixronde 14-10 (punt 9): de restgroep is geen afdeling maar een
+            # samengevoegde groep, dus "kleine groep". Zelfde vorm en breedte.
+            woord = 'groep' if is_rest else 'af&shy;de&shy;ling'
             score_cell = ('<span style="font-size:8px;font-weight:400;color:#94A3B8;">'
-                          'kleine<br>af&shy;de&shy;ling</span>')
-        is_rest = row.get("is_pooled", False)
+                          f'kleine<br>{woord}</span>')
         strip = _seg_strip(row, scan_type)
         if is_rest:
             # H20: de restgroep noemt haar leden, zodat "Overige afdelingen"

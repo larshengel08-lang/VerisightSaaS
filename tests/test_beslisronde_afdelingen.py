@@ -96,10 +96,17 @@ def test_a4_vanaf_de_grens_blijft_het_cijfer_staan(scan_type):
 
 
 def test_a4_restgroep_volgt_haar_eigen_aantal():
-    # Restgroep van 3 + 3 = 6 antwoorden: kleine afdeling.
+    # Restgroep van 3 + 3 = 6 antwoorden: "kleine groep" (fixronde 14-10,
+    # punt 9): de restgroep is geen afdeling maar een samengevoegde groep.
     klein = _block(("Sales", 13, 5.0), ("Finance", 12, 7.0),
                    ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0), scan_type="retention")
-    assert _tekst(_cellen(klein, "Overige afdelingen")[2]) == "kleine afdeling"
+    score = _cellen(klein, "Overige afdelingen")[2]
+    assert _tekst(score) == "kleine groep"
+    assert "afdeling" not in _tekst(score)
+    # Zelfde vorm als bij een kleine afdeling: twee regels, klein en grijs,
+    # niet vet, zodat de kolom even breed blijft.
+    assert "kleine<br>groep" in score
+    assert "color:#94A3B8" in score and "font-weight:400" in score
     # Restgroep van 4 + 4 + 3 = 11 antwoorden: het cijfer blijft.
     groot = _block(("Sales", 13, 5.0), ("Finance", 12, 7.0),
                    ("Marketing", 4, 4.0), ("Customer Success", 4, 4.0), ("Legal", 3, 4.0),
