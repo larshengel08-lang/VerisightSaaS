@@ -237,3 +237,12 @@ def test_scenario_05_aftreksom_met_pagina_twee_verraadt_operations_niet():
     # Operations (14) staat zonder telling en er is geen andere telling om af
     # te trekken: de aftreksom is het totaal zelf, en dat is niet 0 of alles.
     assert 0 < hoog < n
+
+
+# -- Punt 11: de intro zegt dat een restgroep er nooit in staat ------------------
+
+def test_intro_noemt_dat_de_restgroep_er_nooit_in_staat():
+    t = _plain(_intentie_afdelingen_block(
+        {"rows": [_rij(to_high=5, tonen=True)], "dropped": [], "reason": ""}))
+    assert ("Alleen afdelingen met minstens 10 antwoorden, dezelfde grens als voor alle "
+            "onderwerpen per afdeling. Een samengevoegde restgroep staat er nooit in.") in t

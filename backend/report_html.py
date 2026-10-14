@@ -6091,9 +6091,12 @@ SEGMENT_TOELICHTING_GRENS = (
 
 
 INTENTIE_AFDELING_KOP = "Blijf- en vertrekintentie per afdeling"
+# Fixronde 14-10 (punt 11): de restgroep doet nooit mee (_department_intent_rows),
+# ook niet met 10 of meer antwoorden. Zonder die zin zoekt de lezer haar hier
+# als ze in de tabel erboven wel een cijfer heeft.
 INTENTIE_AFDELING_UITLEG = (
     f"Alleen afdelingen met minstens {MIN_DISTRIBUTION_N} antwoorden, dezelfde grens als voor "
-    "alle onderwerpen per afdeling.")
+    "alle onderwerpen per afdeling. Een samengevoegde restgroep staat er nooit in.")
 
 
 # Fixronde 14-10 (punt 1): de regel onder het intentieblok als een telling
