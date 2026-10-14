@@ -12,6 +12,10 @@ kaart. Daar komt een losse zin achter met de tellingen ("Tegelijk kozen ..."),
 met dezelfde poort als de kaart (direction_none_at_least_top_shown op
 direction_state met de getoonde score). In elke andere staat verandert er niets.
 
+Fixronde 14-10, punt 7 (besluit Lars 14-10): op pagina twee niet meer. Daar
+noemde de zin dezelfde tellingen als de richtingregel eronder en duwde hij de
+kernzin naar de kleinere letter. De markeringsregel onder de rij houdt hem.
+
 De niets-groep wordt vergeleken met de grootste ENKELE richting, niet met alle
 veranderstemmen: die vergelijking staat daarom expliciet in de zin.
 
@@ -31,7 +35,6 @@ from backend.products.shared.deepening import (
 )
 from backend.report_html import (
     _fl,
-    _p02_niets_feiten,
     _p02_opening,
     _p02_startpunt_gronden,
     _p02_startpunt_zin,
@@ -206,44 +209,16 @@ def _zin(**kw):
     return _p02_startpunt_zin("Werkdruk", **basis)
 
 
-def test_startpuntzin_krijgt_zin_met_tellingen():
-    zin = _zin(niets_feiten={"none_n": 3, "n": 8, "change_top_n": 3}, scan_type="retention")
-    assert zin == ("Als startpunt kiest Loep Werkdruk: daar vragen meer mensen om "
-                   "verandering dan bij Groeiperspectief (5 van de 8 tegen 1 van de 8). "
-                   "Tegelijk kozen bij Werkdruk 3 van de 8 ‘Niets, dit zit hier goed’, "
-                   "evenveel als de grootste richting.")
-
-
-def test_startpuntzin_bij_groter():
-    zin = _zin(niets_feiten={"none_n": 4, "n": 9, "change_top_n": 3}, scan_type="exit",
-               change=(5, 9))
-    assert zin.endswith("(5 van de 9 tegen 1 van de 8). Tegelijk kozen bij Werkdruk "
-                        "4 van de 9 ‘Niets, dit zat hier goed’, meer dan de grootste "
-                        "richting (3).")
-
-
-def test_startpuntzin_ongewijzigd_zonder_niets_feiten():
+def test_startpuntzin_heeft_geen_niets_zin_meer():
+    # Fixronde 14-10, punt 7: de parameter is weg, zodat geen aanroep de zin
+    # per ongeluk terugbrengt.
+    with pytest.raises(TypeError):
+        _zin(niets_feiten={"none_n": 3, "n": 8, "change_top_n": 3}, scan_type="retention")
     assert _zin() == ("Als startpunt kiest Loep Werkdruk: daar vragen meer mensen om "
                       "verandering dan bij Groeiperspectief (5 van de 8 tegen 1 van de 8).")
-
-
-def test_startpuntzin_negeert_niets_feiten_buiten_de_richtingtak():
-    zin = _zin(tie_break_kind="spread", change=None, change_other=None,
-               niets_feiten={"none_n": 3, "n": 8, "change_top_n": 3}, scan_type="retention")
-    assert "Tegelijk" not in zin
-
-
-def test_startpuntzin_indicatief_houdt_de_zin():
-    zin = _zin(indicatief=True, niets_feiten={"none_n": 3, "n": 8, "change_top_n": 3},
-               scan_type="exit")
-    assert zin.startswith("Als mogelijk startpunt kiest Loep Werkdruk:")
-    assert zin.endswith(" Tegelijk kozen bij Werkdruk 3 van de 8 ‘Niets, dit zat hier "
-                        "goed’, evenveel als de grootste richting.")
-
-
-def test_startpuntzin_niets_feiten_zonder_scan_type_valt_luid_om():
-    with pytest.raises(ValueError):
-        _zin(niets_feiten={"none_n": 3, "n": 8, "change_top_n": 3})
+    assert _zin(indicatief=True) == (
+        "Als mogelijk startpunt kiest Loep Werkdruk: daar vragen meer mensen om "
+        "verandering dan bij Groeiperspectief (5 van de 8 tegen 1 van de 8).")
 
 
 # Vlak profiel zonder kwetsbaar onderwerp: de vlak-tak van de kernzin sluit af
@@ -264,32 +239,30 @@ def _opening(rows, labels, scan):
     tk, chg, chg_other, delta = _p02_startpunt_gronden(rows)
     return _p02_opening(scan_type=scan, shape=profile_shape(AVGS), labels=labels,
                         primary_key="workload", tie_break_kind=tk, change=chg,
-                        change_other=chg_other, next_delta=delta,
-                        niets_feiten=_p02_niets_feiten(rows))
+                        change_other=chg_other, next_delta=delta)
 
 
 @pytest.mark.parametrize("scan", ["retention", "exit"])
 def test_pagina_twee_van_rangorde_tot_kernzin(scan):
+    # De rij draagt de niets-tellingen (de markeringsregel gebruikt ze), maar
+    # pagina twee noemt ze niet meer (fixronde 14-10, punt 7).
     rows, labels = _rank_volledig(NIETS_EVEN_GROOT, scan)
     assert rows[0]["key"] == "workload"
-    assert _p02_niets_feiten(rows) == {"none_n": 3, "n": 8, "change_top_n": 3}
+    assert rows[0]["direction_niets_feiten"] == {"none_n": 3, "n": 8, "change_top_n": 3}
+    assert "Tegelijk kozen" in rows[0]["tie_break_note"]
     zin = _opening(rows, labels, scan)
-    assert (f"(5 van de 8 tegen 1 van de 8). Tegelijk kozen bij {_fl('workload', scan)} "
-            f"3 van de 8 ‘{NIETS[scan]}’, evenveel als de grootste richting.") in zin
+    assert zin.endswith("(5 van de 8 tegen 1 van de 8).")
+    assert "Tegelijk" not in zin and NIETS[scan] not in zin
 
 
 @pytest.mark.parametrize("scan", ["retention", "exit"])
 def test_pagina_twee_ongewijzigd_bij_duidelijke_richting(scan):
     rows, labels = _rank_volledig({"wld_scope": 5, "wld_planning": 2, "wld_none": 1}, scan)
     assert rows[0]["key"] == "workload"
-    assert _p02_niets_feiten(rows) is None
+    assert rows[0]["direction_niets_feiten"] is None
     zin = _opening(rows, labels, scan)
     assert zin.endswith("(7 van de 8 tegen 1 van de 8).")
     assert "Tegelijk" not in zin
-
-
-def test_niets_feiten_leeg_zonder_rijen():
-    assert _p02_niets_feiten([]) is None
 
 
 @pytest.mark.parametrize("scan", ["retention", "exit"])
@@ -336,13 +309,17 @@ def _exit_html():
 
 @pytest.mark.parametrize("scan,html_fn", [("retention", _retention_html), ("exit", _exit_html)],
                          ids=["retention", "exit"])
-def test_volledige_render_toont_de_zin_op_pagina_twee_en_onder_de_rasterrij(scan, html_fn):
+def test_volledige_render_toont_de_zin_alleen_onder_de_rasterrij(scan, html_fn):
+    # Fixronde 14-10, punt 7: pagina twee zonder de niets-zin, de
+    # markeringsregel onder de rij van de ranglijst houdt hem.
     html = html_fn()
     label = _fl("workload", scan)
     p02 = (f"Als startpunt kiest Loep {label}: daar vragen meer mensen om verandering "
-           f"dan bij Groeiperspectief (5 van de 8 tegen 1 van de 4). Tegelijk kozen bij "
-           f"{label} 3 van de 8 ‘{NIETS[scan]}’, evenveel als de grootste richting.")
+           f"dan bij Groeiperspectief (5 van de 8 tegen 1 van de 4).")
     assert p02 in html
+    assert p02 + " Tegelijk" not in html
+    assert f"Tegelijk kozen bij {label}" not in html
+    assert html.count("Tegelijk kozen") == 1
     notes = re.findall(r'<tr class="r-note"><td colspan="\d+">(.*?)</td></tr>', html, re.S)
     assert notes == [
         "Staat hoger dan Groeiperspectief omdat hier meer mensen om verandering vragen "

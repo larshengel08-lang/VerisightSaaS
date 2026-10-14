@@ -211,12 +211,12 @@ def _direction_niets_feiten(fk: str, score: float | None,
     {"none_n", "n", "change_top_n"}: niets-stemmen, beantwoorders van de
     richtingvraag voor dit onderwerp (dezelfde n als kaart en p.02-richtingregel)
     en de stemmen voor de grootste enkele richting. Feiten, geen tekst: de
-    zinnen bouwen _tie_break_note en report_html._p02_startpunt_zin via
-    direction_niets_zin.
+    zin bouwt _tie_break_note via direction_niets_zin. Pagina twee noemt hem
+    niet meer (fixronde 14-10, punt 7, besluit Lars 14-10).
 
     Zelfde poort als de kaart: direction_none_at_least_top_shown op
-    direction_state met de GETOONDE score (B15), zodat markeringsregel en
-    pagina twee nooit een andere staat zien dan de kaart. Alleen aangeroepen
+    direction_state met de GETOONDE score (B15), zodat de markeringsregel
+    nooit een andere staat ziet dan de kaart. Alleen aangeroepen
     voor een rij die het gelijkspel op de vraag om verandering won: dan heeft
     hij gegarandeerd minstens DIRECTION_MIN_N beantwoorders en een telling.
     """
@@ -230,7 +230,8 @@ def _direction_niets_feiten(fk: str, score: float | None,
 
 def direction_niets_zin(feiten: dict[str, int], scan_type: str, waar: str) -> str:
     """De losse zin achter de richting-grond (A7, beslisronde 12-10), voor de
-    markeringsregel (waar = "hier") en pagina twee (waar = "bij <startpunt>").
+    markeringsregel (waar = "hier"). Pagina twee gebruikte hem ook ("bij
+    <startpunt>"); sinds fixronde 14-10 (punt 7) niet meer.
 
     Een eigen zin met tellingen, geen bijzin: direct na "meer mensen vragen om
     verandering (5 van de 8 ...)" las "een even grote groep" als een
@@ -399,9 +400,8 @@ def rank_factors(scan_type: str,
         # van, geen tweede redenering.
         r["decided_by"] = ({"kind": decided[0], "other": decided[1]["key"]}
                            if decided else None)
-        # A7: alleen bij een richting-tie-break; pagina twee leest dit veld via
-        # report_html._p02_niets_feiten, dus de twee zinnen kunnen niet
-        # uiteenlopen.
+        # A7: alleen bij een richting-tie-break; alleen de markeringsregel
+        # gebruikt dit veld (pagina twee niet meer, fixronde 14-10, punt 7).
         r["direction_niets_feiten"] = (
             _direction_niets_feiten(r["key"], r["score"],
                                     (direction_agg or {}).get(r["key"]))
