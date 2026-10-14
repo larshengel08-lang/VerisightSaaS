@@ -16,7 +16,7 @@ import re
 
 import pytest
 
-from backend.report_distribution import MIN_DISTRIBUTION_N, ZONE_HIGH
+from backend.report_distribution import MIN_DISTRIBUTION_N, ZONE_HIGH, score_distribution
 from backend.report_html import (
     INTENTIE_DUIDING_KERN,
     LEIDRAAD_ANKERS,
@@ -61,10 +61,17 @@ def _seg(*specs):
     return _department_segment_rows(rows)
 
 
+def _hoog(resp):
+    """Het aantal met veel vertrekgedachten dat pagina twee noemt (fixronde 14-10)."""
+    return score_distribution([r["turnover"] for r in resp
+                               if r["turnover"] is not None])["zones"][2]
+
+
 def _info(resp, *specs):
     stay_n = sum(1 for r in resp if r["stay"] is not None)
     to_n = sum(1 for r in resp if r["turnover"] is not None)
-    return _department_intent_rows(resp, _seg(*specs), total_stay_n=stay_n, total_to_n=to_n)
+    return _department_intent_rows(resp, _seg(*specs), total_stay_n=stay_n, total_to_n=to_n,
+                                   total_to_high=_hoog(resp))
 
 
 # ── Data ─────────────────────────────────────────────────────────────────────
@@ -93,7 +100,7 @@ def test_volgorde_volgt_de_afdelingstabel():
     resp = _resp("A", 10) + _resp("B", 12) + _resp("C", 11) + _resp("D", 10)
     seg = [{"department": d, "n": n, "avg": avg, "scores": [], "is_pooled": False}
            for d, n, avg in (("C", 11, 4.0), ("A", 10, 5.0), ("B", 12, 6.0), ("D", 10, 7.0))]
-    info = _department_intent_rows(resp, seg, total_stay_n=43, total_to_n=43)
+    info = _department_intent_rows(resp, seg, total_stay_n=43, total_to_n=43, total_to_high=_hoog(resp))
     assert [r["department"] for r in info["rows"]] == ["C", "A", "B", "D"]
 
 
@@ -128,7 +135,7 @@ def test_geen_afdeling_van_tien():
 
 def test_zonder_afdelingen_niet_vastgelegd():
     resp = _resp(None, 30)
-    info = _department_intent_rows(resp, [], total_stay_n=30, total_to_n=30)
+    info = _department_intent_rows(resp, [], total_stay_n=30, total_to_n=30, total_to_high=_hoog(resp))
     assert info == {"rows": [], "dropped": [], "reason": "niet_vastgelegd"}
 
 
@@ -137,7 +144,7 @@ def test_telt_alleen_respondenten_met_een_werkbeeld():
     # afdelingstabel telt 9, dus het blok ook. Ops haalt de 10 niet.
     resp = _resp("Ops", 9) + [_r("Ops", signal=None)] + _resp("Fin", 12) + _resp(None, 10)
     seg = _department_segment_rows([r for r in resp if r["signal_score"] is not None])
-    info = _department_intent_rows(resp, seg, total_stay_n=32, total_to_n=32)
+    info = _department_intent_rows(resp, seg, total_stay_n=32, total_to_n=32, total_to_high=_hoog(resp))
     assert [r["department"] for r in info["rows"]] == ["Fin"]
     assert info["rows"][0]["n"] == 12
 
@@ -145,7 +152,7 @@ def test_telt_alleen_respondenten_met_een_werkbeeld():
 def test_ingevuld_is_de_n_van_de_tabelrij():
     resp = _resp("Ops", 14) + _resp("Fin", 11)
     seg = _seg(("Ops", 14), ("Fin", 11))
-    info = _department_intent_rows(resp, seg, total_stay_n=25, total_to_n=25)
+    info = _department_intent_rows(resp, seg, total_stay_n=25, total_to_n=25, total_to_high=_hoog(resp))
     n_tabel = {row["department"]: row["n"] for row in seg}
     assert {r["department"]: r["n"] for r in info["rows"]} == n_tabel
 
@@ -154,7 +161,7 @@ def test_alleen_werkbeeld_telt_voor_een_afdeling_van_tien():
     # Twaalf in Ops, maar acht met werkbeeld: telt als geen afdeling van tien.
     resp = _resp("Ops", 8) + [_r("Ops", signal=None)] * 4 + _resp("Fin", 6)
     seg = _department_segment_rows([r for r in resp if r["signal_score"] is not None])
-    info = _department_intent_rows(resp, seg, total_stay_n=18, total_to_n=18)
+    info = _department_intent_rows(resp, seg, total_stay_n=18, total_to_n=18, total_to_high=_hoog(resp))
     assert info["reason"] == "geen"
 
 
@@ -184,7 +191,7 @@ def test_rest_van_een_tot_negen_laat_de_kleinste_afdeling_vallen():
 def test_rest_zonder_afdeling_telt_ook_mee():
     resp = _resp("Ops", 15) + _resp("Fin", 11) + _resp(None, 2)
     info = _department_intent_rows(resp, _seg(("Ops", 15), ("Fin", 11)),
-                                   total_stay_n=28, total_to_n=28)
+                                   total_stay_n=28, total_to_n=28, total_to_high=_hoog(resp))
     assert [r["department"] for r in info["rows"]] == ["Ops"]
 
 
@@ -224,7 +231,7 @@ def test_rest_per_maat_apart_getoetst():
 
 def _rij(dept="Operations", n=14, stay_avg=3.9, to_high=6):
     return {"department": dept, "n": n, "stay_avg": stay_avg, "stay_n": n,
-            "to_n": n, "to_high": to_high}
+            "to_n": n, "to_high": to_high, "to_high_tonen": True}
 
 
 def test_blok_kop_uitleg_kolommen_en_anker():

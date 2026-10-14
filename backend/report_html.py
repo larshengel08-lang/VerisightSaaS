@@ -6078,6 +6078,13 @@ INTENTIE_AFDELING_UITLEG = (
     "alle onderwerpen per afdeling.")
 
 
+# Fixronde 14-10 (punt 1): de regel onder het intentieblok als een telling
+# niet getoond wordt. Neutraal: hij noemt niet waarom (zie _markeer_tellingen).
+INTENTIE_TELLING_NIET_GETOOND = (
+    "Bij {namen} staat geen aantal: daarmee zou je kunnen afleiden hoe afzonderlijke "
+    "mensen hebben geantwoord.")
+
+
 def _intentie_afdelingen_block(info: dict | None) -> str:
     """Blok "Blijf- en vertrekintentie per afdeling" (A5, beslisronde 12-10).
 
@@ -6098,21 +6105,33 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
     werd de cel drie regels hoog en schoof het raster in stresstest 04 naar een
     eigen vel (gemeten in het productie-image). De plantekst vraagt in de tabel
     alleen score en label. Eén geheel (no-break).
+
+    Fixronde 14-10 (punt 1): staat to_high_tonen op False (_markeer_tellingen),
+    dan geen telling maar "niet getoond", met één neutrale regel onder de
+    tabel. Die regel zegt bewust niet waarom (niemand, iedereen of de
+    aftreksom met pagina twee): anders weet de lezer het alsnog. Een rij
+    zonder dat veld is een fout (KeyError), geen stille telling.
     """
     rows = (info or {}).get("rows") or []
     if not rows:
         return ""
     grens = f"{ZONE_HIGH:.1f}".replace(".", ",")
     trs = ""
+    verborgen: list[str] = []
     for r in rows:
         avg = r["stay_avg"]
+        if r["to_high_tonen"]:
+            telling = f'{r["to_high"]} van de {r["to_n"]}'
+        else:
+            verborgen.append(r["department"])
+            telling = ('<span style="font-size:8px;color:#94A3B8;">niet getoond</span>')
         trs += (f'<tr><td class="iq" style="width:30%;"><strong>{_h(r["department"])}</strong></td>'
                 f'<td style="width:16%;">{r["n"]}</td>'
                 f'<td style="width:30%;"><span style="font-weight:700;color:{_factor_color(avg)};">'
                 f'{_score_str(avg)}</span><br>'
                 f'<span style="font-size:9px;color:{_factor_color(avg)};">'
                 f'{_h(_factor_label(avg))}</span></td>'
-                f'<td style="width:24%;">{r["to_high"]} van de {r["to_n"]}</td></tr>')
+                f'<td style="width:24%;">{telling}</td></tr>')
     kop = ('<thead><tr><th style="width:30%">Afdeling</th>'
            '<th style="width:16%">Inge&shy;vuld</th>'
            '<th style="width:30%">Blijf&shy;intentie</th>'
@@ -6127,6 +6146,10 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
         weg = (f'<p class="seg-sub-intro">{_h(namen)} {werkwoord} hier niet in: met de cijfers '
                'voor de hele organisatie op ' + _P02 + ' zou je anders de antwoorden van een '
                f'groep van minder dan {MIN_DISTRIBUTION_N} mensen kunnen afleiden.</p>')
+    if verborgen:
+        weg += ('<p class="seg-sub-intro">'
+                + _h(INTENTIE_TELLING_NIET_GETOOND.format(namen=_opsomming(verborgen)))
+                + '</p>')
     return (f'<div class="no-break seg-sub" id="{LEIDRAAD_ANKERS["intenties"]}">'
             '<div style="font-family:&quot;Inter Tight&quot;, sans-serif;font-weight:700;'
             f'font-size:11px;margin-bottom:2px;">{INTENTIE_AFDELING_KOP}</div>'
@@ -6521,14 +6544,17 @@ def _blijf_naar_10(raw: float) -> float:
 
 
 def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *,
-                            total_stay_n: int, total_to_n: int) -> dict:
+                            total_stay_n: int, total_to_n: int,
+                            total_to_high: int) -> dict:
     """Blijf- en vertrekintentie per afdeling (A5, beslisronde 12-10), Loep Behoud.
 
     Input per afgeronde respondent: {"department": str|None, "signal_score":
     float|None (het werkbeeld, zoals de afdelingstabel), "stay": float|None
     (al op 1-10, via _blijf_naar_10), "turnover": float|None}. total_stay_n en
     total_to_n zijn de noemers die pagina twee toont (alle losse scores van de
-    meting, ook zonder afdeling of werkbeeld).
+    meting, ook zonder afdeling of werkbeeld). total_to_high is het aantal met
+    veel vertrekgedachten dat pagina twee daarbij noemt (fixronde 14-10, zie
+    _markeer_tellingen); verplicht, zodat geen aanroep de aftreksom vergeet.
 
     Eén telbron met de afdelingstabel (codereview taak 3): een afdeling telt
     de respondenten met een werkbeeldscore, zoals _department_grouping. Het
@@ -6538,7 +6564,8 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
     Output: {"rows": [...], "dropped": [...], "reason": str}
     - rows, in de volgorde van de afdelingstabel: per afdeling department, n
       (van de tabelrij), stay_avg, stay_n, to_n, to_high (vanaf ZONE_HIGH,
-      dezelfde zone als de zin over vertrekgedachten op pagina twee).
+      dezelfde zone als de zin over vertrekgedachten op pagina twee) en
+      to_high_tonen (mag de telling in het blok, zie _markeer_tellingen).
     - reason "" zodra er rijen zijn, anders (voor de zin op pagina twee,
       INTENTIE_AFDELING_ZIN):
       "niet_vastgelegd"  geen respondent met werkbeeld heeft een afdeling;
@@ -6611,7 +6638,42 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
         dropped.append({"department": kleinste["department"], "n": kleinste["n"]})
     if not rows:
         return _leeg("herleidbaar", dropped)
+    _markeer_tellingen(rows, total_to_n=total_to_n, total_to_high=total_to_high)
     return {"rows": rows, "dropped": dropped, "reason": ""}
+
+
+def _markeer_tellingen(rows: list[dict], *, total_to_n: int, total_to_high: int) -> None:
+    """Zet per rij to_high_tonen: mag "x van de n met veel vertrekgedachten" erin?
+    (fixronde 14-10, punt 1, besluit Lars 14-10)
+
+    1. Niemand (0) of iedereen (n van de n): geen telling. Anders weet het MT
+       van elk lid van die afdeling hoe het zit.
+    2. Pagina twee toont het totaal voor de hele meting. Totaal min de getoonde
+       tellingen is de aftreksom over alles wat niet getoond is: de afdelingen
+       zonder telling plus iedereen buiten het blok (kleine afdelingen, de
+       weggevallen afdelingen, mensen zonder afdeling). Is die som zelf 0 of
+       alles, dan zegt pagina twee dat over elke afdeling erin. Dan valt ook de
+       telling van de kleinste afdeling met telling weg (kleinste n, bij gelijke
+       n de eerste op naam, zoals bij het weglaten hierboven). Eén keer is
+       genoeg: die afdeling is zelf niet 0 of alles (punt 1), dus de som wordt
+       het daarna ook niet. De lus blijft voor de zekerheid.
+    Wordt niets meer getoond, dan is de aftreksom het totaal van pagina twee
+    zelf; dat is een uitspraak over de hele meting, niet over een afdeling.
+    """
+    for r in rows:
+        r["to_high_tonen"] = 0 < r["to_high"] < r["to_n"]
+
+    def _som() -> tuple[int, int]:
+        getoond = [r for r in rows if r["to_high_tonen"]]
+        return (total_to_high - sum(r["to_high"] for r in getoond),
+                total_to_n - sum(r["to_n"] for r in getoond))
+
+    hoog, n = _som()
+    while n > 0 and hoog in (0, n) and any(r["to_high_tonen"] for r in rows):
+        kleinste = min((r for r in rows if r["to_high_tonen"]),
+                       key=lambda r: (r["n"], r["department"]))
+        kleinste["to_high_tonen"] = False
+        hoog, n = _som()
 
 
 def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
@@ -6881,7 +6943,9 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
                    if r.response.stay_intent_score is not None else None),
           "turnover": r.response.turnover_intention_score}
          for r in completed],
-        segment_rows, total_stay_n=len(si_sc), total_to_n=len(to_sc))
+        segment_rows, total_stay_n=len(si_sc), total_to_n=len(to_sc),
+        # Hetzelfde getal als de zin op pagina twee (_intentie_duiding).
+        total_to_high=score_distribution(to_sc)["zones"][2] if to_sc else 0)
         if scan_type == "retention" else None)
 
     # eNPS staat canoniek in full_result["enps"]["raw_score"] (zoals de submit-flow
