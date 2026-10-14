@@ -325,3 +325,16 @@ def test_volledige_render_toont_de_zin_alleen_onder_de_rasterrij(scan, html_fn):
         "Staat hoger dan Groeiperspectief omdat hier meer mensen om verandering vragen "
         f"(5 van de 8 tegen 1 van de 4). Tegelijk kozen hier 3 van de 8 ‘{NIETS[scan]}’, "
         "evenveel als de grootste richting."]
+
+
+def test_niets_tekst_is_onveranderbaar():
+    # Fixronde 14-10, punt 12: een bevroren vorm voorkomt dat iemand per
+    # ongeluk de niets-tekst van een scan overschrijft. Lezen blijft gelijk.
+    with pytest.raises(TypeError):
+        dp.DIRECTION_NONE_TEXT["retention"] = "iets anders"
+    with pytest.raises(AttributeError):
+        dp.DIRECTION_NONE_TEXT.pop("exit")
+    assert dict(dp.DIRECTION_NONE_TEXT) == NIETS
+    # De respondentoptie krijgt een eigen, gewone kopie.
+    texts = dp.direction_option_texts("retention", "workload")
+    assert NIETS["retention"] in texts.values()

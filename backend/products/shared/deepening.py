@@ -5,6 +5,8 @@ Content + pure logica. Geen invloed op scoring.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -414,7 +416,11 @@ def _q(onderwerp: str) -> dict[str, str]:
 # De niets-tekst per scan: voor elk onderwerp dezelfde. Eén bron voor de
 # respondentoptie (_none) en voor rapportzinnen die de niets-groep citeren
 # zonder een optiesleutel bij de hand (report_priority, A7 beslisronde 12-10).
-DIRECTION_NONE_TEXT: dict[str, str] = _t("Niets, dit zit hier goed", "Niets, dit zat hier goed")
+# Onveranderbaar (fixronde 14-10, punt 12): een gewone dict kon per ongeluk
+# worden overschreven, en dan citeert het rapport iets anders dan de
+# respondent zag. Lezen werkt gelijk; _none maakt er een eigen dict van.
+DIRECTION_NONE_TEXT: Mapping[str, str] = MappingProxyType(
+    _t("Niets, dit zit hier goed", "Niets, dit zat hier goed"))
 
 
 def _none(prefix: str) -> dict[str, Any]:
