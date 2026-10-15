@@ -5,6 +5,8 @@ Content + pure logica. Geen invloed op scoring.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -411,9 +413,19 @@ def _q(onderwerp: str) -> dict[str, str]:
     }
 
 
+# De niets-tekst per scan: voor elk onderwerp dezelfde. Eén bron voor de
+# respondentoptie (_none) en voor rapportzinnen die de niets-groep citeren
+# zonder een optiesleutel bij de hand (report_priority, A7 beslisronde 12-10).
+# Onveranderbaar (fixronde 14-10, punt 12): een gewone dict kon per ongeluk
+# worden overschreven, en dan citeert het rapport iets anders dan de
+# respondent zag. Lezen werkt gelijk; _none maakt er een eigen dict van.
+DIRECTION_NONE_TEXT: Mapping[str, str] = MappingProxyType(
+    _t("Niets, dit zit hier goed", "Niets, dit zat hier goed"))
+
+
 def _none(prefix: str) -> dict[str, Any]:
     return {"key": f"{prefix}_none",
-            "text": _t("Niets, dit zit hier goed", "Niets, dit zat hier goed"),
+            "text": dict(DIRECTION_NONE_TEXT),
             "imperative": None}
 
 
@@ -657,7 +669,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "ldd_mandate": {
             "retention": "Welke drie beslissingen mag een medewerker bij jullie nemen zonder het eerst te vragen, en hoe reageert een leidinggevende als zo'n beslissing anders uitpakt?",
-            "exit": "Welke drie beslissingen mag een medewerker nu nemen zonder het eerst te vragen, en van wie heeft die dat gehoord? Was dat een jaar geleden anders?",
+            "exit": "Welke drie beslissingen mag een medewerker nu nemen zonder het eerst te vragen, en van wie heeft die dat gehoord? Was dat anders in de periode waar deze meting over gaat?",
         },
         "ldd_escalation": {
             "retention": "Als een medewerker vastloopt in een situatie of een spanning: wat doet de leidinggevende dan, binnen hoeveel dagen, en bij wie kan die medewerker terecht als het daar niet lukt?",
@@ -691,7 +703,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "cud_agreements": {
             "retention": "Een collega houdt zich niet aan een teamafspraak. Wie zegt daar bij jullie iets van, en hoe snel? En waar staan die afspraken, zodat een nieuw teamlid ze kent?",
-            "exit": "Een collega houdt zich nu niet aan een teamafspraak. Wie zegt daar iets van, en waar staan die afspraken? Was dat een jaar geleden anders?",
+            "exit": "Een collega houdt zich nu niet aan een teamafspraak. Wie zegt daar iets van, en waar staan die afspraken? Was dat anders in de periode waar deze meting over gaat?",
         },
         "cud_involvement": {
             "retention": "Welk besluit dat een team raakt komt er de komende maanden aan? Op welk moment praten medewerkers mee voordat het vaststaat, en wat horen ze terug over hun inbreng?",
@@ -713,11 +725,11 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "grd_followthrough": {
             "retention": "Waar staat een ontwikkelafspraak bij jullie na het gesprek, wie kijkt er na drie maanden naar, en hoe ziet de medewerker dat er iets mee gebeurt?",
-            "exit": "Waar staat een ontwikkelafspraak nu na het gesprek, en wie komt erop terug? Hoeveel afspraken van een jaar geleden zijn nagekomen?",
+            "exit": "Waar staat een ontwikkelafspraak nu na het gesprek, en wie komt erop terug? Werden ontwikkelafspraken ook zo vastgelegd en opgevolgd in de periode waar deze meting over gaat?",
         },
         "grd_time": {
             "retention": "Hoeveel uur per maand mag ontwikkeling bij jullie kosten, wie vangt het werk dan op, en wat gebeurt er als het druk is?",
-            "exit": "Hoeveel uur per maand heeft een medewerker nu voor ontwikkeling, en wat gebeurt er als het druk is? Was dat een jaar geleden anders?",
+            "exit": "Hoeveel uur per maand heeft een medewerker nu voor ontwikkeling, en wat gebeurt er als het druk is? Was dat anders in de periode waar deze meting over gaat?",
         },
         "grd_criteria": {
             "retention": "Wat moet iemand bij jullie laten zien om door te groeien, wie beslist daarover, en waar kan een medewerker dat nalezen voordat hij of zij het vraagt?",
@@ -725,17 +737,17 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "grd_nextstep": {
             "retention": "Welke vervolgstappen zijn er bij jullie echt, en welke niet? Wie zegt dat eerlijk tegen een medewerker, en op welk moment in het jaar?",
-            "exit": "Welke vervolgstappen zijn er nu echt, en welke niet? Wie zegt dat eerlijk tegen een medewerker, en wanneer? Gebeurde dat een jaar geleden ook?",
+            "exit": "Welke vervolgstappen zijn er nu echt, en welke niet? Wie zegt dat eerlijk tegen een medewerker, en wanneer? Gebeurde dat ook in de periode waar deze meting over gaat?",
         },
     },
     "compensation": {
         "cpd_insight": {
             "retention": "Een medewerker vraagt hoe jullie salaris zich verhoudt tot vergelijkbaar werk elders. Wat krijgt die te zien? En weten jullie het zelf niet: wie zoekt het uit, voor welke functies eerst?",
-            "exit": "Een medewerker vraagt nu hoe jullie salaris zich verhoudt tot vergelijkbaar werk elders. Wat krijgt die te zien, en weten jullie het zelf? Was dat een jaar geleden anders?",
+            "exit": "Een medewerker vraagt nu hoe jullie salaris zich verhoudt tot vergelijkbaar werk elders. Wat krijgt die te zien, en weten jullie het zelf? Was dat anders in de periode waar deze meting over gaat?",
         },
         "cpd_explain": {
             "retention": "Welke verschillen tussen vergelijkbare functies kunnen jullie goed uitleggen en welke niet? Wie legt ze uit, en wat doen jullie met een verschil dat niemand kan uitleggen?",
-            "exit": "Welke verschillen tussen vergelijkbare functies kunnen jullie nu uitleggen, en welke niet? Wat doen jullie met een verschil dat niemand kan uitleggen? En een jaar geleden?",
+            "exit": "Welke verschillen tussen vergelijkbare functies kunnen jullie nu uitleggen, en welke niet? Wat doen jullie met een verschil dat niemand kan uitleggen? En in de periode waar deze meting over gaat?",
         },
         "cpd_review": {
             "retention": "Wanneer keken jullie voor het laatst of de beloning nog past bij hoe zwaar een functie is? Welke functies zijn sindsdien veranderd, en wie kijkt daar als eerste naar?",
@@ -743,15 +755,15 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "cpd_path": {
             "retention": "Wat kan een medewerker bij jullie de komende twee jaar aan salarisgroei verwachten: onder welke voorwaarden, op welk moment, en wie vertelt dat?",
-            "exit": "Wat kan een medewerker nu de komende twee jaar aan salarisgroei verwachten, en wie vertelt dat? Kreeg een medewerker dat een jaar geleden ook te horen?",
+            "exit": "Wat kan een medewerker nu de komende twee jaar aan salarisgroei verwachten, en wie vertelt dat? Kreeg een medewerker dat in de periode waar deze meting over gaat ook te horen?",
         },
         "cpd_clarity": {
             "retention": "Stel dat een medewerker het morgen vraagt: wie legt in twee minuten uit hoe bij jullie een salaris en een volgende stap worden bepaald? Wat blijft er onduidelijk, en wie zet dat op papier?",
-            "exit": "Stel dat een medewerker het nu vraagt: wie legt in twee minuten uit hoe een salaris en een volgende stap worden bepaald? Was die uitleg er een jaar geleden ook?",
+            "exit": "Stel dat een medewerker het nu vraagt: wie legt in twee minuten uit hoe een salaris en een volgende stap worden bepaald? Was die uitleg er ook in de periode waar deze meting over gaat?",
         },
         "cpd_flex": {
             "retention": "Wat kan er bij jullie echt rond rooster en werktijden, voor welke functies, wie beslist over een verzoek, en waar staat dat zodat niemand het hoeft te vragen?",
-            "exit": "Wat kan er nu echt rond rooster en werktijden, voor welke functies, en waar staat dat? Was dat een jaar geleden anders?",
+            "exit": "Wat kan er nu echt rond rooster en werktijden, voor welke functies, en waar staat dat? Was dat anders in de periode waar deze meting over gaat?",
         },
     },
     "workload": {
@@ -761,7 +773,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "wld_planning": {
             "retention": "Hoe ver vooruit zien jullie hoeveel werk er komt, en wie legt dat naast de bezetting? Klopt het niet: mensen erbij, werk eraf, of vangt het team het op?",
-            "exit": "Hoe ver vooruit weten jullie nu hoeveel werk er komt, en wie legt dat naast de bezetting? Keken jullie daar een jaar geleden ook zo naar?",
+            "exit": "Hoe ver vooruit weten jullie nu hoeveel werk er komt, en wie legt dat naast de bezetting? Keken jullie daar ook zo naar in de periode waar deze meting over gaat?",
         },
         "wld_peaks": {
             "retention": "Welke pieken kunnen jullie zien aankomen, en welke niet? Wie verdeelt het spoedwerk, en wie mag zeggen: dit kan er nu niet bij?",
@@ -773,7 +785,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "wld_priorities": {
             "retention": "Als alles belangrijk is: wie zegt bij jullie hardop wat mag wachten, en hoe weet een medewerker dat op maandag? Wat hebben jullie zelf voor het laatst laten wachten?",
-            "exit": "Als alles belangrijk is: wie zegt nu hardop wat mag wachten, en hoe weet een medewerker dat op maandag? Was dat een jaar geleden anders?",
+            "exit": "Als alles belangrijk is: wie zegt nu hardop wat mag wachten, en hoe weet een medewerker dat op maandag? Was dat anders in de periode waar deze meting over gaat?",
         },
         "wld_friction": {
             "retention": "Welk dubbel werk of systeemgedoe kost de meeste tijd, en weten jullie dat of de mensen die het doen? Hoe halen jullie het op, en wie lost het eerste punt op?",
@@ -783,7 +795,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
     "role_clarity": {
         "rcd_priorities": {
             "retention": "Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je bij jullie twee keer hetzelfde lijstje? Wie bespreekt het, en hoe vaak?",
-            "exit": "Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je nu twee keer hetzelfde lijstje? En een jaar geleden?",
+            "exit": "Vraag een medewerker en de leidinggevende los van elkaar naar de drie belangrijkste dingen in dat werk. Krijg je nu twee keer hetzelfde lijstje? En in de periode waar deze meting over gaat?",
         },
         "rcd_expectations": {
             "retention": "Waarop wordt een medewerker bij jullie aangesproken, en wist die dat vooraf? Wie spreekt verwachtingen uit, op welk moment, en waar staan ze?",
@@ -799,7 +811,7 @@ WORK_QUESTIONS: dict[str, dict[str, dict[str, str]]] = {
         },
         "rcd_mandate": {
             "retention": "Neem een functie die bij jullie veel voorkomt. Waarover beslist iemand in die rol zelf, waarover samen en waarover niet, en wie vertelt dat bij de start?",
-            "exit": "Neem een functie die veel voorkomt. Waarover beslist iemand in die rol nu zelf, en wie vertelt dat? Was dat een jaar geleden even duidelijk?",
+            "exit": "Neem een functie die veel voorkomt. Waarover beslist iemand in die rol nu zelf, en wie vertelt dat? Was dat even duidelijk in de periode waar deze meting over gaat?",
         },
         "rcd_information": {
             "retention": "Iemand begint bij jullie aan een klus of neemt een dienst over. Wat moet die dan weten, wie zorgt dat het er ligt, en wat doet die als het ontbreekt?",
@@ -817,17 +829,18 @@ WORK_QUESTION_VARIANTS: dict[str, dict[str, str]] = {
         "exit": "Deze vertrekkers kozen verschillend; de verdeling staat bij ‘Wat er moet gebeuren’. Welke van de meest gekozen richtingen pakken jullie op voor wie er nu werkt, en welke laten jullie bewust liggen?",
     },
     "split_none": {
-        "retention": "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kan kloppen. Waar zouden jullie met de meest gekozen richting beginnen?",
-        "exit": "Deze vertrekkers waren verdeeld: een deel vroeg om verandering, een even groot deel zei dat het goed zat. Beide kan kloppen. Waar zouden jullie voor wie er nu werkt met de meest gekozen richting beginnen?",
+        "retention": "Deze groep is verdeeld: een deel vraagt om verandering, een even groot deel zegt dat het goed zit. Beide kunnen kloppen. Waar zouden jullie met de meest gekozen richting beginnen?",
+        "exit": "Deze vertrekkers waren verdeeld: een deel vroeg om verandering, een even groot deel zei dat het goed zat. Beide kunnen kloppen. Waar zouden jullie voor wie er nu werkt met de meest gekozen richting beginnen?",
     },
     # Spec 2026-10-09 par. 3 (besluit Lars 9-10): de niets-groep is minstens zo
     # groot als de grootste richting (direction_none_at_least_top_shown). Niet
     # "een even groot deel": de niets-groep kan ook groter zijn. De vraag laat
     # beide uitkomsten open, zodat hij de kaart niet tegenspreekt door het MT
-    # toch een route te laten kiezen. CONCEPT: nog ter review bij Lars.
+    # toch een route te laten kiezen. Goedgekeurd door Lars op 12-10
+    # (beslisronde na de polijstronde, A1).
     "none_at_least_top": {
-        "retention": "Bij deze groep zeggen minstens zoveel mensen dat het hier goed zit als er om de meest gekozen richting vragen. Beide kan kloppen. Pakken jullie hier toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
-        "exit": "Bij deze vertrekkers zeiden minstens zoveel mensen dat het hier goed zat als er om de meest gekozen richting vroegen. Beide kan kloppen. Pakken jullie hier voor wie er nu werkt toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
+        "retention": "Bij deze groep zeggen minstens zoveel mensen dat het hier goed zit als er om de meest gekozen richting vragen. Beide kunnen kloppen. Pakken jullie hier toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
+        "exit": "Bij deze vertrekkers zeiden minstens zoveel mensen dat het hier goed zat als er om de meest gekozen richting vroegen. Beide kunnen kloppen. Pakken jullie hier voor wie er nu werkt toch iets op, en zo ja wat, of laten jullie dit onderwerp bewust liggen?",
     },
 }
 

@@ -29,9 +29,14 @@ def _row(dept, n, avg, invited=None, pooled=False, members=None):
     return r
 
 
+# Fixronde 14-10 (punt 10): alleen afdelingen met een cijfer (minstens 10
+# antwoorden) doen mee aan de vergelijking, ook de restgroep. Finance en de
+# restgroep hebben daarom 12 en 10 (was 8 en 9), zodat deze fixture blijft
+# toetsen wat ze toetste: een aangewezen afdeling, met een lagere restgroep.
+# Marketing (5) blijft klein: daardoor zegt de conclusie "met een cijfer".
 ROWS = [_row("Operations", 17, 6.0, invited=21), _row("Marketing", 5, 6.3, invited=8),
-        _row("Finance", 8, 6.6, invited=10),
-        _row("Overige afdelingen", 9, 5.9, invited=19, pooled=True, members=["Facilitair", "Staf"])]
+        _row("Finance", 12, 6.6, invited=14),
+        _row("Overige afdelingen", 10, 5.9, invited=19, pooled=True, members=["Facilitair", "Staf"])]
 FACTOR_ROWS = {"Operations": {"factors": [("workload", 4.9, 17), ("leadership", 5.2, 17)], "omitted": 0}}
 
 
@@ -42,9 +47,13 @@ def _tekst(html):
 def test_segment_startpunt_wijst_alleen_aan_bij_beide_grenzen():
     seg = _segment_startpunt(ROWS, FACTOR_ROWS)
     assert seg == {"department": "Operations", "score": 6.0, "n": 17, "invited": 21,
-                   "low_fk": "workload", "low_avg": 4.9, "rest_lager": True}
+                   "low_fk": "workload", "low_avg": 4.9, "kwalificatie": "met een cijfer",
+                   "tegen_org": None, "rest_lager": True}
     te_klein = [_row("Ops", 7, 5.0), _row("Sales", 9, 6.1)]
     assert _segment_startpunt(te_klein, None) is None
+    # Fixronde 14-10: de volgende afdeling zonder cijfer telt niet als vergelijking.
+    volgende_klein = [_row("Ops", 14, 5.0), _row("Sales", 9, 6.1)]
+    assert _segment_startpunt(volgende_klein, None) is None
     te_dicht = [_row("Ops", 12, 6.0), _row("Sales", 12, 6.1)]
     assert _segment_startpunt(te_dicht, None) is None
 
@@ -63,7 +72,7 @@ def test_brugzin_drie_varianten():
     assert _brugzin("growth", "Groeiperspectief", None, "retention") == ""
     zonder_thema = _brugzin("growth", "Groeiperspectief", dict(seg, low_fk=None, low_avg=None), "retention")
     assert zonder_thema == ("Organisatiebreed begint het gesprek bij Groeiperspectief. Operations scoort het "
-                            "laagst van de afdelingen die apart getoond worden (6.0/10); welk onderwerp "
+                            "laagst van de afdelingen met een cijfer (6.0/10); welk onderwerp "
                             "daar het zwaarst weegt is niet te zeggen, te weinig antwoorden per onderwerp. "
                             "De restgroep scoort lager, maar bestaat uit kleine afdelingen en telt daarom "
                             "niet als startpunt.")
@@ -86,10 +95,12 @@ def test_restgroep_heeft_samenstelling_en_noemer():
     html = _segment_block(ROWS, FACTOR_ROWS, scan_type="retention")
     tekst = _tekst(html)
     assert "Overige afdelingen Facilitair, Staf" in tekst
-    assert "9/19" in tekst and "47%" in tekst
-    # S9 (polijstronde): de restgroep heeft er 9, dus geen cijfer in de zin.
-    assert ("De restgroep “Overige afdelingen” (Facilitair, Staf; samen 19 uitgenodigd, 9 ingevuld) "
-            "scoort lager, maar") in tekst.replace("&ldquo;", "“").replace("&rdquo;", "”")
+    assert "10/19" in tekst and "53%" in tekst
+    # S9 (polijstronde): de restgroep heeft er 10, dus het cijfer staat in de
+    # zin. Een kleinere restgroep wordt sinds fixronde 14-10 niet vergeleken
+    # (tests/test_fixronde_1410_afdelingen.py).
+    assert ("De restgroep “Overige afdelingen” (Facilitair, Staf; samen 19 uitgenodigd, 10 ingevuld) "
+            "scoort lager (5.9/10), maar") in tekst.replace("&ldquo;", "“").replace("&rdquo;", "”")
 
 
 def test_restgroep_zonder_noemer_meldt_alleen_het_aantal():
@@ -98,9 +109,9 @@ def test_restgroep_zonder_noemer_meldt_alleen_het_aantal():
     rows = [r.copy() for r in ROWS]
     rows[-1]["invited"] = None
     tekst = _tekst(_segment_block(rows, FACTOR_ROWS, scan_type="retention"))
-    assert ("(Facilitair, Staf; 9 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet "
+    assert ("(Facilitair, Staf; 10 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet "
             "volledig vastgelegd) scoort lager") in tekst
-    assert "uitgenodigd, 9 ingevuld" not in tekst
+    assert "uitgenodigd, 10 ingevuld" not in tekst
 
 
 def test_department_rows_dragen_de_leden_van_de_restgroep():
@@ -219,17 +230,20 @@ def test_loep_start_cover_en_pagina_twee_noemen_hetzelfde_startpunt():
 def test_variant_zonder_thema_hedget_net_als_het_navy_blok():
     # Defect 1: "Operations scoort het laagst van de afdelingen (6.0/10)" is
     # onwaar zodra de gepoolde restgroep lager staat, en het navy blok zegt in
-    # precies deze situatie "van de afdelingen die apart getoond worden".
+    # precies deze situatie "van de afdelingen die apart getoond worden", of,
+    # met kleine afdelingen ernaast, "met een cijfer" (fixronde 14-10).
     seg = dict(_segment_startpunt(ROWS, FACTOR_ROWS), low_fk=None, low_avg=None)
     assert seg["rest_lager"] is True
     zin = _brugzin("growth", "Groeiperspectief", seg, "retention")
-    assert "scoort het laagst van de afdelingen die apart getoond worden (6.0/10)" in zin
+    assert "scoort het laagst van de afdelingen met een cijfer (6.0/10)" in zin
     assert ("De restgroep scoort lager, maar bestaat uit kleine afdelingen en telt "
             "daarom niet als startpunt.") in zin
 
 
 def test_variant_zonder_thema_zwijgt_over_een_restgroep_die_niet_lager_staat():
-    zonder_rest = [r for r in ROWS if not r["is_pooled"]]
+    # Zonder restgroep en zonder de kleine afdeling (fixronde 14-10): dan
+    # omvat "die apart getoond worden" precies de vergeleken afdelingen.
+    zonder_rest = [r for r in ROWS if not r["is_pooled"] and r["n"] >= 10]
     seg = dict(_segment_startpunt(zonder_rest, FACTOR_ROWS), low_fk=None, low_avg=None)
     assert seg["rest_lager"] is False
     zin = _brugzin("growth", "Groeiperspectief", seg, "retention")
@@ -291,15 +305,18 @@ def test_restgroepnoemer_telt_afdelingen_zonder_respons_mee():
 
 
 def test_restgroepnoemer_vervalt_met_reden_als_de_campagnelijst_hem_niet_draagt():
+    # Fixronde 14-10: de restgroep heeft er 11 (cijfer in de tabel); een
+    # kleinere restgroep wordt niet meer vergeleken.
     resp = ([{"department": "Ops", "signal_score": 6.0}] * 12
             + [{"department": "Sales", "signal_score": 6.5}] * 10
-            + [{"department": "Staf", "signal_score": 4.0}] * 3
-            + [{"department": "Facilitair", "signal_score": 4.2}] * 3)
+            + [{"department": "Staf", "signal_score": 4.0}] * 4
+            + [{"department": "Facilitair", "signal_score": 4.2}] * 4
+            + [{"department": "Inkoop", "signal_score": 4.1}] * 3)
     rows = _enrich_segment_rows_with_invited(
         _department_segment_rows(resp),
         [{"label": "Ops", "invited_count": 15}, {"label": "Staf", "invited_count": 4}])
     pooled = [r for r in rows if r["is_pooled"]][0]
     assert pooled["invited"] is None
     tekst = _tekst(_segment_start_note(rows, None, "retention"))
-    assert ("6 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
+    assert ("11 ingevuld, hoeveel mensen hier zijn uitgenodigd is niet volledig "
             "vastgelegd) scoort lager") in tekst

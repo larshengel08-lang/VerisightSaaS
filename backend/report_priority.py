@@ -11,10 +11,13 @@ from typing import Any
 from backend.products.shared.deepening import (
     DEEPENING_MIN_N,
     DIRECTION_MIN_N,
+    DIRECTION_NONE_TEXT,
     TOP_CHOICE_MIN_LEAD,
     agenda_enrichment,
+    direction_none_at_least_top_shown,
+    direction_state,
 )
-from backend.report_distribution import MIN_DISTRIBUTION_N, ZONE_LOW
+from backend.report_distribution import MIN_DISTRIBUTION_N, ZONE_LOW, shown
 from backend.scoring_config import ORG_FACTOR_KEYS
 
 # Gelijkspel-marge, vergelijking STRIKT kleiner dan (spec par. 3.4):
@@ -199,14 +202,75 @@ def _decision(row: dict[str, Any], below_rows: list[dict[str, Any]],
     return None
 
 
-def _tie_break_note(row: dict[str, Any], other: dict[str, Any], kind: str) -> str:
-    """De zin onder de rij. Formuleert alleen; de beslissing komt uit _decision."""
+def _direction_niets_feiten(fk: str, score: float | None,
+                            agg: dict[str, Any] | None) -> dict[str, int] | None:
+    """De tellingen van de niets-groep als de richtingkaart van dit onderwerp
+    de verdeeld-staat toont met een niets-groep die minstens zo groot is als
+    de grootste richting, anders None (beslisronde 12-10, A7).
+
+    {"none_n", "n", "change_top_n"}: niets-stemmen, beantwoorders van de
+    richtingvraag voor dit onderwerp (dezelfde n als kaart en p.02-richtingregel)
+    en de stemmen voor de grootste enkele richting. Feiten, geen tekst: de
+    zin bouwt _tie_break_note via direction_niets_zin. Pagina twee noemt hem
+    niet meer (fixronde 14-10, punt 7, besluit Lars 14-10).
+
+    Zelfde poort als de kaart: direction_none_at_least_top_shown op
+    direction_state met de GETOONDE score (B15), zodat de markeringsregel
+    nooit een andere staat ziet dan de kaart. Alleen aangeroepen
+    voor een rij die het gelijkspel op de vraag om verandering won: dan heeft
+    hij gegarandeerd minstens DIRECTION_MIN_N beantwoorders en een telling.
+    """
+    if not agg:
+        return None
+    st = direction_state(agg, fk, shown(score))
+    if not direction_none_at_least_top_shown(st):
+        return None
+    return {"none_n": st["none_n"], "n": st["n"], "change_top_n": st["change_top_n"]}
+
+
+def direction_niets_zin(feiten: dict[str, int], scan_type: str, waar: str) -> str:
+    """De losse zin achter de richting-grond (A7, beslisronde 12-10), voor de
+    markeringsregel (waar = "hier"). Pagina twee gebruikte hem ook ("bij
+    <startpunt>"); sinds fixronde 14-10 (punt 7) niet meer.
+
+    Een eigen zin met tellingen, geen bijzin: direct na "meer mensen vragen om
+    verandering (5 van de 8 ...)" las "een even grote groep" als een
+    vergelijking met alle veranderstemmen, terwijl de niets-groep alleen met de
+    grootste ENKELE richting wordt vergeleken. Daarom staat die vergelijking er
+    expliciet, met het getal erbij als de niets-groep groter is.
+
+    Altijd "kozen": none_n >= change_top_n >= DIRECTION_NONE_TOP_COUNTS_MIN (2),
+    anders vuurt de poort niet. "X van de Y" zonder percentage, zoals de
+    tellingen ervoor in dezelfde regel en zoals pagina twee (R18).
+    """
+    none_n, n, top = feiten["none_n"], feiten["n"], feiten["change_top_n"]
+    vergelijking = ("evenveel als de grootste richting" if none_n == top
+                    else "meer dan de grootste richting (" + str(top) + ")")
+    return ("Tegelijk kozen " + waar + " " + str(none_n) + " van de " + str(n)
+            + " ‘" + DIRECTION_NONE_TEXT[scan_type] + "’, " + vergelijking + ".")
+
+
+def _tie_break_note(row: dict[str, Any], other: dict[str, Any], kind: str,
+                    scan_type: str) -> str:
+    """De zin onder de rij. Formuleert alleen; de beslissing komt uit _decision.
+
+    A7 (beslisronde 12-10): won de rij op de vraag om verandering terwijl de
+    kaart van dit onderwerp de niets-groep minstens zo groot toont als de
+    grootste richting (row["direction_niets_feiten"]), dan volgt een losse zin
+    met die tellingen (direction_niets_zin, "hier"). Anders lijkt "meer mensen
+    vragen om verandering" de kaart tegen te spreken. De poort hangt aan de
+    data, niet aan of er een kaart staat: wint een rij buiten de agenda op
+    richting (stresstestscenario 04, Leiderschap), dan staat dezelfde verdeling
+    in de bijlage (_bijlage_richting_block) en klopt de zin ook.
+    """
     lbl = other["label"]
     if kind == "direction":
+        feiten = row.get("direction_niets_feiten")
+        staart = (" " + direction_niets_zin(feiten, scan_type, "hier") if feiten else "")
         return (f"Staat hoger dan {lbl} omdat hier meer mensen om verandering "
                 f"vragen ({row['direction_change']} van de "
                 f"{row['direction_answered']} tegen {other['direction_change']} "
-                f"van de {other['direction_answered']}).")
+                f"van de {other['direction_answered']})." + staart)
     if kind == "spread":
         return (f"Staat hoger dan {lbl} omdat de antwoorden hier verder "
                 f"uiteenlopen ({row['spread_below']} van de {row['spread_n']} "
@@ -336,6 +400,12 @@ def rank_factors(scan_type: str,
         # van, geen tweede redenering.
         r["decided_by"] = ({"kind": decided[0], "other": decided[1]["key"]}
                            if decided else None)
-        r["tie_break_note"] = (_tie_break_note(r, decided[1], decided[0])
+        # A7: alleen bij een richting-tie-break; alleen de markeringsregel
+        # gebruikt dit veld (pagina twee niet meer, fixronde 14-10, punt 7).
+        r["direction_niets_feiten"] = (
+            _direction_niets_feiten(r["key"], r["score"],
+                                    (direction_agg or {}).get(r["key"]))
+            if decided and decided[0] == "direction" else None)
+        r["tie_break_note"] = (_tie_break_note(r, decided[1], decided[0], scan_type)
                                if decided else None)
     return rows

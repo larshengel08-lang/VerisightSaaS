@@ -180,23 +180,26 @@ def test_loep_start_verandert_niet():
 
 STAY = [2.0] * 25 + [5.5] * 8 + [8.0] * 6        # n=39
 TO_VEEL = [7.0] * 19 + [3.0] * 20                 # 19 van de 39 vanaf 6,5
-KERN = ("Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke afdeling "
-        "het speelt of waarom, en ook niet wie er vertrekt: dit rapport splitst ze niet per "
-        "afdeling uit.")
+# A5 (beslisronde 12-10): de intenties staan nu per afdeling in een eigen blok;
+# de afdelingszin na de kern test tests/test_beslisronde_intenties.py. Hier
+# zonder afdelingsgegevens (intenties_afdeling=None), dus zonder die zin.
+KERN = ("Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet waarom, en ook "
+        "niet wie er vertrekt.")
 SLOT = ("Daarom begint het gesprek bij Groeiperspectief: daar zie je waar het wringt, en daar "
         "kan het MT zelf iets besluiten.")
 SLOT_STERK = "Daarom begint het gesprek bij Groeiperspectief: daar kan het MT zelf iets besluiten."
 SLOT_INDICATIEF = ("Daarom kiest Loep Groeiperspectief als mogelijk startpunt voor het gesprek: daar "
                    "zie je waar het wringt, en daar kan het MT zelf iets besluiten.")
 LEIDRAADZIN = ("Gaat het over blijf- of vertrekintentie, lees dan de regel onder de cijfers "
-               "hierboven voor.")
+               "voor.")
 DUIDING = "hoe dringend behoud hier is"
 
 
 def _duiding(avg_si=3.9, stay=STAY, to=TO_VEEL, *, startpunt="Groeiperspectief",
-             score=4.5, indicatief=False) -> str:
+             score=4.5, indicatief=False, afd=None) -> str:
     return _intentie_duiding(avg_si, stay, to, startpunt_label=startpunt,
-                             startpunt_score=score, indicatief=indicatief)
+                             startpunt_score=score, indicatief=indicatief,
+                             intenties_afdeling=afd)
 
 
 def test_intentie_duiding_noemt_urgentie_grens_en_startpunt():
@@ -256,7 +259,8 @@ def test_indicatief_beeld_noemt_een_mogelijk_startpunt():
 
 
 def test_intentie_duiding_claimt_geen_oorzaak_en_voorspelt_niets():
-    for html in (_duiding(), _duiding(indicatief=True), _duiding(score=7.0)):
+    for html in (_duiding(), _duiding(indicatief=True), _duiding(score=7.0),
+                 *(_duiding(afd=a) for a in ("blok", "geen", "geen_tabel", "herleidbaar"))):
         t = _plain(html).lower()
         for fout in ("oorzaak", "komt door", "voorspel", "zullen vertrekken", "gaan vertrekken"):
             assert fout not in t
@@ -648,8 +652,11 @@ from backend.report_html import (  # noqa: E402
     _fl,
 )
 
+# "kwalificatie" (fixronde 14-10): welke afdelingen "de laagste" omvat, zoals
+# _segment_startpunt hem zet.
 SEG_OPS = {"department": "Operations", "score": 6.0, "n": 17, "invited": 21,
-           "low_fk": "workload", "low_avg": 4.9, "rest_lager": False}
+           "low_fk": "workload", "low_avg": 4.9, "kwalificatie": "die apart getoond worden",
+           "rest_lager": False}
 
 
 def test_brugzin_noemt_het_tweede_punt_als_het_hetzelfde_onderwerp_is():

@@ -224,6 +224,23 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .sub-cols td + td { padding: 0 0 0 10px; }
 .sub-cols td[colspan] { padding: 0; }
 .sub-cols tbody.sub-grp { break-inside: avoid; }
+/* A5 (beslisronde 12-10): alleen in het raster met het intentieblok van Loep
+   Behoud (klasse met-intentie, gezet door _segment_factor_grid). In een vak van
+   halve breedte lopen de bandlabels ("Kwetsbaar punt") over twee regels; met de
+   regelhoogte van de lopende tekst schoof het raster in Behoud-scenario's met
+   het intentieblok naast het enige subblok naar een eigen vel (gemeten in het
+   productie-image). Rasters zonder intentieblok blijven zoals ze waren. */
+/* Fixronde 15-10 (onderdeel C): nu in elk raster van twee kolommen, niet
+   alleen met het intentieblok. In Loep Vertrek met twee afdelingen van 10 of
+   meer antwoorden (zz_besluitmax_*_vx) liep elk bandlabel over twee regels en
+   viel de uitsplitsing als los vel van 29% achter de tabel (gemeten in het
+   productie-image). Alleen rasters van twee subblokken naast elkaar, dus
+   alleen metingen met minstens twee afdelingen van 10 of meer antwoorden. */
+.sub-cols .item-tbl.seg-tbl td { padding: 3px 6px; line-height: 1.3; }
+/* Het bandlabel op één regel, de onderwerpnaam mag afbreken: zo breekt hooguit
+   de langste naam ("Cultuur en psychologische veiligheid") in plaats van elk
+   label. */
+.sub-cols .seg-sub td.sub-band { white-space: nowrap; }
 .empty-state.seg-leeg { padding: 8px 14px; }
 /* Taak 11 (polijstronde): de afdelingskaart eindigt op een tabelrij of een
    subblok, dus de onderpadding verlengt alleen de linkerlijn. 6px in plaats van
@@ -454,8 +471,13 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .bl-hint { font-size: 8.5px; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; line-height: 1.35; }
 .bl-tekst { font-size: 11px; line-height: 1.55; color: """ + INK + r"""; padding: 4px 0 6px; border-bottom: 1px solid """ + HAIRLINE + r"""; }
 .bl-status { font-size: 9.5px; color: """ + STEEL + r"""; margin: 8px 0 0; font-style: italic; }
-.mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
-.mq-brug { font-size: 10.5px; color: #374151; margin: 8px 0 0; }
+/* Fixronde 15-10 (onderdeel C): ook binnen .mq-line (pagina twee). Daar won
+   `.mq-line p` (13px, vet) op specificiteit, zodat de richtingregel en de
+   brugzin op pagina twee even groot en vet stonden als de gespreksopener, en
+   anders dan dezelfde brugzin op de gespreksagenda. Pagina twee liep daardoor
+   over bij Loep Behoud met twee afdelingen van 10 of meer antwoorden. */
+.mq-direction, .mq-line .mq-direction { font-size: 11px; font-weight: 600; color: """ + NAVY + r"""; margin: 8px 0 0; }
+.mq-brug, .mq-line .mq-brug { font-size: 10.5px; font-weight: 400; color: #374151; margin: 8px 0 0; }
 /* Dezelfde brugzin op een eigen sectie (gespreksagenda) staat na een tabel en
    krijgt daar iets meer lucht. Als klasse en niet als inline style, zodat de
    maat op één plek staat. */

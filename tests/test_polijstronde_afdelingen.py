@@ -38,10 +38,17 @@ def _block(*specs, scan_type="onboarding"):
 
 # ── S9: geen cijfers van kleine afdelingen in de conclusie ──────────────────
 
+# Fixronde 14-10 (punt 10, besluit Lars 14-10): een afdeling zonder cijfer in
+# de tabel (5 tot 9 antwoorden) wordt in de conclusie niet meer genoemd of
+# gerangschikt, ook niet zonder cijfer (S9). De tests hieronder pinnen dat; de
+# tests met alleen grote afdelingen houden hun cijfers.
+
 def test_s9_dicht_bij_elkaar_zonder_cijfers_bij_kleine_afdelingen():
     # Het Start-voorbeeld letterlijk: Sales 7 antwoorden, Operations 5.
     a = _anchor(_block(("Sales", 7, 6.0), ("Operations", 5, 6.2)))
-    assert "De twee laagste afdelingen liggen dicht bij elkaar (Sales en Operations)." in a
+    assert "Sales" not in a and "Operations" not in a
+    assert "dicht bij elkaar" not in a
+    assert "Geen afzonderlijke afdeling heeft genoeg antwoorden voor een cijfer" in a
     assert "/10" not in a
 
 
@@ -53,14 +60,16 @@ def test_s9_dicht_bij_elkaar_houdt_cijfers_bij_grote_afdelingen():
 
 def test_s9_een_kleine_van_de_twee_is_genoeg_om_beide_cijfers_weg_te_laten():
     a = _anchor(_block(("Sales", 12, 6.0), ("Operations", MIN_DISTRIBUTION_N - 1, 6.2)))
-    assert "liggen dicht bij elkaar (Sales en Operations)." in a
+    assert "Operations" not in a
+    assert "Alleen Sales heeft genoeg antwoorden voor een cijfer" in a
     assert "/10" not in a
 
 
 def test_s9_dezelfde_score_zonder_cijfer_bij_kleine_afdelingen():
     # Gelijke score: meeste antwoorden eerst, de tie-break van de tabel.
     a = _anchor(_block(("Sales", 7, 6.0), ("Finance", 6, 6.0)))
-    assert "De twee laagste afdelingen komen op dezelfde score uit (Sales en Finance)." in a
+    assert "Sales" not in a and "Finance" not in a
+    assert "dezelfde score" not in a
     assert "/10" not in a
 
 
@@ -75,14 +84,15 @@ def test_s9_precies_op_de_grens_blijven_de_cijfers_staan():
 def test_s9_net_onder_de_grens_aan_een_kant_geen_cijfers():
     n = MIN_DISTRIBUTION_N
     a = _anchor(_block(("Sales", n, 6.0), ("Operations", n - 1, 6.2)))
-    assert "(Sales en Operations)." in a and "/10" not in a
+    assert "Operations" not in a and "/10" not in a
     a = _anchor(_block(("Sales", n - 1, 6.0), ("Operations", n, 6.2)))
-    assert "(Sales en Operations)." in a and "/10" not in a
+    assert "Sales" not in a and "/10" not in a
 
 
 def test_s9_dezelfde_score_groot_en_klein_zonder_cijfer():
     a = _anchor(_block(("Sales", 12, 6.0), ("Finance", 6, 6.0)))
-    assert "De twee laagste afdelingen komen op dezelfde score uit (Sales en Finance)." in a
+    assert "Finance" not in a
+    assert "Alleen Sales heeft genoeg antwoorden voor een cijfer" in a
     assert "/10" not in a
 
 
@@ -91,18 +101,20 @@ def test_s9_dezelfde_score_houdt_cijfer_bij_grote_afdelingen():
     assert "komen op dezelfde score uit (Finance en Sales, beide 6.0/10)." in a
 
 
-def test_s9_staat_2_noemt_geen_cijfer_van_de_kleine_laagste_afdeling():
-    # Staat 2 heeft per definitie een laagste afdeling onder de 10.
+def test_s9_kleine_laagste_afdeling_wordt_niet_genoemd():
+    # De oude staat 2 (laagste afdeling onder de 10) bestaat niet meer: die
+    # afdeling heeft geen cijfer en doet niet mee aan de vergelijking.
     a = _anchor(_block(("Operations", 8, 4.5), ("Sales", 20, 7.0)))
-    assert ("Operations scoort het laagst van de afdelingen die apart getoond "
-            "worden, maar heeft 8 antwoorden.") in a
+    assert "Operations" not in a
+    assert "laagst" not in a
     assert "/10" not in a
 
 
 def test_s9_kleine_restgroep_zonder_cijfer():
     a = _anchor(_block(("Sales", 13, 5.0), ("Finance", 12, 7.0),
                        ("Marketing", 3, 4.0), ("Customer Success", 3, 4.0)))
-    assert "vastgelegd) scoort lager, maar is samengesteld uit kleine afdelingen" in a
+    # Fixronde 14-10: een restgroep zonder cijfer (6) wordt niet vergeleken.
+    assert "restgroep" not in a
     assert "4.0/10" not in a
     # De aangewezen afdeling heeft er 13: haar cijfer blijft staan.
     assert "(5.0/10; 13 antwoorden)" in a
@@ -132,9 +144,11 @@ _P02 = "pagina " + _pref("p02")
      "De kolom Werkbeeld is het werkbeeld van " + _P02 + ", per afdeling."),
     ("onboarding", "Checkpointscore",
      "De kolom Checkpointscore is de checkpointscore van " + _P02 + ", per afdeling."),
-    ("exit", "Score",
-     "De kolom Score is per afdeling de frictiescore van " + _P02
-     + ", maar omgedraaid: hier is hoger beter."),
+    # A8 (beslisronde 12-10): de frictiescore zelf, hoger is slechter.
+    ("exit", "Frictiescore",
+     "De kolom Frictiescore is de frictiescore van " + _P02
+     + ", per afdeling: hoger is slechter. De kolom Band gebruikt de grenzen van de "
+     "frictiescore: laag onder 4,5, sterk vanaf 7,0."),
 ])
 def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
     html = _block(*_GROOT, scan_type=scan_type)
@@ -142,9 +156,10 @@ def test_r14_kolomkop_en_intro_per_scan(scan_type, kop, zin):
     intro = re.search(r'<p class="sec-intro">(.*?)</p>', html, re.S).group(1)
     assert intro.endswith(zin)
     # De staffelzin gaat expliciet over de kolom met het laagste onderwerp.
+    # A4 (beslisronde 12-10): de staffelzin geldt nu voor die kolom en de scorekolom.
     assert ("De kolom met het laagste onderwerp noemt per afdeling het laagst scorende "
-            "onderwerp; bij kleine afdelingen (5 tot 9 antwoorden) staat daar alleen een "
-            "label") in intro
+            "onderwerp. Bij kleine afdelingen (5 tot 9 antwoorden) staat in die kolom en in "
+            "de scorekolom alleen een label") in intro
     assert "tonen we" not in intro
     # De uitsplitsing met alle onderwerpen staat onder de tabel, onder de naam
     # waarmee _segment_factor_subblocks haar opent.

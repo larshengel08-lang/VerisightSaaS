@@ -15,11 +15,20 @@ de besluitpagina kort zo'n veld nog steeds af op BESLUIT_TEKST_MAX en meldt dat
 (BESLUIT_INGEKORT). Onderwerpen en eigenaar worden nooit afgekapt.
 
 Scenario's:
-  06  Loep Behoud met een aangewezen afdeling (blok "Afspraak per afdeling").
+  06  Loep Behoud met een aangewezen afdeling (blok "Afspraak per afdeling"):
+      stresstest-scenario 06. Alleen Operations heeft een cijfer (minstens 10
+      antwoorden); sinds fixronde 15-10 (onderdeel B, besluit Lars 15-10)
+      vergelijkt Loep die afdeling met de organisatie als geheel en wijst ze
+      aan. Tussen fixronde 14-10 en 15-10 wees 06 niets aan en stond vb hier.
+  vb  Extra variant: Loep Behoud met TWEE afdelingen met een cijfer (06 met
+      Sales op 10 en Marketing op 3, totaal blijft 45). Een echt klantgeval
+      (pagina twee liep hier over, fixronde 15-10 onderdeel C).
   08  Loep Vertrek (langste terugkoppelhint), zonder aangewezen afdeling.
   vx  Loep Vertrek MET een aangewezen afdeling. Geen stresstest-scenario doet
       dat (07 en 08 hebben te weinig antwoorden per afdeling), dus dit script
       voegt het slechtste geval zelf toe; het zit niet in de vaste matrix.
+      Sinds fixronde 14-10 ook met Sales op 10 en Marketing op 3, om dezelfde
+      reden als vb.
 
 Varianten:
   max    elk veld op zijn huidige limiet, ook het tweede onderwerp (120
@@ -37,8 +46,8 @@ Varianten:
          Welke van de twee de pagina langer maakt, hangt van het afbreken af;
          daarom beide.
 
-Het script faalt hard (SystemExit) als die opzet wegvalt: 06 en vx moeten het
-afdelingsblok dragen, 08 niet, de variant oud moet BESLUIT_INGEKORT tonen, en
+Het script faalt hard (SystemExit) als die opzet wegvalt: 06, vb en vx moeten
+het afdelingsblok dragen, 08 niet, de variant oud moet BESLUIT_INGEKORT tonen, en
 de variant samen moet de zin BESLUIT_AFDELING_SAMEN tonen. Anders zou de
 meting stil een lichter geval meten.
 
@@ -136,12 +145,23 @@ def _besluit_oud(tweede_onderwerp: str | None = None) -> dict:
     }
 
 
+# Sales 10 en Marketing 3 (was 9 en 4): zie "Scenario's" hierboven.
+_AFDELINGEN_MET_TWEE = [("Operations", 14), ("Sales", 10), ("Finance", 7), ("IT", 6),
+                        ("Customer Success", 5), ("Marketing", 3)]
+
+BEHOUD_AFDELING = st.Scenario(
+    "vb_behoud_afdeling", "Behoud met een aangewezen afdeling (n=45)",
+    "Alleen voor de besluitpaginameting: stresstest 06 met een tweede afdeling met een cijfer.",
+    factors=st.flat(7.3, 0.8),
+    depts=_AFDELINGEN_MET_TWEE,
+    dept_shift={"Operations": -2.8},
+)
+
 VERTREK_AFDELING = st.Scenario(
     "vx_vertrek_afdeling", "Vertrek met een aangewezen afdeling (n=45)",
     "Alleen voor de besluitpaginameting: Loep Vertrek waarin een afdeling eruit springt.",
     scan_type="exit", n=45, invited=60, factors=st.flat(7.3, 0.8),
-    depts=[("Operations", 14), ("Sales", 9), ("Finance", 7), ("IT", 6),
-           ("Customer Success", 5), ("Marketing", 4)],
+    depts=_AFDELINGEN_MET_TWEE,
     dept_shift={"Operations": -2.8},
 )
 
@@ -176,6 +196,7 @@ def main() -> int:
 
     # (scenario, moet het afdelingsblok dragen)
     scenarios = [(next(s for s in st.SCENARIOS if s.num == "06"), True),
+                 (BEHOUD_AFDELING, True),
                  (next(s for s in st.SCENARIOS if s.num == "08"), False),
                  (VERTREK_AFDELING, True)]
 

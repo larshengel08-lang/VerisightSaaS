@@ -71,10 +71,11 @@ def _labels(scan: str = "retention") -> dict[str, str]:
 # ── R27: geen voorspelling, geen verzonnen reden ─────────────────────────────
 
 def test_r27_kern_zegt_ook_niet_wie_er_vertrekt():
+    # A5 (beslisronde 12-10): "niet bij welke afdeling" vervalt, de intenties
+    # staan nu per afdeling in een eigen blok.
     assert INTENTIE_DUIDING_KERN == (
-        "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet bij welke "
-        "afdeling het speelt of waarom, en ook niet wie er vertrekt: dit rapport splitst "
-        "ze niet per afdeling uit.")
+        "Blijf- en vertrekintentie zeggen hoe dringend behoud hier is, niet waarom, en ook "
+        "niet wie er vertrekt.")
 
 
 def test_r27_staat_op_pagina_twee():
@@ -139,11 +140,36 @@ def test_r21_zonder_tweede_punt_geen_parkeerregel():
     assert "parkeer" not in slot
 
 
+# Fixronde 14-10 (punt 10): alleen afdelingen met een cijfer (minstens 10
+# antwoorden) doen mee aan de vergelijking. In scenario 06 heeft alleen
+# Operations er tien of meer, dus daar wordt geen afdeling meer aangewezen.
+# Deze variant geeft Sales er 10 (Marketing 3, totaal blijft 45), zodat een
+# vergelijking kan en Operations weer de aangewezen afdeling is.
+_06_MET_TWEE = st.Scenario(
+    "06_met_twee_afdelingen", "Eén afdeling laag, twee met een cijfer (n=45)",
+    "Operations 4.5 op alles, Sales 10 antwoorden: er valt iets te vergelijken.",
+    factors=st.flat(7.3, 0.8),
+    depts=[("Operations", 14), ("Sales", 10), ("Finance", 7), ("IT", 6),
+           ("Customer Success", 5), ("Marketing", 3)],
+    dept_shift={"Operations": -2.8})
+
+
 def test_r21_renderer_zet_de_vlag_uit_het_afdelingsblok():
-    """Scenario 06: Operations is de aangewezen afdeling en de besluitpagina
-    krijgt een afdelingsblok; de leidraad noemt dan de afdelingsafspraak."""
+    """Operations is de aangewezen afdeling en de besluitpagina krijgt een
+    afdelingsblok; de leidraad noemt dan de afdelingsafspraak."""
+    html = open(st.run_scenario(_06_MET_TWEE)["html"], encoding="utf-8").read()
+    assert "Afspraak per afdeling" in html
+    assert VUL_AFDELING in _slot(html)
+
+
+def test_r21_scenario_06_wijst_operations_aan_tegen_de_organisatie():
+    """Scenario 06: alleen Operations heeft een cijfer (fixronde 14-10, punt
+    10). Sinds fixronde 15-10 (onderdeel B) vergelijkt Loep die afdeling met de
+    organisatie als geheel; Operations ligt ruim lager, dus weer een
+    aangewezen afdeling en een afdelingsblok op de besluitpagina."""
     html = _html("06_een_afdeling_laag")
     assert "Afspraak per afdeling" in html
+    assert "niets te vergelijken" not in html
     assert VUL_AFDELING in _slot(html)
 
 
