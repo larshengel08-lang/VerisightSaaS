@@ -109,7 +109,9 @@ def test_zelfde_grenzen_als_pagina_twee():
     # ZONE_HIGH (6,5) als veel vertrekgedachten, met 6,5 zelf erbij.
     resp = ([_r("Ops", stay=4.9, to=ZONE_HIGH)] * 3
             + [_r("Ops", stay=5.0, to=6.4)] * 9)
-    resp += _resp("Fin", 10)
+    # Finance gemengd (4 van de 10): bij 0 van de 10 zou de aftreksom met
+    # pagina twee Finance exact maken en valt Ops weg (fixronde 15-10).
+    resp += _resp("Fin", 4, to=7.0) + _resp("Fin", 6)
     info = _info(resp, ("Ops", 12), ("Fin", 10))
     ops = next(r for r in info["rows"] if r["department"] == "Ops")
     assert ops["n"] == 12
@@ -130,13 +132,13 @@ def test_afdeling_met_te_weinig_intentiescores_valt_eruit():
 def test_geen_afdeling_van_tien():
     resp = _resp("A", 9) + _resp("B", 8) + _resp("C", 7)
     info = _info(resp, ("A", 9), ("B", 8), ("C", 7))
-    assert info == {"rows": [], "dropped": [], "reason": "geen"}
+    assert info == {"rows": [], "dropped": [], "dropped_aantal": [], "reason": "geen"}
 
 
 def test_zonder_afdelingen_niet_vastgelegd():
     resp = _resp(None, 30)
     info = _department_intent_rows(resp, [], total_stay_n=30, total_to_n=30, total_to_high=_hoog(resp))
-    assert info == {"rows": [], "dropped": [], "reason": "niet_vastgelegd"}
+    assert info == {"rows": [], "dropped": [], "dropped_aantal": [], "reason": "niet_vastgelegd"}
 
 
 def test_telt_alleen_respondenten_met_een_werkbeeld():
@@ -168,7 +170,7 @@ def test_alleen_werkbeeld_telt_voor_een_afdeling_van_tien():
 def test_afdeling_van_tien_maar_te_weinig_intentiescores():
     resp = [_r("Ops", to=None)] * 3 + _resp("Ops", 9) + _resp("Fin", 6) + _resp(None, 10)
     info = _info(resp, ("Ops", 12), ("Fin", 6))
-    assert info == {"rows": [], "dropped": [], "reason": "te_weinig_intentie"}
+    assert info == {"rows": [], "dropped": [], "dropped_aantal": [], "reason": "te_weinig_intentie"}
 
 
 def test_wel_een_afdeling_van_tien_maar_geen_afdelingstabel():
@@ -231,7 +233,7 @@ def test_rest_per_maat_apart_getoetst():
 
 def _rij(dept="Operations", n=14, stay_avg=3.9, to_high=6):
     return {"department": dept, "n": n, "stay_avg": stay_avg, "stay_n": n,
-            "to_n": n, "to_high": to_high, "to_high_tonen": True}
+            "to_n": n, "to_high": to_high}
 
 
 def test_blok_kop_uitleg_kolommen_en_anker():
@@ -377,7 +379,7 @@ def test_intent_staat_blok_en_redenen():
     ({"rows": [{"department": "X"}], "dropped": [], "reason": ""}, ""),   # rijen zonder blok
     ({"rows": [], "dropped": [], "reason": ""}, ""),                       # lege reden
     ({"rows": [], "dropped": [], "reason": "onzin"}, ""),                  # onbekende reden
-    ({"rows": [], "dropped": [], "reason": "geen"}, "<div>blok</div>"),    # blok zonder rijen
+    ({"rows": [], "dropped": [], "dropped_aantal": [], "reason": "geen"}, "<div>blok</div>"),    # blok zonder rijen
     (None, "<div>blok</div>"),
 ])
 def test_intent_staat_onmogelijke_staat_faalt_luid(info, blok):

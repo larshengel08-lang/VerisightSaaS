@@ -1072,6 +1072,12 @@ INTENTIE_AFDELING_ZIN = {
     "herleidbaar": ("Per afdeling staan ze niet in dit rapport: met de cijfers voor de hele "
                     "organisatie zou je anders de antwoorden van een groep van minder dan "
                     f"{MIN_DISTRIBUTION_N} mensen kunnen afleiden."),
+    # Fixronde 15-10: de aftreksom met het totaal van pagina twee zou anders
+    # een heel klein aantal mensen met (of zonder) veel vertrekgedachten
+    # aanwijzen (_intent_aftreksom_lekt).
+    "herleidbaar_aantal": ("Per afdeling staan ze niet in dit rapport: met de cijfers voor de "
+                           "hele organisatie zou je anders kunnen afleiden hoe een paar mensen "
+                           "hebben geantwoord."),
 }
 
 
@@ -1101,9 +1107,10 @@ def _intentie_duiding(avg_si: float | None, stay_scores: list[float],
     afdelingen in plaats van iets te beweren wat niet vaststaat. Verplicht
     keyword, zodat geen aanroep hem stil vergeet. Zie _intent_staat.
 
-    intenties_weggelaten: de "dropped"-lijst van _department_intent_rows. Viel
-    er een afdeling van tien of meer weg om een kleine rest niet herleidbaar te
-    maken, dan noemt de verwijzing haar: anders zoekt de lezer haar in het blok.
+    intenties_weggelaten: de "dropped"- en "dropped_aantal"-lijst van
+    _department_intent_rows samen. Viel er een afdeling van tien of meer weg om
+    een kleine rest of een klein aantal niet herleidbaar te maken, dan noemt de
+    verwijzing haar: anders zoekt de lezer haar in het blok.
 
     Slotzin (codereview taak 3):
     - "daar zie je waar het wringt" alleen als het startpunt zelf geen
@@ -6099,11 +6106,48 @@ INTENTIE_AFDELING_UITLEG = (
     "alle onderwerpen per afdeling. Een samengevoegde restgroep staat er nooit in.")
 
 
-# Fixronde 14-10 (punt 1): de regel onder het intentieblok als een telling
-# niet getoond wordt. Neutraal: hij noemt niet waarom (zie _markeer_tellingen).
-INTENTIE_TELLING_NIET_GETOOND = (
-    "Bij {namen} staat geen aantal: daarmee zou je kunnen afleiden hoe afzonderlijke "
-    "mensen hebben geantwoord.")
+# Fixronde 15-10 (besluit Lars 15-10, vervangt de aanpak van 14-10): het
+# aantal met veel vertrekgedachten staat er exact, behalve als het kleiner is
+# dan INTENTIE_TELLING_GRENS of als n min het aantal dat is. Dan staat er een
+# grens ("minder dan 3 van de 14", "meer dan 11 van de 14"). Eén uitleg in de
+# intro, voor alle afdelingen; geen melding per afdeling: de oude regel "Bij
+# Operations staat geen aantal" verraadde juist dat het 0 of iedereen was.
+INTENTIE_TELLING_GRENS = 3
+INTENTIE_GRENS_UITLEG = (
+    "Bij heel kleine aantallen, met of zonder veel vertrekgedachten, staat een grens in "
+    "plaats van het precieze aantal, zodat niemand is aan te wijzen.")
+
+
+def _telling_weergave(to_high: int, to_n: int) -> str:
+    """"x van de n" met veel vertrekgedachten, of een grens (fixronde 15-10).
+
+    Onder INTENTIE_TELLING_GRENS mensen met, of onder die grens mensen zonder
+    veel vertrekgedachten: een grens in plaats van het getal. Eén bron voor het
+    blok en voor de aftrekcontrole (_intent_aftreksom_lekt, via
+    _telling_bereik), zodat die rekent met wat er echt staat. Onder 2 x de
+    grens kunnen beide tegelijk gelden; dat komt in het blok niet voor
+    (minstens MIN_DISTRIBUTION_N), dus dan een fout in plaats van een gok.
+    """
+    g = INTENTIE_TELLING_GRENS
+    if to_n < 2 * g:
+        raise ValueError(f"_telling_weergave: n={to_n} te klein voor een grens van {g}")
+    if to_high < g:
+        return f"minder dan {g} van de {to_n}"
+    if to_n - to_high < g:
+        return f"meer dan {to_n - g} van de {to_n}"
+    return f"{to_high} van de {to_n}"
+
+
+def _telling_bereik(to_high: int, to_n: int) -> tuple[int, int]:
+    """Wat de lezer uit _telling_weergave weet: het kleinste en grootste
+    mogelijke aantal (gelijk bij een exact getal)."""
+    tekst = _telling_weergave(to_high, to_n)
+    g = INTENTIE_TELLING_GRENS
+    if tekst.startswith("minder dan "):
+        return 0, g - 1
+    if tekst.startswith("meer dan "):
+        return to_n - g + 1, to_n
+    return to_high, to_high
 
 
 def _intentie_afdelingen_block(info: dict | None) -> str:
@@ -6127,25 +6171,21 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
     eigen vel (gemeten in het productie-image). De plantekst vraagt in de tabel
     alleen score en label. Eén geheel (no-break).
 
-    Fixronde 14-10 (punt 1): staat to_high_tonen op False (_markeer_tellingen),
-    dan geen telling maar "niet getoond", met één neutrale regel onder de
-    tabel. Die regel zegt bewust niet waarom (niemand, iedereen of de
-    aftreksom met pagina twee): anders weet de lezer het alsnog. Een rij
-    zonder dat veld is een fout (KeyError), geen stille telling.
+    Fixronde 15-10 (besluit Lars 15-10): de telling via _telling_weergave,
+    exact of als grens. INTENTIE_GRENS_UITLEG staat altijd in de intro, ook als
+    geen enkele afdeling een grens heeft: anders verraadt het verschijnen van
+    de uitleg iets. Afdelingen die wegvielen om de aftreksom met pagina twee
+    ("dropped_aantal", _department_intent_rows) krijgen één regel onder de
+    tabel, net als de bestaande aftrekregel ("dropped").
     """
     rows = (info or {}).get("rows") or []
     if not rows:
         return ""
     grens = f"{ZONE_HIGH:.1f}".replace(".", ",")
     trs = ""
-    verborgen: list[str] = []
     for r in rows:
         avg = r["stay_avg"]
-        if r["to_high_tonen"]:
-            telling = f'{r["to_high"]} van de {r["to_n"]}'
-        else:
-            verborgen.append(r["department"])
-            telling = ('<span style="font-size:8px;color:#94A3B8;">niet getoond</span>')
+        telling = _h(_telling_weergave(r["to_high"], r["to_n"]))
         trs += (f'<tr><td class="iq" style="width:30%;"><strong>{_h(r["department"])}</strong></td>'
                 f'<td style="width:16%;">{r["n"]}</td>'
                 f'<td style="width:30%;"><span style="font-weight:700;color:{_factor_color(avg)};">'
@@ -6158,7 +6198,7 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
            '<th style="width:30%">Blijf&shy;intentie</th>'
            '<th style="width:24%">Veel vertrek&shy;gedachten</th></tr></thead>')
     uitleg = (INTENTIE_AFDELING_UITLEG + " Veel vertrekgedachten: een vertrekintentie vanaf "
-              + grens + ".")
+              + grens + ". " + INTENTIE_GRENS_UITLEG)
     weg = ""
     dropped = (info or {}).get("dropped") or []
     if dropped:
@@ -6167,10 +6207,13 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
         weg = (f'<p class="seg-sub-intro">{_h(namen)} {werkwoord} hier niet in: met de cijfers '
                'voor de hele organisatie op ' + _P02 + ' zou je anders de antwoorden van een '
                f'groep van minder dan {MIN_DISTRIBUTION_N} mensen kunnen afleiden.</p>')
-    if verborgen:
-        weg += ('<p class="seg-sub-intro">'
-                + _h(INTENTIE_TELLING_NIET_GETOOND.format(namen=_opsomming(verborgen)))
-                + '</p>')
+    dropped_aantal = (info or {}).get("dropped_aantal") or []
+    if dropped_aantal:
+        namen = _opsomming([f'{d["department"]} ({d["n"]} antwoorden)' for d in dropped_aantal])
+        werkwoord = "staat" if len(dropped_aantal) == 1 else "staan"
+        weg += (f'<p class="seg-sub-intro">{_h(namen)} {werkwoord} hier niet in: met de cijfers '
+                'voor de hele organisatie op ' + _P02 + ' zou je anders kunnen afleiden hoe een '
+                'paar mensen hebben geantwoord.</p>')
     return (f'<div class="no-break seg-sub" id="{LEIDRAAD_ANKERS["intenties"]}">'
             '<div style="font-family:&quot;Inter Tight&quot;, sans-serif;font-weight:700;'
             f'font-size:11px;margin-bottom:2px;">{INTENTIE_AFDELING_KOP}</div>'
@@ -6577,19 +6620,21 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
     (al op 1-10, via _blijf_naar_10), "turnover": float|None}. total_stay_n en
     total_to_n zijn de noemers die pagina twee toont (alle losse scores van de
     meting, ook zonder afdeling of werkbeeld). total_to_high is het aantal met
-    veel vertrekgedachten dat pagina twee daarbij noemt (fixronde 14-10, zie
-    _markeer_tellingen); verplicht, zodat geen aanroep de aftreksom vergeet.
+    veel vertrekgedachten dat pagina twee daarbij noemt (fixronde 15-10, zie
+    _intent_aftreksom_lekt); verplicht, zodat geen aanroep de aftreksom vergeet.
 
     Eén telbron met de afdelingstabel (codereview taak 3): een afdeling telt
     de respondenten met een werkbeeldscore, zoals _department_grouping. Het
     aantal "Ingevuld" in het blok is dus de n van de tabelrij, en de gate
     vraagt die n plus evenveel losse scores op beide intenties.
 
-    Output: {"rows": [...], "dropped": [...], "reason": str}
+    Output: {"rows": [...], "dropped": [...], "dropped_aantal": [...], "reason": str}
     - rows, in de volgorde van de afdelingstabel: per afdeling department, n
       (van de tabelrij), stay_avg, stay_n, to_n, to_high (vanaf ZONE_HIGH,
-      dezelfde zone als de zin over vertrekgedachten op pagina twee) en
-      to_high_tonen (mag de telling in het blok, zie _markeer_tellingen).
+      dezelfde zone als de zin over vertrekgedachten op pagina twee). Het blok
+      toont to_high via _telling_weergave (exact of als grens).
+    - dropped_aantal: afdelingen die wegvielen om de aftreksom met pagina twee
+      (_intent_aftreksom_lekt, fixronde 15-10).
     - reason "" zodra er rijen zijn, anders (voor de zin op pagina twee,
       INTENTIE_AFDELING_ZIN):
       "niet_vastgelegd"  geen respondent met werkbeeld heeft een afdeling;
@@ -6599,6 +6644,7 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
       "te_weinig_intentie" wel een afdeling van tien, maar geen enkele met
                          tien losse scores op blijf- én vertrekintentie;
       "herleidbaar"      zie hieronder.
+      "herleidbaar_aantal" alle afdelingen vielen weg om de aftreksom.
 
     Privacy (harde regel, niet verlagen):
     - Een afdeling doet alleen mee met minstens MIN_DISTRIBUTION_N antwoorden
@@ -6612,6 +6658,13 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
       afdeling komt in "dropped" en het blok en pagina twee melden haar. Eén
       keer weglaten is altijd genoeg: de rest groeit dan met minstens
       MIN_DISTRIBUTION_N. Blijft er niets over, dan is de reason "herleidbaar".
+    - Het aantal met veel vertrekgedachten staat er exact of als grens
+      (_telling_weergave). Pagina twee toont het totaal; totaal min de exacte
+      tellingen mag geen afdeling met een grens alsnog exact maken en mag zelf
+      geen heel klein aantal zijn. Anders valt de kleinste afdeling met een
+      exact getal weg ("dropped_aantal"), tot het klopt
+      (_intent_aftreksom_lekt). Blijft er niets over, dan is de reason
+      "herleidbaar_aantal".
     """
     N = MIN_DISTRIBUTION_N
     grouped: dict[str, dict] = {}
@@ -6626,8 +6679,10 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
         if r.get("turnover") is not None:
             g["turnover"].append(float(r["turnover"]))
 
-    def _leeg(reason: str, dropped: list[dict] | None = None) -> dict:
-        return {"rows": [], "dropped": dropped or [], "reason": reason}
+    def _leeg(reason: str, dropped: list[dict] | None = None,
+              dropped_aantal: list[dict] | None = None) -> dict:
+        return {"rows": [], "dropped": dropped or [], "dropped_aantal": dropped_aantal or [],
+                "reason": reason}
 
     if not grouped:
         return _leeg("niet_vastgelegd")
@@ -6662,42 +6717,69 @@ def _department_intent_rows(respondents: list[dict], segment_rows: list[dict], *
         dropped.append({"department": kleinste["department"], "n": kleinste["n"]})
     if not rows:
         return _leeg("herleidbaar", dropped)
-    _markeer_tellingen(rows, total_to_n=total_to_n, total_to_high=total_to_high)
-    return {"rows": rows, "dropped": dropped, "reason": ""}
-
-
-def _markeer_tellingen(rows: list[dict], *, total_to_n: int, total_to_high: int) -> None:
-    """Zet per rij to_high_tonen: mag "x van de n met veel vertrekgedachten" erin?
-    (fixronde 14-10, punt 1, besluit Lars 14-10)
-
-    1. Niemand (0) of iedereen (n van de n): geen telling. Anders weet het MT
-       van elk lid van die afdeling hoe het zit.
-    2. Pagina twee toont het totaal voor de hele meting. Totaal min de getoonde
-       tellingen is de aftreksom over alles wat niet getoond is: de afdelingen
-       zonder telling plus iedereen buiten het blok (kleine afdelingen, de
-       weggevallen afdelingen, mensen zonder afdeling). Is die som zelf 0 of
-       alles, dan zegt pagina twee dat over elke afdeling erin. Dan valt ook de
-       telling van de kleinste afdeling met telling weg (kleinste n, bij gelijke
-       n de eerste op naam, zoals bij het weglaten hierboven). Eén keer is
-       genoeg: die afdeling is zelf niet 0 of alles (punt 1), dus de som wordt
-       het daarna ook niet. De lus blijft voor de zekerheid.
-    Wordt niets meer getoond, dan is de aftreksom het totaal van pagina twee
-    zelf; dat is een uitspraak over de hele meting, niet over een afdeling.
-    """
-    for r in rows:
-        r["to_high_tonen"] = 0 < r["to_high"] < r["to_n"]
-
-    def _som() -> tuple[int, int]:
-        getoond = [r for r in rows if r["to_high_tonen"]]
-        return (total_to_high - sum(r["to_high"] for r in getoond),
-                total_to_n - sum(r["to_n"] for r in getoond))
-
-    hoog, n = _som()
-    while n > 0 and hoog in (0, n) and any(r["to_high_tonen"] for r in rows):
-        kleinste = min((r for r in rows if r["to_high_tonen"]),
+    dropped_aantal: list[dict] = []
+    while _intent_aftreksom_lekt(rows, total_to_n=total_to_n, total_to_high=total_to_high):
+        # Alleen een afdeling met een exact getal: _intent_aftreksom_lekt geeft
+        # zonder exacte tellingen altijd False, dus de lus eindigt. Kleinste n,
+        # bij gelijke n de eerste op naam, zoals bij de aftrekregel hierboven.
+        kleinste = min((r for r in rows if _telling_exact(r)),
                        key=lambda r: (r["n"], r["department"]))
-        kleinste["to_high_tonen"] = False
-        hoog, n = _som()
+        rows.remove(kleinste)
+        dropped_aantal.append({"department": kleinste["department"], "n": kleinste["n"]})
+    if not rows:
+        return _leeg("herleidbaar_aantal", dropped, dropped_aantal)
+    return {"rows": rows, "dropped": dropped, "dropped_aantal": dropped_aantal, "reason": ""}
+
+
+def _telling_exact(r: dict) -> bool:
+    """Staat het aantal van deze rij exact in het blok (geen grens)?"""
+    lo, hi = _telling_bereik(r["to_high"], r["to_n"])
+    return lo == hi
+
+
+def _intent_aftreksom_lekt(rows: list[dict], *, total_to_n: int, total_to_high: int) -> bool:
+    """Verraadt pagina twee via aftrekken alsnog iets? (fixronde 15-10, besluit
+    Lars 15-10)
+
+    Pagina twee toont het totaal voor de hele meting. Totaal min de exacte
+    tellingen in het blok is de aftreksom over de rest G: de afdelingen met een
+    grens plus iedereen buiten het blok (kleine afdelingen, weggevallen
+    afdelingen, mensen zonder afdeling). Het lekt als
+    1. die aftreksom zelf onder INTENTIE_TELLING_GRENS ligt, of minder dan dat
+       onder de omvang van G: dan is binnen G iemand aan te wijzen, precies wat
+       de grens in het blok voorkomt; of
+    2. de aftreksom samen met de grenzen het aantal van een afdeling met een
+       grens vastpint (bijvoorbeeld "minder dan 3" naast een rest van nul
+       mensen). Per afdeling: kleinste en grootste waarde die nog kan, gegeven
+       de aftreksom en de bereiken van de andere delen van G (de rest buiten
+       het blok: 0 tot zijn omvang). Omdat elk deel een aaneengesloten bereik
+       is, is dat interval exact.
+    Zonder exacte telling is de aftreksom het totaal van pagina twee zelf: een
+    uitspraak over de hele meting, niet over een afdeling. Dan nooit een lek.
+    """
+    exact = [r for r in rows if _telling_exact(r)]
+    if not exact:
+        return False
+    g = INTENTIE_TELLING_GRENS
+    hoog = total_to_high - sum(r["to_high"] for r in exact)
+    n = total_to_n - sum(r["to_n"] for r in exact)
+    if n <= 0:
+        return False
+    if hoog < g or n - hoog < g:
+        return True
+    grens = [r for r in rows if not _telling_exact(r)]
+    rest_n = n - sum(r["to_n"] for r in grens)
+    delen = [_telling_bereik(r["to_high"], r["to_n"]) for r in grens]
+    if rest_n > 0:
+        delen.append((0, rest_n))
+    for i in range(len(grens)):
+        lo, hi = delen[i]
+        anderen = delen[:i] + delen[i + 1:]
+        onder = max(lo, hoog - sum(h for _l, h in anderen))
+        boven = min(hi, hoog - sum(l for l, _h in anderen))
+        if onder >= boven:
+            return True
+    return False
 
 
 def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
@@ -8474,7 +8556,10 @@ def render_retention_report_html(data: dict) -> str:
         startpunt_score=_primary_score,
         indicatief=_indicatief,
         intenties_afdeling=_intent_staat(_intent_info, _intent_block),
-        intenties_weggelaten=(_intent_info or {}).get("dropped"))
+        # Beide soorten weggevallen afdelingen (A5-aftrekregel en de aftreksom
+        # van fixronde 15-10): pagina twee noemt ze met dezelfde woorden.
+        intenties_weggelaten=((_intent_info or {}).get("dropped") or [])
+        + ((_intent_info or {}).get("dropped_aantal") or []))
     _cijfers_html += _intentie_html
     # Zelfde telling als _p02_opening: zonder kwetsbaar onderwerp zegt de kop
     # "Geen onderwerp scoort kwetsbaar.", dus geen "Ook".
