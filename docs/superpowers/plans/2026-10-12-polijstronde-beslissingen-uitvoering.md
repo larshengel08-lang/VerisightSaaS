@@ -179,3 +179,56 @@ Geen migratie. Na merge een Railway-redeploy van "Loep main" (backend: rapport, 
 - `docs/stresstest/` is gitignored en bevat de eindmeting.
 
 De branch is klaar voor verificatie door de hoofdsessie.
+
+## Fixronde 14-10 en 15-10
+
+Na de eindreview (zie "Wat Lars nog moet beslissen of weten") besliste Lars op 14-10 over de twaalf punten en op 15-10 over drie vervolgpunten. Niet gemerged, niet gepusht.
+
+### 14-10 (commits `3882396d` tot en met `b87dc79a`)
+
+Punt 1 (geen telling bij 0 of alle), 3 (frictiegrenzen bij de kolom Band), 7 (A7-zin niet op pagina twee), 8 (navy alinea Vertrek: "bij de onderwerpen is hoger juist beter"), 9 ("kleine groep" voor de restgroep), 10 (de afdelingsconclusie vergelijkt alleen afdelingen met een cijfer), 11 (intentieblok: een restgroep staat er nooit in) en 12 (`DIRECTION_NONE_TEXT` onveranderbaar). Punt 1 is op 15-10 vervangen (A hieronder). De backendtests waren daarop groen; de renders in het productie-image niet (04 werd 17 pagina's, vb liep op pagina twee over, vx en vb hielden een dun vel).
+
+### 15-10
+
+**A. Intentieblok: een grens in plaats van "niet getoond"** (`81b0fd4a`, besluit Lars 15-10). De regel "Bij Operations staat geen aantal: ..." verraadde dat het 0 of iedereen was. Nu staat het aantal met veel vertrekgedachten exact, behalve als het onder 3 ligt of n min het aantal onder 3 ligt; dan "minder dan 3 van de 14" of "meer dan 11 van de 14" (`_telling_weergave`, `INTENTIE_TELLING_GRENS = 3`). Eén uitleg in de intro, altijd, ook zonder grens: "Bij heel kleine aantallen staat een grens in plaats van het precieze aantal, zodat niemand is aan te wijzen." Geen melding per afdeling.
+
+Aftreksom met pagina twee (`_intent_aftreksom_lekt`): totaal min de exacte tellingen mag (1) zelf geen heel klein aantal zijn (onder 3, of minder dan 3 onder de omvang van de rest) en (2) samen met de grenzen geen afdeling met een grens vastpinnen (per afdeling het interval dat nog kan; elk deel is aaneengesloten, dus het interval is exact). Lekt het, dan valt de kleinste afdeling met een exact getal uit het blok (`dropped_aantal`), met dezelfde zin op pagina twee als de bestaande aftrekregel ("... staat er niet in, zodat een kleine groep niet herleidbaar wordt") en een eigen regel in het blok; valt alles weg, dan reden `herleidbaar_aantal`. Zonder exacte telling is de aftreksom het totaal van pagina twee zelf (uitspraak over de hele meting). In geen scenario of voorbeeld valt een afdeling weg. Grenzen in de renders: 02, 04, 09 en 12 ("minder dan 3 van de 14" of "van de 10"), 05 en vb ("meer dan 11 van de 14"; vb ook "minder dan 3 van de 10"). Tests: `tests/test_fixronde_1410_intentie_privacy.py` herschreven (weergaveregel per aantal, waarheid van elke grens, vastpinnen, rest, 120 willekeurige gevallen met een onafhankelijke intervalcontrole, scenario 04 en 05 zonder exact Operations-aantal in het hele rapport).
+
+**B. Eén afdeling met een cijfer tegen de organisatie** (`ff22ee0e`, besluit Lars 15-10). Heeft maar één afdeling 10 of meer antwoorden, dan vergelijkt de conclusie haar met het cijfer van pagina twee (werkbeeld, checkpointscore of frictiescore), op de getoonde scores, met `SEGMENT_START_MIN_DELTA` (0,3) en dezelfde omvangeis. Bij Loep Vertrek telt een frictiescore die minstens 0,3 hoger is (`_seg_tegen_org`). Aangewezen: "Operations scoort lager dan de organisatie als geheel (4.5/10 tegen 6.4/10 op pagina 2; 14 van de 28 uitgenodigden vulden in). Ze is de enige afdeling met genoeg antwoorden voor een eigen cijfer." Eén gate (`_segment_startpunt`, nu met `org_signal` en `scan_type`) voor navy blok, brugzin op pagina twee en besluitpagina; de brugzin zonder onderwerp zegt "scoort lager dan de organisatie als geheel (x tegen y)". Niet aangewezen: "Alleen X heeft genoeg antwoorden voor een eigen cijfer. Die komt op dezelfde score uit als / scoort x, niet lager dan / scoort x, minder dan 0,3 punt onder de organisatie als geheel (y). Loep wijst pas een afdeling aan vanaf 0,3 punt verschil; begin dus bij het organisatiebeeld." (Vertrek: frictiescore, "niet hoger dan", "minder dan 0,3 punt boven"). Twee of meer afdelingen met een cijfer vergelijken nog onderling. `scripts/render_besluit_max.py` meet weer 06 als Behoud-scenario; vb blijft als extra variant. Tests: `tests/test_fixronde_1510_afdeling_tegen_organisatie.py` (Behoud en Vertrek: aanwijzen, precies 0,3, net niet, afronding, gelijkspel, beter, leesrichting, twee afdelingen, zonder organisatiescore, restgroep, brugzin, en gerenderd 06 plus een Vertrek-variant van 06 waarin het organisatiecijfer gelijk is aan dat op pagina twee).
+
+In de stresstest wijst alleen 06 een afdeling aan via de organisatie; in 01, 02, 03, 04, 05, 09, 12 tot en met 17 en 19 staat nu de niet-aangewezen zin met beide cijfers (was "Er valt dus niets te vergelijken").
+
+**C. Paginering** (`dc2f2b0b`).
+- 04: het intentieblok naast het enige subblok was het hoogste vak van de staart (conclusie plus raster), die daardoor naar een vel van 30 tot 34% schoof. Intro van het blok korter ("Alleen afdelingen vanaf 10 antwoorden, nooit een samengevoegde restgroep."; "dezelfde grens als voor alle onderwerpen per afdeling" is weg) en de niet-aangewezen conclusie in twee regels. 04: 16 pagina's, geen bevinding; de staart eindigt op 760,8 pt (24 pt vrij).
+- vb, pagina twee: de richtingregel en de brugzin kregen binnen `.mq-line` via `.mq-line p` 13px vet in plaats van hun eigen maat (11px halfvet en 10,5px gewoon, zoals de brugzin op de gespreksagenda): specificiteit rechtgezet in `report_css.py`. Daarnaast "hierboven" uit de leidraadregel 5-12 min ("lees dan de regel onder de cijfers voor."): het woord liet "voor." op een eigen regel vallen. Geen informatie weg.
+- vb, afdelingspagina: het intentieblok stond als tweede rasterrij los op een vel van 19%. De staart blijft nu ook bij twee rasterrijen bij elkaar (was alleen bij één); vanaf drie rijen niet.
+- vx: "Alle onderwerpen per afdeling" viel als vel van 29% achter de tabel. De compacte rijen en het bandlabel op één regel (A5) gelden nu in elk raster van twee kolommen, niet alleen met het intentieblok. Dat raakt alleen metingen met twee afdelingen van 10 of meer zonder intentieblok (Vertrek, Start). vx: 17 pagina's (was 18). Geen uitzondering toegevoegd, geen meetgrens veranderd.
+
+**Voorbeelden** (`e8ff03c3`): HTML en PDF opnieuw, in `docs/examples/` en `frontend/public/examples/` gelijk. Pagina twee van Behoud veranderde onder het knipvlak; het knipvlak van de hero (y 40 tot 454,6 pt) is pixel voor pixel gelijk aan de huidige `voorbeeld-loep-behoud-p02.webp` (1489 x 1037, 126.150 bytes), dus die is niet vervangen.
+
+### Gates
+
+| Gate | Uitkomst |
+|---|---|
+| Backend `pytest tests` | 24 failed / 2753 passed / 11 skipped; faalset per testnaam identiek aan `polijstronde-backend-baseline-fails.txt` |
+| Python 3.11-guard | groen (in de suite) |
+| Render productie-image (`loep-backend:beslis`) | `TOTAAL 37 bestanden, 0 met bevindingen`, 0 warnings, 0 streepjes; alleen de zes vaste uitzonderingen (01 p.7 36% en p.13 39%, 09 p.7 26% en p.13 39%, 14 p.13 32%, 19 p.7 36%) |
+| `richting_staten.py` voor (`b87dc79a`, tijdelijke worktree) en na | geen verschil; na heeft alleen zes regels extra voor de nieuwe `zz_besluitmax_*_06`-bestanden, gelijk aan 06 |
+
+Paginatallen: 01 18, 02 18, 03 18, 04 16, 05 19, 06 19, 07 8, 08 14, 09 18, 10 19, 11 20, 12 18, 13 18, 14 18, 15 18, 16 19, 16b 19, 17 19, 18 14, 19 17, 20 13, 21 14, 22 14; `zz_besluitmax_*_06` 19 (nieuw), `*_08` 14, `*_vb` 19, `*_vx` 17; voorbeelden Vertrek 17, Behoud 19, Start 13. Gelijk aan de tabel onder "Eindrender" hierboven. Ten opzichte van de stand vóór 15-10 (`b87dc79a`): 04 17 naar 16, vb 20 naar 19, vx 18 naar 17.
+
+Krapte pagina twee (vrije ruimte tot de ondermarge op 785 pt): krapst 22 met 5,1 pt (was 1 pt na de polijstronde), dan 08 en `zz_*_08` met 6,0 pt, het Vertrek-voorbeeld met 9,3 pt en vb met 11,1 pt (liep eerst over).
+
+Zelf bekeken (PyMuPDF naar PNG): vb pagina twee (richting- en brugregel in de kleinere maat, meetgegevens op het vel), vb p.9 en p.10 (conclusie, twee subblokken en het intentieblok samen op p.10, "meer dan 11 van de 14" en "minder dan 3 van de 10"), 04 p.8 (tabel, conclusie, subblok en intentieblok op één vel, "minder dan 3 van de 14"), 06 p.10 (aanwijzing tegen 6.4/10, "11 van de 14"), Behoud-voorbeeld p.10 (Operations "11 van de 17", conclusie "Die scoort 6.0/10, minder dan 0,3 punt onder de organisatie als geheel (6.2/10)"), vx p.8 en p.9 vóór de fix.
+
+### Afwijkingen en twijfels voor Lars
+
+1. **Het organisatietotaal kan de grens nog steeds openbreken.** In 04 zegt pagina twee "Geen van de 45 heeft veel vertrekgedachten" en de spreidingsstrook op de behoudscontext "Veel vertrekgedachten 0". Dan is "minder dan 3 van de 14" bij Operations zinloos: het is 0. Hetzelfde bij een totaal van 1 of 2, of van bijna iedereen. De aftrekcontrole behandelt het organisatietotaal als uitspraak over de hele meting, zoals de aanpak van 14-10 ook deed. De grens ook op organisatieniveau toepassen raakt pagina twee en de strook; dat heb ik niet gedaan. Besluit nodig.
+2. **Een weggevallen afdeling krijgt wel een melding.** Als de aftreksom een grens zou ontmaskeren, valt de kleinste afdeling met een exact getal weg en noemen pagina twee en het blok haar (zelfde mechanisme als de aftrekregel van A5). Elke andere weergave van die afdeling (ook een grens of een leeg vak) laat de ontmaskering staan. Komt in geen render voor.
+3. **Pagina twee ziet er anders uit** bij elk rapport met een richtingregel of brugzin: die staan nu in hun bedoelde maat (11px halfvet, 10,5px gewoon) in plaats van 13px vet. Dat was een specificiteitsfout, maar het is een zichtbare wijziging in alle voorbeeldrapporten.
+4. **Een eerder besluit teruggedraaid:** A5 beperkte de compacte rasterrijen bewust tot het raster met het intentieblok. Nu gelden ze overal; in de matrix raakt dat alleen vx.
+5. **Copy gewijzigd om ruimte te maken:** de intro van het intentieblok is korter (zonder "dezelfde grens als voor alle onderwerpen per afdeling"), "hierboven" is weg uit de leidraad, en de niet-aangewezen conclusie bij één afdeling begint de tweede zin met "Die". De grensuitleg staat er in de woorden van Lars.
+6. **Het organisatiecijfer bevat de afdeling zelf.** In 06 telt Operations mee in de 6.4/10 waarmee ze vergeleken wordt; dat is "de organisatie als geheel" en het cijfer van pagina twee, zoals gevraagd, maar het verschil met de rest van de organisatie is groter dan het getoonde.
+7. **Geen render van Vertrek met één afdeling met een cijfer in het productie-image.** De matrix heeft dat geval niet (07, 08, 21, 22 hebben alleen kleine afdelingen; vx heeft er twee). Het is unit-getest en als HTML gerenderd (test), niet gepagineerd gemeten.
+
+Meetuitvoer (niet in de repo): `C:\Users\larsh\AppData\Local\Temp\claude\verif-beslis\` (`out2-render.txt`, PDF's in `out2/`, `suite1.log`, de hero in `hero/`). De tijdelijke worktree van `b87dc79a` is verwijderd.
