@@ -5560,14 +5560,18 @@ _SEG_WOORDEN = {
              # Fixronde 14-10 (punt 10): als er ook kleine afdelingen zonder
              # cijfer in de tabel staan, zie _seg_vergelijkbaar.
              "twee_cijfer": "De twee afdelingen met een cijfer en de hoogste frictiescore",
-             "lager": "heeft een hogere frictiescore"},
+             "lager": "heeft een hogere frictiescore",
+             # Fixronde 15-10 (onderdeel B): één afdeling met een cijfer tegen
+             # de hele organisatie, zie _seg_tegen_org.
+             "lager_dan_org": "heeft een hogere frictiescore dan de organisatie als geheel"},
 }
 _SEG_WOORDEN["retention"] = _SEG_WOORDEN["onboarding"] = {
     "laagst": "scoort het laagst",
     "laagste_score": "heeft de laagste score",
     "twee": "De twee laagste afdelingen",
     "twee_cijfer": "De twee laagste afdelingen met een cijfer",
-    "lager": "scoort lager"}
+    "lager": "scoort lager",
+    "lager_dan_org": "scoort lager dan de organisatie als geheel"}
 
 
 def _seg_woord(scan_type: str, sleutel: str) -> str:
@@ -5753,8 +5757,27 @@ def _seg_kwalificatie(klein_ernaast: bool) -> str:
     return "met een cijfer" if klein_ernaast else "die apart getoond worden"
 
 
+def _seg_tegen_org(row: dict, org_signal: float, scan_type: str) -> tuple[float, float, float]:
+    """(afdeling, organisatie, verschil) zoals de lezer ze ziet, op de schaal
+    van het product (fixronde 15-10, onderdeel B, besluit Lars 15-10).
+
+    org_signal is het cijfer van pagina twee op de schaal van het product: de
+    frictiescore bij Loep Vertrek, het werkbeeld of de checkpointscore op de
+    gezondheidsschaal bij Behoud en Start. Beide kanten getoond (afgerond),
+    zodat de verschilgrens werkt op wat er op de pagina staat (B15). Verschil
+    positief = de afdeling staat er slechter voor: bij Vertrek een HOGERE
+    frictiescore, anders een lagere score.
+    """
+    dept_d = _seg_getoond(row["avg"], scan_type)
+    org_d = _shown(org_signal)
+    verschil = dept_d - org_d if scan_type == "exit" else org_d - dept_d
+    return dept_d, org_d, round(verschil, 1)
+
+
 def _segment_startpunt(segment_rows: list[dict],
-                       factor_rows: dict[str, dict] | None) -> dict | None:
+                       factor_rows: dict[str, dict] | None, *,
+                       org_signal: float | None = None,
+                       scan_type: str | None = None) -> dict | None:
     """De aangewezen afdeling, of None.
 
     De enige gate voor staat 3 van `_segment_start_note` (verschil >=
@@ -5768,14 +5791,33 @@ def _segment_startpunt(segment_rows: list[dict],
     moet er nu zelf ook aan voldoen: een verschil met een afdeling zonder
     cijfer kan de lezer niet nagaan. "kwalificatie" zegt de brugzin welke
     afdelingen "de laagste" omvat.
+
+    Fixronde 15-10 (onderdeel B, besluit Lars 15-10): heeft maar één afdeling
+    een cijfer, dan vergelijkt Loep die met de hele organisatie, het cijfer van
+    pagina twee (org_signal, schaal van het product, zie _seg_tegen_org).
+    Dezelfde verschilgrens op de getoonde scores en dezelfde omvangeis (de
+    afdeling heeft een cijfer). "tegen_org" is dan het getoonde
+    organisatiecijfer, anders None. Zonder org_signal (oude aanroepen) blijft
+    het bij geen aanwijzing; scan_type is met org_signal verplicht, want de
+    leesrichting verschilt per product.
     """
+    if org_signal is not None and scan_type is None:
+        raise ValueError("_segment_startpunt: org_signal zonder scan_type")
     vergelijkbaar, klein_ernaast = _seg_vergelijkbaar(segment_rows)
-    if len(vergelijkbaar) < 2:
+    tegen_org: float | None = None
+    if len(vergelijkbaar) == 1 and org_signal is not None:
+        lowest = vergelijkbaar[0]
+        _d, tegen_org, verschil = _seg_tegen_org(lowest, org_signal, scan_type)
+        if verschil < SEGMENT_START_MIN_DELTA:
+            return None
+        low_sc = _shown(lowest["avg"])
+    elif len(vergelijkbaar) < 2:
         return None
-    lowest, runner_up = vergelijkbaar[0], vergelijkbaar[1]
-    low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
-    if round(run_sc - low_sc, 1) < SEGMENT_START_MIN_DELTA:
-        return None
+    else:
+        lowest, runner_up = vergelijkbaar[0], vergelijkbaar[1]
+        low_sc, run_sc = _shown(lowest["avg"]), _shown(runner_up["avg"])
+        if round(run_sc - low_sc, 1) < SEGMENT_START_MIN_DELTA:
+            return None
     info = (factor_rows or {}).get(lowest["department"]) or {}
     factors = info.get("factors") or []
     return {"department": lowest["department"], "score": low_sc, "n": lowest["n"],
@@ -5783,6 +5825,7 @@ def _segment_startpunt(segment_rows: list[dict],
             "low_fk": factors[0][0] if factors else None,
             "low_avg": factors[0][1] if factors else None,
             "kwalificatie": _seg_kwalificatie(klein_ernaast),
+            "tegen_org": tegen_org,
             # Staat de restgroep lager, dan mag ook de brugzin niet kaal "de
             # laagste afdeling" zeggen (codereview taak 7, defect 1).
             "rest_lager": _pooled_lager(segment_rows, low_sc) is not None}
@@ -5847,9 +5890,15 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
     dept, score = seg["department"], _score_str(_seg_getoond(seg["score"], scan_type))
     rest_zin = (" De restgroep " + _seg_woord(scan_type, "lager") + ", maar bestaat uit kleine "
                 "afdelingen en telt daarom niet als startpunt." if seg.get("rest_lager") else "")
+    if seg.get("tegen_org") is not None:
+        # Fixronde 15-10 (onderdeel B): één afdeling met een cijfer, vergeleken
+        # met de hele organisatie, zoals het navy blok.
+        waarom = (f"{_seg_woord(scan_type, 'lager_dan_org')} "
+                  f"({score} tegen {_score_str(seg['tegen_org'])})")
+    else:
+        waarom = f"{_seg_woord(scan_type, 'laagst')} van de afdelingen {seg['kwalificatie']} ({score})"
     if seg["low_fk"] is None:
-        return (f"{org_start} {dept} {_seg_woord(scan_type, 'laagst')} "
-                f"van de afdelingen {seg['kwalificatie']} ({score}); welk onderwerp "
+        return (f"{org_start} {dept} {waarom}; welk onderwerp "
                 f"daar het zwaarst weegt is niet te zeggen, te weinig antwoorden per "
                 f"onderwerp.{rest_zin}")
     low_lbl = _fl(seg["low_fk"], scan_type)
@@ -5877,7 +5926,7 @@ def _brugzin(startpunt_key: str | None, startpunt_label: str, seg: dict | None,
 
 def _segment_start_note(segment_rows: list[dict],
                         factor_rows: dict[str, dict] | None,
-                        scan_type: str) -> str:
+                        scan_type: str, org_signal: float | None = None) -> str:
     """Het navy-blok "Waar het per afdeling begint" onder de segmenttabel.
 
     Drie staten (spec ronde 2 par. 3.1), elk met de reden die in DEZE meting
@@ -5910,6 +5959,14 @@ def _segment_start_note(segment_rows: list[dict],
     eerlijk dat er niets te vergelijken is. Staan er kleine afdelingen naast,
     dan zegt de conclusie "met een cijfer" in plaats van "die apart getoond
     worden".
+
+    Fixronde 15-10 (onderdeel B, besluit Lars 15-10): heeft maar één afdeling
+    een cijfer en is org_signal (het cijfer van pagina twee) bekend, dan
+    vergelijkt het blok die afdeling met de organisatie als geheel. Haalt het
+    verschil de grens, dan de gewone aanwijzing met "lager dan de organisatie
+    als geheel (x tegen y)"; anders een eerlijke zin met beide cijfers (gelijk,
+    niet slechter, of minder dan de grens slechter). Zonder org_signal de oude
+    zin "niets te vergelijken".
     """
     # Een tabel met één benoemde rij krijgt geen conclusie: een startpunt is
     # per definitie een vergelijking. Uit _department_segment_rows komen altijd
@@ -5929,19 +5986,49 @@ def _segment_start_note(segment_rows: list[dict],
     grens = f"minstens {MIN_DISTRIBUTION_N}"
 
     # Eén gate voor staat 3, gedeeld met de brugzin (_segment_startpunt).
-    aangewezen = _segment_startpunt(segment_rows, factor_rows)
+    aangewezen = _segment_startpunt(segment_rows, factor_rows, org_signal=org_signal,
+                                    scan_type=scan_type)
 
     low_sc: float | None = None
     if not vergelijkbaar:
         body = ('Geen afzonderlijke afdeling heeft genoeg antwoorden voor een cijfer '
                 f'({grens}), dus Loep vergelijkt de afdelingen hier niet. Kijk voor de '
                 'eerste prioriteit naar het organisatiebeeld.')
-    elif len(vergelijkbaar) == 1:
+    elif len(vergelijkbaar) == 1 and org_signal is None:
         enige = vergelijkbaar[0]
         low_sc = _shown(enige["avg"])
         body = (f'Alleen {_h(enige["department"])} heeft genoeg antwoorden voor een cijfer '
                 f'({grens}). Er valt dus niets te vergelijken, en Loep wijst hier geen '
                 f'eerste afdeling aan. Kijk voor de eerste prioriteit naar het '
+                f'organisatiebeeld.')
+    elif len(vergelijkbaar) == 1 and aangewezen is None:
+        # Fixronde 15-10 (onderdeel B): de enige afdeling met een cijfer wijkt
+        # niet genoeg af van de organisatie als geheel. Drie eerlijke vormen,
+        # elk met beide getoonde cijfers.
+        enige = vergelijkbaar[0]
+        low_sc = _shown(enige["avg"])
+        dept = _h(enige["department"])
+        dept_d, org_d, verschil = _seg_tegen_org(enige, org_signal, scan_type)
+        maat = "frictiescore" if scan_type == "exit" else "score"
+        if verschil == 0:
+            vergelijking = (f'{dept} komt op dezelfde {maat} uit als de organisatie als '
+                            f'geheel ({_score_str(org_d)}).')
+        elif verschil < 0 and scan_type == "exit":
+            vergelijking = (f'{dept} ({_score_str(dept_d)}) heeft geen hogere frictiescore '
+                            f'dan de organisatie als geheel ({_score_str(org_d)}).')
+        elif verschil < 0:
+            vergelijking = (f'{dept} ({_score_str(dept_d)}) scoort niet lager dan de '
+                            f'organisatie als geheel ({_score_str(org_d)}).')
+        elif scan_type == "exit":
+            vergelijking = (f'{dept} ({_score_str(dept_d)}) ligt minder dan {marge} punt '
+                            f'boven de frictiescore van de organisatie als geheel '
+                            f'({_score_str(org_d)}).')
+        else:
+            vergelijking = (f'{dept} ({_score_str(dept_d)}) ligt minder dan {marge} punt '
+                            f'onder de organisatie als geheel ({_score_str(org_d)}).')
+        body = (f'Alleen {dept} heeft genoeg antwoorden voor een eigen cijfer ({grens}). '
+                f'{vergelijking} Loep wijst een afdeling pas aan bij minstens {marge} punt '
+                f'verschil, dus hier niet. Kijk voor de eerste prioriteit naar het '
                 f'organisatiebeeld.')
     elif aangewezen is None:
         # Het verschil tussen de twee laagste afdelingen met een cijfer haalt
@@ -6011,10 +6098,19 @@ def _segment_start_note(segment_rows: list[dict],
             theme_sentence = (f'{_inleiding}'
                               f'{_h(_lc(_fl(aangewezen["low_fk"], scan_type)))} '
                               f'({aangewezen["low_avg"]:.1f}/10).{_voorbehoud}')
-        body = (f'<strong>{_h(aangewezen["department"])}</strong> '
-                f'{_seg_woord(scan_type, "laagste_score")} '
-                f'van de afdelingen {kwal} '
-                f'({_seg_getoond(aangewezen["score"], scan_type):.1f}/10; {_low_basis}). '
+        if aangewezen["tegen_org"] is not None:
+            # Fixronde 15-10 (onderdeel B): de enige afdeling met een cijfer,
+            # vergeleken met het cijfer van pagina twee.
+            opening = (f'{_seg_woord(scan_type, "lager_dan_org")} '
+                       f'({_seg_getoond(aangewezen["score"], scan_type):.1f}/10 tegen '
+                       f'{aangewezen["tegen_org"]:.1f}/10 op {_P02}; {_low_basis}). '
+                       f'Ze is de enige afdeling met genoeg antwoorden voor een eigen '
+                       f'cijfer.')
+        else:
+            opening = (f'{_seg_woord(scan_type, "laagste_score")} '
+                       f'van de afdelingen {kwal} '
+                       f'({_seg_getoond(aangewezen["score"], scan_type):.1f}/10; {_low_basis}).')
+        body = (f'<strong>{_h(aangewezen["department"])}</strong> {opening} '
                 f'Gebruik dit om te toetsen wat hier '
                 f'speelt, geen ranking of oordeel.{theme_sentence}')
 
@@ -6224,7 +6320,7 @@ def _intentie_afdelingen_block(info: dict | None) -> str:
 def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None = None,
                    scan_type: str = "exit", opener_html: str = "",
                    hidden_n: int = 0, toelichting_regel: bool = False,
-                   intent_html: str = "") -> str:
+                   intent_html: str = "", org_signal: float | None = None) -> str:
     """Segmentanalyse per afdeling: tabel + spreidingsstrip (spec 2026-07-11)
     + factorlaag met laagste thema en uitsplitsing (spec 2026-07-16).
 
@@ -6253,6 +6349,10 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     intent_html (A5): het blok van _intentie_afdelingen_block, alleen bij Loep
     Behoud. Het staat onder de tabel, als laatste vak in het raster van de
     uitsplitsing per afdeling (zie _segment_factor_subblocks).
+
+    org_signal (fixronde 15-10, onderdeel B): het cijfer van pagina twee op de
+    schaal van het product, voor de conclusie als maar één afdeling een cijfer
+    heeft (zie _segment_start_note). De renderers geven het altijd mee.
     """
     if not segment_rows:
         return _segment_status_block(0, has_segment_data=False, opener_html=opener_html,
@@ -6324,7 +6424,7 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     # tot 10% gevuld; stresstest na plan 3a, observatie 10). Nu loopt ze mee
     # met de tabel waar ze over gaat; wat eventueel doorschuift is de
     # uitsplitsing, het detail.
-    low_note = _segment_start_note(segment_rows, factor_rows, scan_type)
+    low_note = _segment_start_note(segment_rows, factor_rows, scan_type, org_signal)
 
     # Fail Loud: niet tonen mag, verzwijgen niet. Halen de kleine afdelingen
     # samen de grens voor een restgroep niet, dan staan hun responses nergens
@@ -7937,8 +8037,11 @@ def render_exit_report_html(data: dict) -> str:
     # Brugzin (taak 7, B2): één startpuntverhaal. Zelfde zin op p.02 en op de
     # gespreksagenda; leeg zonder aangewezen afdeling of zonder factorprofiel
     # (dan is er niets om aan te knopen en zegt het navy blok zelf de reden).
+    # Fixronde 15-10 (onderdeel B): met het cijfer van pagina twee, voor als
+    # maar één afdeling een cijfer heeft. Dezelfde waarde als _segment_block.
     _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
-                                        data.get("segment_factor_rows"))
+                                        data.get("segment_factor_rows"),
+                                        org_signal=avg_risk or None, scan_type="exit")
     _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _tweede_key = _tweede_row["key"] if _tweede_row else None
     # De aangewezen afdeling voor de besluitpagina, één keer bepaald: de
@@ -8308,7 +8411,8 @@ def render_exit_report_html(data: dict) -> str:
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type="exit", opener_html=_seg_opener,
                         hidden_n=data.get("segment_hidden_n", 0),
-                        toelichting_regel=_toont_toelichtingen(deep_agg) and bool(_seg_rows))
+                        toelichting_regel=_toont_toelichtingen(deep_agg) and bool(_seg_rows),
+                        org_signal=avg_risk or None)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -8440,7 +8544,8 @@ def render_retention_report_html(data: dict) -> str:
 
     # Brugzin (taak 7, B2), zie render_exit_report_html.
     _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
-                                        data.get("segment_factor_rows"))
+                                        data.get("segment_factor_rows"),
+                                        org_signal=signal, scan_type=ST)
     _tweede_row = next((r for r in _raster_rows if r["agenda_role"] == "tweede"), None)
     _tweede_key = _tweede_row["key"] if _tweede_row else None
     # De aangewezen afdeling voor de besluitpagina, één keer bepaald: de
@@ -8765,7 +8870,7 @@ def render_retention_report_html(data: dict) -> str:
                         scan_type=ST, opener_html=_seg_opener,
                         hidden_n=data.get("segment_hidden_n", 0),
                         toelichting_regel=_toont_toelichtingen(deep_agg) and bool(_seg_rows),
-                        intent_html=_intent_block)
+                        intent_html=_intent_block, org_signal=signal)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]
@@ -8952,7 +9057,8 @@ def render_onboarding_report_html(data: dict) -> str:
 
     # Brugzin (taak 7, B2), zie render_exit_report_html.
     _seg_startpunt = _segment_startpunt(data.get("segment_rows") or [],
-                                        data.get("segment_factor_rows"))
+                                        data.get("segment_factor_rows"),
+                                        org_signal=signal, scan_type=ST)
     _brug = ("" if _geen_profiel else
              _brugzin(_ob_startpunt_fk, _fl(_ob_startpunt_fk, ST) if _ob_startpunt_fk else "",
                       _seg_startpunt, ST))
@@ -9213,7 +9319,7 @@ def render_onboarding_report_html(data: dict) -> str:
     _seg_opener = ch.opener("Per afdeling", anchor=LEIDRAAD_ANKERS["afdelingen"]) if _seg_rows else ch.opener("Per afdeling")
     s += _segment_block(_seg_rows, factor_rows=data.get("segment_factor_rows"),
                         scan_type=ST, opener_html=_seg_opener,
-                        hidden_n=data.get("segment_hidden_n", 0))
+                        hidden_n=data.get("segment_hidden_n", 0), org_signal=signal)
 
     # ── Open toelichtingen ────────────────────────────────────────────────────
     texts = data["open_texts"]

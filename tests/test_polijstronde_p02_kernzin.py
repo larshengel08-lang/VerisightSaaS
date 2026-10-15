@@ -162,12 +162,15 @@ def test_r21_renderer_zet_de_vlag_uit_het_afdelingsblok():
     assert VUL_AFDELING in _slot(html)
 
 
-def test_r21_scenario_06_heeft_geen_aangewezen_afdeling_meer():
-    """Scenario 06: alleen Operations heeft een cijfer, dus geen vergelijking
-    en geen afdelingsblok (fixronde 14-10, punt 10)."""
+def test_r21_scenario_06_wijst_operations_aan_tegen_de_organisatie():
+    """Scenario 06: alleen Operations heeft een cijfer (fixronde 14-10, punt
+    10). Sinds fixronde 15-10 (onderdeel B) vergelijkt Loep die afdeling met de
+    organisatie als geheel; Operations ligt ruim lager, dus weer een
+    aangewezen afdeling en een afdelingsblok op de besluitpagina."""
     html = _html("06_een_afdeling_laag")
-    assert "Afspraak per afdeling" not in html
-    assert "Alleen Operations heeft genoeg antwoorden voor een cijfer" in html
+    assert "Afspraak per afdeling" in html
+    assert "niets te vergelijken" not in html
+    assert VUL_AFDELING in _slot(html)
 
 
 def test_r21_renderer_zonder_afdelingsblok_noemt_alleen_de_terugkoppeling():

@@ -48,7 +48,7 @@ def test_segment_startpunt_wijst_alleen_aan_bij_beide_grenzen():
     seg = _segment_startpunt(ROWS, FACTOR_ROWS)
     assert seg == {"department": "Operations", "score": 6.0, "n": 17, "invited": 21,
                    "low_fk": "workload", "low_avg": 4.9, "kwalificatie": "met een cijfer",
-                   "rest_lager": True}
+                   "tegen_org": None, "rest_lager": True}
     te_klein = [_row("Ops", 7, 5.0), _row("Sales", 9, 6.1)]
     assert _segment_startpunt(te_klein, None) is None
     # Fixronde 14-10: de volgende afdeling zonder cijfer telt niet als vergelijking.

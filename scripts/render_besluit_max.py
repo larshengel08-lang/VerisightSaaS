@@ -15,12 +15,14 @@ de besluitpagina kort zo'n veld nog steeds af op BESLUIT_TEKST_MAX en meldt dat
 (BESLUIT_INGEKORT). Onderwerpen en eigenaar worden nooit afgekapt.
 
 Scenario's:
-  vb  Loep Behoud met een aangewezen afdeling (blok "Afspraak per afdeling").
-      Tot fixronde 14-10 was dat stresstest-scenario 06. Sinds punt 10 (besluit
-      Lars 14-10) doen alleen afdelingen met een cijfer (minstens 10
-      antwoorden) mee aan de vergelijking; in 06 heeft alleen Operations er
-      tien of meer, dus daar wordt geen afdeling meer aangewezen. vb is 06 met
-      Sales op 10 en Marketing op 3 (totaal blijft 45).
+  06  Loep Behoud met een aangewezen afdeling (blok "Afspraak per afdeling"):
+      stresstest-scenario 06. Alleen Operations heeft een cijfer (minstens 10
+      antwoorden); sinds fixronde 15-10 (onderdeel B, besluit Lars 15-10)
+      vergelijkt Loep die afdeling met de organisatie als geheel en wijst ze
+      aan. Tussen fixronde 14-10 en 15-10 wees 06 niets aan en stond vb hier.
+  vb  Extra variant: Loep Behoud met TWEE afdelingen met een cijfer (06 met
+      Sales op 10 en Marketing op 3, totaal blijft 45). Een echt klantgeval
+      (pagina twee liep hier over, fixronde 15-10 onderdeel C).
   08  Loep Vertrek (langste terugkoppelhint), zonder aangewezen afdeling.
   vx  Loep Vertrek MET een aangewezen afdeling. Geen stresstest-scenario doet
       dat (07 en 08 hebben te weinig antwoorden per afdeling), dus dit script
@@ -44,8 +46,8 @@ Varianten:
          Welke van de twee de pagina langer maakt, hangt van het afbreken af;
          daarom beide.
 
-Het script faalt hard (SystemExit) als die opzet wegvalt: 06 en vx moeten het
-afdelingsblok dragen (vb en vx), 08 niet, de variant oud moet BESLUIT_INGEKORT tonen, en
+Het script faalt hard (SystemExit) als die opzet wegvalt: 06, vb en vx moeten
+het afdelingsblok dragen, 08 niet, de variant oud moet BESLUIT_INGEKORT tonen, en
 de variant samen moet de zin BESLUIT_AFDELING_SAMEN tonen. Anders zou de
 meting stil een lichter geval meten.
 
@@ -193,7 +195,8 @@ def main() -> int:
         return data
 
     # (scenario, moet het afdelingsblok dragen)
-    scenarios = [(BEHOUD_AFDELING, True),
+    scenarios = [(next(s for s in st.SCENARIOS if s.num == "06"), True),
+                 (BEHOUD_AFDELING, True),
                  (next(s for s in st.SCENARIOS if s.num == "08"), False),
                  (VERTREK_AFDELING, True)]
 
