@@ -191,7 +191,7 @@ SLOT_STERK = "Daarom begint het gesprek bij Groeiperspectief: daar kan het MT ze
 SLOT_INDICATIEF = ("Daarom kiest Loep Groeiperspectief als mogelijk startpunt voor het gesprek: daar "
                    "zie je waar het wringt, en daar kan het MT zelf iets besluiten.")
 LEIDRAADZIN = ("Gaat het over blijf- of vertrekintentie, lees dan de regel onder de cijfers "
-               "hierboven voor.")
+               "voor.")
 DUIDING = "hoe dringend behoud hier is"
 
 

@@ -2223,8 +2223,12 @@ def _leidraad_block(scan_type: str, *, has_segments: bool, has_quotes: bool,
     if intentie_duiding:
         # R1: het moment waarop de vergadering ontspoorde. De regel onder de
         # cijfers op deze pagina is de zin die de HR-manager dan voorleest.
+        # Zonder "hierboven" (fixronde 15-10, onderdeel C): de leidraad staat
+        # op dezelfde pagina, en het woord liet "voor." op een eigen regel
+        # vallen, waardoor pagina twee bij Loep Behoud met twee afdelingen van
+        # 10 of meer antwoorden geen ruimte overhield.
         rij2 += (" Gaat het over blijf- of vertrekintentie, lees dan de regel onder de "
-                 "cijfers hierboven voor.")
+                 "cijfers voor.")
     rijen = [
         ("0-5 min", "Hoe stevig is dit", rij1),
         ("5-12 min", "Het beeld in één plaatje", rij2),
@@ -6009,27 +6013,23 @@ def _segment_start_note(segment_rows: list[dict],
         low_sc = _shown(enige["avg"])
         dept = _h(enige["department"])
         dept_d, org_d, verschil = _seg_tegen_org(enige, org_signal, scan_type)
-        maat = "frictiescore" if scan_type == "exit" else "score"
+        # Kort gehouden (onderdeel C): in stresstest 04 moet dit blok met het
+        # raster eronder nog op het vel van de tabel passen.
+        o = _score_str(org_d)
         if verschil == 0:
-            vergelijking = (f'{dept} komt op dezelfde {maat} uit als de organisatie als '
-                            f'geheel ({_score_str(org_d)}).')
-        elif verschil < 0 and scan_type == "exit":
-            vergelijking = (f'{dept} ({_score_str(dept_d)}) heeft geen hogere frictiescore '
-                            f'dan de organisatie als geheel ({_score_str(org_d)}).')
-        elif verschil < 0:
-            vergelijking = (f'{dept} ({_score_str(dept_d)}) scoort niet lager dan de '
-                            f'organisatie als geheel ({_score_str(org_d)}).')
+            maat = "frictiescore" if scan_type == "exit" else "score"
+            vergelijking = f'Die komt op dezelfde {maat} uit als de organisatie als geheel ({o}).'
         elif scan_type == "exit":
-            vergelijking = (f'{dept} ({_score_str(dept_d)}) ligt minder dan {marge} punt '
-                            f'boven de frictiescore van de organisatie als geheel '
-                            f'({_score_str(org_d)}).')
+            hoe = "niet hoger dan" if verschil < 0 else f"minder dan {marge} punt boven"
+            vergelijking = (f'Die heeft een frictiescore van {_score_str(dept_d)}, {hoe} de '
+                            f'organisatie als geheel ({o}).')
         else:
-            vergelijking = (f'{dept} ({_score_str(dept_d)}) ligt minder dan {marge} punt '
-                            f'onder de organisatie als geheel ({_score_str(org_d)}).')
-        body = (f'Alleen {dept} heeft genoeg antwoorden voor een eigen cijfer ({grens}). '
-                f'{vergelijking} Loep wijst een afdeling pas aan bij minstens {marge} punt '
-                f'verschil, dus hier niet. Kijk voor de eerste prioriteit naar het '
-                f'organisatiebeeld.')
+            hoe = "niet lager dan" if verschil < 0 else f"minder dan {marge} punt onder"
+            vergelijking = (f'Die scoort {_score_str(dept_d)}, {hoe} de organisatie als '
+                            f'geheel ({o}).')
+        body = (f'Alleen {dept} heeft genoeg antwoorden voor een eigen cijfer. {vergelijking} '
+                f'Loep wijst pas een afdeling aan vanaf {marge} punt verschil; begin dus bij '
+                f'het organisatiebeeld.')
     elif aangewezen is None:
         # Het verschil tussen de twee laagste afdelingen met een cijfer haalt
         # SEGMENT_START_MIN_DELTA niet. Beide hebben een cijfer, dus beide
@@ -6197,9 +6197,12 @@ INTENTIE_AFDELING_KOP = "Blijf- en vertrekintentie per afdeling"
 # Fixronde 14-10 (punt 11): de restgroep doet nooit mee (_department_intent_rows),
 # ook niet met 10 of meer antwoorden. Zonder die zin zoekt de lezer haar hier
 # als ze in de tabel erboven wel een cijfer heeft.
+# Fixronde 15-10 (onderdeel C): korter geformuleerd, zodat het vak met de
+# grensuitleg erbij niet hoger wordt dan het subblok ernaast (stresstest 04
+# schoof anders naar een eigen vel van 32%, gemeten in het productie-image).
 INTENTIE_AFDELING_UITLEG = (
-    f"Alleen afdelingen met minstens {MIN_DISTRIBUTION_N} antwoorden, dezelfde grens als voor "
-    "alle onderwerpen per afdeling. Een samengevoegde restgroep staat er nooit in.")
+    f"Alleen afdelingen vanaf {MIN_DISTRIBUTION_N} antwoorden, nooit een samengevoegde "
+    "restgroep.")
 
 
 # Fixronde 15-10 (besluit Lars 15-10, vervangt de aanpak van 14-10): het
@@ -6210,8 +6213,8 @@ INTENTIE_AFDELING_UITLEG = (
 # Operations staat geen aantal" verraadde juist dat het 0 of iedereen was.
 INTENTIE_TELLING_GRENS = 3
 INTENTIE_GRENS_UITLEG = (
-    "Bij heel kleine aantallen, met of zonder veel vertrekgedachten, staat een grens in "
-    "plaats van het precieze aantal, zodat niemand is aan te wijzen.")
+    "Bij heel kleine aantallen staat een grens in plaats van het precieze aantal, zodat "
+    "niemand is aan te wijzen.")
 
 
 def _telling_weergave(to_high: int, to_n: int) -> str:
@@ -6447,10 +6450,16 @@ def _segment_block(segment_rows: list[dict], factor_rows: dict[str, dict] | None
     # het productie-image). Daarom gaan de conclusie en haar regel dan mee: dat
     # vel is gevuld, en de conclusie staat nog steeds direct na de tabel. Past
     # alles, dan verandert er niets.
+    #
+    # Fixronde 15-10 (onderdeel C): ook bij twee rasterrijen. Met twee
+    # afdelingen van 10 of meer staan hun subblokken in rij 1 en het
+    # intentieblok alleen in rij 2; die rij viel los op een vel van 19%
+    # (zz_besluitmax_*_vb, gemeten in het productie-image). Vanaf drie rijen
+    # niet: dan is de staart zelf bijna een vel en breekt hij toch.
     staart = (low_note
               + (f'<p class="trustline">{SEGMENT_TOELICHTING_GRENS}</p>' if toelichting_regel else '')
               + subblocks)
-    if intent_html and rasterrijen == 1:
+    if intent_html and rasterrijen in (1, 2):
         staart = f'<div class="no-break">{staart}</div>'
 
     # C9: de tabel had geen kolomkoppen, dus was per kolom niet te zien wat er

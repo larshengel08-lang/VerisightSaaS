@@ -76,8 +76,9 @@ def test_behoud_net_niet_wijst_niet_aan():
     rows = _rows(("Operations", 12, 6.7), ("Sales", 8, 7.0))
     assert _segment_startpunt(rows, None, org_signal=6.9, scan_type="retention") is None
     a = _note(rows, 6.9)
-    assert "Operations (6.7/10) ligt minder dan 0,3 punt onder de organisatie als geheel (6.9/10)" in a
-    assert "Loep wijst een afdeling pas aan bij minstens 0,3 punt verschil, dus hier niet." in a
+    assert "Die scoort 6.7/10, minder dan 0,3 punt onder de organisatie als geheel (6.9/10)." in a
+    assert ("Loep wijst pas een afdeling aan vanaf 0,3 punt verschil; begin dus bij het "
+            "organisatiebeeld.") in a
     assert "organisatiebeeld" in a
     assert "scoort lager dan de organisatie" not in a
 
@@ -95,14 +96,14 @@ def test_behoud_gelijkspel():
     rows = _rows(("Operations", 12, 6.9), ("Sales", 8, 7.0))
     assert _segment_startpunt(rows, None, org_signal=6.9, scan_type="retention") is None
     a = _note(rows, 6.9)
-    assert "Operations komt op dezelfde score uit als de organisatie als geheel (6.9/10)" in a
+    assert "Die komt op dezelfde score uit als de organisatie als geheel (6.9/10)." in a
 
 
 def test_behoud_hoger_dan_organisatie():
     rows = _rows(("Operations", 12, 7.4), ("Sales", 8, 5.0))
     assert _segment_startpunt(rows, None, org_signal=6.9, scan_type="retention") is None
     a = _note(rows, 6.9)
-    assert "Operations (7.4/10) scoort niet lager dan de organisatie als geheel (6.9/10)" in a
+    assert "Die scoort 7.4/10, niet lager dan de organisatie als geheel (6.9/10)." in a
     assert "Sales" not in a
 
 
@@ -111,7 +112,7 @@ def test_behoud_zin_zegt_waarom_de_organisatie():
     assert "genoeg antwoorden voor een eigen cijfer" in a
     # Niet aangewezen: ook dan zegt het blok waarom het met de organisatie vergelijkt.
     b = _note(_rows(("Operations", 12, 6.9), ("Sales", 8, 7.0)), 6.9)
-    assert "Alleen Operations heeft genoeg antwoorden voor een eigen cijfer (minstens 10)." in b
+    assert "Alleen Operations heeft genoeg antwoorden voor een eigen cijfer. Die " in b
 
 
 def test_twee_afdelingen_met_cijfer_vergelijken_nog_onderling():
@@ -167,16 +168,15 @@ def test_vertrek_net_niet():
     rows = _rows(("Operations", 14, 5.9), ("Sales", 9, 7.0))   # frictie 5.1
     assert _segment_startpunt(rows, None, org_signal=4.9, scan_type="exit") is None
     a = _note(rows, 4.9, "exit")
-    assert ("Operations (5.1/10) ligt minder dan 0,3 punt boven de frictiescore van de "
-            "organisatie als geheel (4.9/10)") in a
+    assert ("Die heeft een frictiescore van 5.1/10, minder dan 0,3 punt boven de "
+            "organisatie als geheel (4.9/10).") in a
 
 
 def test_vertrek_gelijkspel():
     rows = _rows(("Operations", 14, 6.1), ("Sales", 9, 7.0))   # frictie 4.9
     assert _segment_startpunt(rows, None, org_signal=4.9, scan_type="exit") is None
     a = _note(rows, 4.9, "exit")
-    assert ("Operations komt op dezelfde frictiescore uit als de organisatie als geheel "
-            "(4.9/10)") in a
+    assert "Die komt op dezelfde frictiescore uit als de organisatie als geheel (4.9/10)." in a
 
 
 def test_vertrek_leesrichting_lagere_frictie_wijst_niet_aan():
@@ -185,8 +185,8 @@ def test_vertrek_leesrichting_lagere_frictie_wijst_niet_aan():
     rows = _rows(("Operations", 14, 6.0), ("Sales", 9, 7.0))
     assert _segment_startpunt(rows, None, org_signal=5.5, scan_type="exit") is None
     a = _note(rows, 5.5, "exit")
-    assert ("Operations (5.0/10) heeft geen hogere frictiescore dan de organisatie als "
-            "geheel (5.5/10)") in a
+    assert ("Die heeft een frictiescore van 5.0/10, niet hoger dan de organisatie als "
+            "geheel (5.5/10).") in a
     # Omgekeerd: frictie 6.0 tegen 5.5 is 0,5 hoger en wordt wel aangewezen.
     rows = _rows(("Operations", 14, 5.0), ("Sales", 9, 7.0))
     assert _segment_startpunt(rows, None, org_signal=5.5, scan_type="exit") is not None

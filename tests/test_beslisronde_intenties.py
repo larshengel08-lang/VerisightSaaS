@@ -242,8 +242,7 @@ def test_blok_kop_uitleg_kolommen_en_anker():
     assert 'class="no-break' in html
     t = _plain(html)
     assert "Blijf- en vertrekintentie per afdeling" in t
-    assert ("Alleen afdelingen met minstens 10 antwoorden, dezelfde grens als voor alle "
-            "onderwerpen per afdeling.") in t
+    assert "Alleen afdelingen vanaf 10 antwoorden" in t
     for kop in ("Afdeling", "Ingevuld", "Blijfintentie", "Veel vertrekgedachten"):
         assert kop in t
     assert "Operations" in t
@@ -492,12 +491,25 @@ def test_conclusie_blijft_bij_een_raster_van_een_rij():
     assert not _staart_wrapper(zonder)
 
 
-def test_raster_van_meer_rijen_krijgt_geen_wrapper():
+def test_raster_van_twee_rijen_krijgt_ook_een_wrapper():
+    # Fixronde 15-10 (onderdeel C): twee afdelingen van 10+ plus het
+    # intentieblok geven twee rijen; de tweede rij viel anders los op een vel
+    # van 19% (zz_besluitmax_*_vb).
     seg = _seg(("A", 14), ("B", 12), ("C", 11))
     fr = {d: {"factors": [("workload", 5.0, 10)], "omitted": 0} for d in ("A", "B", "C")}
     intent = _intentie_afdelingen_block({"rows": [_rij("A")], "dropped": [], "reason": ""})
     html = _segment_block(seg, factor_rows=fr, scan_type="retention", intent_html=intent)
     assert html.count('<tbody class="sub-grp">') == 2
+    assert _staart_wrapper(html)
+
+
+def test_raster_van_drie_rijen_krijgt_geen_wrapper():
+    depts = ("A", "B", "C", "D", "E")
+    seg = _seg(*[(d, 11) for d in depts])
+    fr = {d: {"factors": [("workload", 5.0, 10)], "omitted": 0} for d in depts}
+    intent = _intentie_afdelingen_block({"rows": [_rij("A")], "dropped": [], "reason": ""})
+    html = _segment_block(seg, factor_rows=fr, scan_type="retention", intent_html=intent)
+    assert html.count('<tbody class="sub-grp">') == 3
     assert not _staart_wrapper(html)
 
 
@@ -507,11 +519,15 @@ def test_blok_zonder_subblokken_staat_alleen():
     assert 'id="' + ANKER + '"' in html
 
 
-def test_compacte_rasterregels_alleen_met_intentieblok():
+def test_compacte_rasterregels_in_elk_raster():
+    # Fixronde 15-10 (onderdeel C): de compacte rijen en het bandlabel op één
+    # regel gelden nu in elk raster van twee kolommen (Loep Vertrek met twee
+    # afdelingen van 10+ viel anders als los vel achter de tabel).
     from backend.report_css import build_css
     css = build_css("retention")
-    assert ".sub-cols.met-intentie .item-tbl.seg-tbl td" in css
-    assert ".sub-cols.met-intentie .seg-sub td.sub-band" in css
+    assert ".sub-cols .item-tbl.seg-tbl td { padding: 3px 6px; line-height: 1.3; }" in css
+    assert ".sub-cols .seg-sub td.sub-band { white-space: nowrap; }" in css
+    assert ".sub-cols.met-intentie" not in css
     assert '<table class="sub-cols met-intentie">' in _seg_html()
     # Zonder intentieblok houdt een raster de gewone klasse.
     seg = _seg(("A", 14), ("B", 12))

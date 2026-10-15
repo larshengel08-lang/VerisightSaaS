@@ -354,5 +354,4 @@ def test_scenario_05_aftreksom_met_pagina_twee_verraadt_operations_niet():
 
 def test_intro_noemt_dat_de_restgroep_er_nooit_in_staat():
     t = _plain(_blok([_rij(to_high=5)]))
-    assert ("Alleen afdelingen met minstens 10 antwoorden, dezelfde grens als voor alle "
-            "onderwerpen per afdeling. Een samengevoegde restgroep staat er nooit in.") in t
+    assert "Alleen afdelingen vanaf 10 antwoorden, nooit een samengevoegde restgroep." in t
