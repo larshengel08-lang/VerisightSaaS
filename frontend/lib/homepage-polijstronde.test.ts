@@ -22,7 +22,7 @@ describe('homepage polijstronde (spec par. 7)', () => {
   it('hero toont de echte rapportafbeelding met label en alt-tekst', () => {
     const src = live.match(/src="(\/images\/voorbeeld-loep-behoud-p02\.[a-z]+)"/)?.[1]
     expect(src).toBeTruthy()
-    expect(live).toContain('Voorbeeld van pagina twee uit een Loep Behoud-rapport')
+    expect(live).toContain('Voorbeeld van pagina twee uit een Loep Behoud-rapport: waarom')
     expect(live).toMatch(/>\s*Voorbeeld\s*</)
     // Precies het bestand dat de component laadt, niet een van twee mogelijke.
     const bestand = join(__dirname, '..', 'public', ...src!.split('/').filter(Boolean))

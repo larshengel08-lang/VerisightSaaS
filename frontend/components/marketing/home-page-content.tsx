@@ -749,7 +749,7 @@ function HeroSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(80px, 9vw, 120px)', paddingBottom: 'clamp(80px, 9vw, 120px)', position: 'relative' }}>
-        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] lg:items-start" style={{ gap: 'clamp(40px, 5vw, 72px)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] lg:items-center" style={{ gap: 'clamp(40px, 5vw, 72px)' }}>
           <div style={{ textAlign: 'left' }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
               <p
@@ -845,13 +845,15 @@ function HeroSection() {
                   maxWidth: '34rem',
                 }}
               >
+                Een alternatief voor het grote jaarlijkse MTO.
+                <br />
                 Reactie binnen 1 werkdag · Vrijblijvend gesprek van 20 min.
               </p>
           </div>
 
             <div
               className="marketing-home-hero-reveal-visual select-none"
-              style={{ margin: '0 auto', maxWidth: 480, position: 'relative', width: '100%' }}
+              style={{ margin: '0 auto', maxWidth: 560, position: 'relative', width: '100%' }}
             >
               <div
                 aria-hidden
@@ -875,10 +877,10 @@ function HeroSection() {
                 >
                   <Image
                     src="/images/voorbeeld-loep-behoud-p02.webp"
-                    alt="Voorbeeld van pagina twee uit een Loep Behoud-rapport: de kernzin, het werkbeeld en de cijfers over blijven en vertrekken."
-                    width={1489}
-                    height={1037}
-                    sizes="(max-width: 520px) 100vw, 480px"
+                    alt="Voorbeeld van pagina twee uit een Loep Behoud-rapport: waarom Groeiperspectief bovenaan staat, de gespreksopener en wat er volgens de mensen moet gebeuren."
+                    width={1319}
+                    height={508}
+                    sizes="(max-width: 600px) 100vw, 560px"
                     priority
                     style={{ width: '100%', height: 'auto', display: 'block' }}
                   />
