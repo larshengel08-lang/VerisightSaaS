@@ -6,18 +6,18 @@ net als scripts/render_in_image.py: /repo is de read-only gemounte worktree,
 
 Wat het doet:
   1. rendert docs/examples/voorbeeldrapport_retentiescan.html met WeasyPrint;
-  2. knipt pagina twee (index 1) van KNIP_BOVEN pt tot KNIP_FACTOR van de
-     paginahoogte met PyMuPDF (de lege bovenmarge gaat eraf, zodat de inhoud
-     op de homepage groter staat);
+  2. knipt op pagina twee (index 1) het blok "Waarom ... bovenaan staat" tot en
+     met de regel "Wat er moet gebeuren ..." (besluit Lars 18-10: de hero toont
+     waarom een onderwerp bovenaan staat en wat er volgens de mensen moet
+     gebeuren, in plaats van de lange kernzin bovenaan de pagina);
   3. rendert die knip op SCHAAL en schrijft /out/hero_p02.png;
   4. zet hem om naar /out/hero_p02.webp (kwaliteit 82).
 
 Fail Loud: het script stopt met een foutcode (en een melding op stderr) als
-de factor buiten het bereik valt, als een tekstblok door de boven- of
+een van de twee ankers ontbreekt, als een tekstblok door de boven- of
 onderknip loopt, of als Pillow of WebP-ondersteuning ontbreekt. Een half
 afgesneden regel of een stille PNG-terugval komt zo nooit op de homepage.
 De afbeelding verzint niets: alles komt uit de generator.
-Draaien: zie plan 2026-10-09-polijstronde, Taak 13b.
 """
 from __future__ import annotations
 
@@ -28,9 +28,11 @@ REPO = Path("/repo")
 OUT = Path("/out")
 BRON = REPO / "docs" / "examples" / "voorbeeldrapport_retentiescan.html"
 
-FACTOR_MIN, FACTOR_MAX = 0.45, 0.6
-KNIP_FACTOR = 0.54  # onderknip als deel van de paginahoogte
-KNIP_BOVEN = 40.0   # pt; de eerste tekst (paginakop) begint rond 53 pt
+ANKER_BOVEN = "Waarom "              # blok "Waarom <onderwerp> bovenaan staat"
+ANKER_BOVEN_EIND = "bovenaan staat"
+ANKER_ONDER = "Wat er moet gebeuren"  # richtingregel onder de gespreksopener
+MARGE = 16.0   # pt boven en onder de ankers
+ZIJ = 34.0     # pt aan beide zijkanten weg (lege paginamarge)
 SCHAAL = 2.5
 
 
@@ -40,14 +42,6 @@ def _fout(melding: str) -> int:
 
 
 def main() -> int:
-    factor = KNIP_FACTOR
-    if len(sys.argv) > 1:
-        try:
-            factor = float(sys.argv[1])
-        except ValueError:
-            return _fout("knipfactor is geen getal: " + repr(sys.argv[1]))
-    if not FACTOR_MIN <= factor <= FACTOR_MAX:
-        return _fout(f"knipfactor {factor} valt buiten {FACTOR_MIN} tot {FACTOR_MAX}")
     if not BRON.exists():
         return _fout("geen bron: draai eerst generate_voorbeeldrapport.py retention")
 
@@ -67,17 +61,29 @@ def main() -> int:
 
     with pymupdf.open(str(pdf)) as doc:
         page = doc[1]
-        clip = pymupdf.Rect(0, KNIP_BOVEN, page.rect.width, page.rect.height * factor)
+        blokken = [(y0, y1, " ".join(tekst.split()))
+                   for _x0, y0, _x1, y1, tekst, *_ in page.get_text("blocks")]
+        boven = next((b for b in blokken
+                      if b[2].startswith(ANKER_BOVEN) and ANKER_BOVEN_EIND in b[2]), None)
+        onder = next((b for b in blokken if b[2].startswith(ANKER_ONDER)), None)
+        if boven is None:
+            return _fout(f"anker '{ANKER_BOVEN}... {ANKER_BOVEN_EIND}' niet gevonden op pagina twee")
+        if onder is None or onder[0] < boven[0]:
+            return _fout(f"anker '{ANKER_ONDER}' niet gevonden onder het waarom-blok")
+        # Marge rond de ankers, maar nooit in het blok erboven of eronder.
+        vorige = max((b[1] for b in blokken if b[1] <= boven[0]), default=0.0)
+        volgende = min((b[0] for b in blokken if b[0] >= onder[1]), default=page.rect.height)
+        clip = pymupdf.Rect(ZIJ, max(boven[0] - MARGE, vorige + 2.0),
+                            page.rect.width - ZIJ, min(onder[1] + MARGE, volgende - 2.0))
 
         doorsneden = []
-        for _x0, y0, _x1, y1, tekst, *_ in page.get_text("blocks"):
-            regel = " ".join(tekst.split())[:70]
-            print(f"BLOK y0={y0:6.1f} y1={y1:6.1f} {regel}")
+        for y0, y1, regel in blokken:
+            print(f"BLOK y0={y0:6.1f} y1={y1:6.1f} {regel[:70]}")
             for naam, lijn in (("boven", clip.y0), ("onder", clip.y1)):
                 if y0 < lijn < y1:
                     doorsneden.append(f"{naam}knip y={lijn:.1f} loopt door blok "
-                                      f"{y0:.1f}-{y1:.1f}: {regel}")
-        print(f"KNIP y={clip.y0:.1f} tot {clip.y1:.1f} van {page.rect.height:.1f}")
+                                      f"{y0:.1f}-{y1:.1f}: {regel[:70]}")
+        print(f"KNIP y={clip.y0:.1f} tot {clip.y1:.1f}, x={clip.x0:.1f} tot {clip.x1:.1f}")
         if doorsneden:
             for d in doorsneden:
                 print("FOUT: " + d, file=sys.stderr)
