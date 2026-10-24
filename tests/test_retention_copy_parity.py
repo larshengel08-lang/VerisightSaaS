@@ -52,5 +52,9 @@ def test_retention_survey_copy_stays_compact_and_actionable():
     # behoud op groepsniveau"-jargon en geen oude productnaam in wat een medewerker leest.
     assert "alleen per groep bekeken, nooit per persoon" in backend_definition
     assert "welke verandering in je werk, leiding of samenwerking" in backend_definition
-    assert "anoniem bewaard en alleen per groep bekeken" in backend_definition
+    # Opruimronde 2026-10-24: vragenlijst en startpagina beloven hetzelfde
+    # (vertrouwelijk, groepsbeeld); "anoniem" is geen garantie die Loep kan geven.
+    assert "vertrouwelijk bewaard en alleen per groep bekeken" in backend_definition
+    assert "vertrouwelijk verwerkt en alleen als groepsbeeld gerapporteerd" in backend_definition
+    assert "anoniem" not in backend_definition.split("survey_intro")[1].split("contact_subject")[0]
     assert "RetentieScan" not in backend_definition.split("survey_intro")[1].split("open_text_help")[0]
