@@ -18,7 +18,7 @@ import { completionPct, resolveInvitedDenominator } from '@/lib/dashboard/invite
 import { normalizeReminderConfig } from '@/lib/launch-controls'
 import { readReminderChoice } from '@/lib/campaign-schedule'
 import { buildReminderText } from '@/lib/dashboard/reminder-text'
-import { isReportReleaseReady } from '@/lib/response-activation'
+import { isReportReleaseReady, reportShowsDepartments } from '@/lib/response-activation'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import { CAMPAIGN_SCAN_OPTIONS } from '@/lib/campaign-setup'
@@ -100,7 +100,7 @@ export default async function CampaignPage({ params }: Props) {
       .limit(1),
     supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
     supabase.from('organizations').select('name').eq('id', stats.organization_id ?? '').maybeSingle(),
-    supabase.from('respondents').select('department').eq('campaign_id', id).not('department', 'is', null),
+    supabase.from('respondents').select('department, completed').eq('campaign_id', id).not('department', 'is', null),
     supabase
       .from('org_members')
       .select('role')
@@ -148,9 +148,13 @@ export default async function CampaignPage({ params }: Props) {
   }
 
   const departmentResponseCounts: Record<string, number> = {}
+  // Alleen ingevulde vragenlijsten: daarop beslist het rapport of het een
+  // tabel per afdeling toont, en daarmee de terugkoppelhint (V14).
+  const completedPerDepartment: Record<string, number> = {}
   for (const r of respondentDepts ?? []) {
     const dept = r.department as string | null
     if (dept) departmentResponseCounts[dept] = (departmentResponseCounts[dept] ?? 0) + 1
+    if (dept && r.completed === true) completedPerDepartment[dept] = (completedPerDepartment[dept] ?? 0) + 1
   }
   const isAdmin = profile?.is_verisight_admin === true
   // Beheer is voorbehouden aan de eigenaar en aan de Loep-operator
@@ -306,6 +310,7 @@ export default async function CampaignPage({ params }: Props) {
           decision={decisionFromRow(decisionRow)}
           loadError={decisionLoadError}
           scanType={stats.scan_type}
+          hasDepartments={reportShowsDepartments(completedPerDepartment)}
         />
       ) : null}
       {state.processingVariant === 'insufficient_response' ? (

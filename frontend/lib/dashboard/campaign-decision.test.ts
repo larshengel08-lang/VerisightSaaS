@@ -258,6 +258,7 @@ describe('robuustheid tegen onbetrouwbare invoer (codekwaliteitsreview taak 10)'
 
 describe('labels en hints van "Besluit vastleggen" (fixronde 24-9)', () => {
   // Letterlijk besluit_terugkoppeling(scan, True) en BESLUIT_REVIEW_HINT in backend/report_html.py.
+  // Zonder afdelingen: besluit_terugkoppeling(scan, False), zie de test daaronder.
   const FEEDBACK = {
     retention:
       'Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. Deel geen open antwoorden en geen uitkomsten van afdelingen met minder dan 10 antwoorden.',
@@ -279,14 +280,27 @@ describe('labels en hints van "Besluit vastleggen" (fixronde 24-9)', () => {
     )
   })
 
-  it('toont per scan de terugkoppelhint van die scan', () => {
+  it('toont per scan de terugkoppelhint van die scan, met afdelingsdeel als het rapport afdelingen toont', () => {
     for (const scanType of ['retention', 'exit', 'onboarding'] as const) {
-      expect(decisionFeedbackHintFor(scanType)).toBe(FEEDBACK[scanType])
+      expect(decisionFeedbackHintFor(scanType, true)).toBe(FEEDBACK[scanType])
+    }
+  })
+
+  it('laat het afdelingsdeel weg zonder afdelingen, zoals besluit_terugkoppeling(scan, False)', () => {
+    // Opruimronde 2026-10-24 (polijstronde beslispunt 19).
+    const STAART = ' en geen uitkomsten van afdelingen met minder dan 10 antwoorden.'
+    for (const scanType of ['retention', 'exit', 'onboarding'] as const) {
+      const zonder = decisionFeedbackHintFor(scanType, false)
+      expect(zonder).toBe(FEEDBACK[scanType].slice(0, -STAART.length) + '.')
+      expect(zonder).not.toContain('afdelingen')
     }
   })
 
   it('toont bij een onbekend of ontbrekend scantype geen terugkoppelhint, nooit die van een andere scan', () => {
-    for (const scanType of ONBEKEND) expect(decisionFeedbackHintFor(scanType)).toBeNull()
+    for (const scanType of ONBEKEND) {
+      expect(decisionFeedbackHintFor(scanType, true)).toBeNull()
+      expect(decisionFeedbackHintFor(scanType, false)).toBeNull()
+    }
   })
 
   it('toont bij het vervolgmoment de richtlijn van de eigen scan', () => {

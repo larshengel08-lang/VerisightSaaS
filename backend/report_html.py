@@ -4425,11 +4425,11 @@ BESLUIT_PARKEERREGEL = ("Spreken jullie hier vandaag iets over af, schrijf dan b
 # het rapport (MIN_DISTRIBUTION_N).
 # S10 (polijstronde): Loep Start krijgt dezelfde grens; de afdelingen daar zijn
 # klein. V14 (polijstronde): het afdelingsdeel staat er alleen als het rapport
-# afdelingen toont (besluit_terugkoppeling). Het dashboard toont per scan de
-# volledige regel (DECISION_FEEDBACK_HINTS in
-# frontend/lib/dashboard/campaign-decision.ts, gelijk aan
-# besluit_terugkoppeling(scan, True)); tests/test_report_leesronde_fixes.py
-# houdt ze gelijk.
+# afdelingen toont (besluit_terugkoppeling). Het dashboard kent dezelfde twee
+# vormen (DECISION_FEEDBACK_HINTS en DECISION_FEEDBACK_DEPARTMENT_TAIL in
+# frontend/lib/dashboard/campaign-decision.ts) en beslist met dezelfde regel als
+# _department_segment_rows (reportShowsDepartments, opruimronde 2026-10-24);
+# tests/test_report_leesronde_fixes.py houdt ze gelijk.
 BESLUIT_TERUGKOPPELING_BASIS = {
     "retention": ("Deel het startpunt, het beeld van de hele organisatie en wat het MT besluit. "
                   "Deel geen open antwoorden"),
@@ -4442,8 +4442,8 @@ BESLUIT_TERUGKOPPELING_BASIS = {
 
 def besluit_terugkoppeling(scan_type: str, heeft_afdelingen: bool) -> str:
     """Terugkoppelingsregel op de besluitpagina. Het afdelingsdeel staat er alleen
-    als het rapport afdelingen toont (V14); het dashboard weet dat niet en toont
-    altijd de volledige regel."""
+    als het rapport afdelingen toont (V14); het dashboard volgt dezelfde regel
+    (reportShowsDepartments in frontend/lib/response-activation.ts)."""
     staart = (" en geen uitkomsten van afdelingen met minder dan "
               + str(MIN_DISTRIBUTION_N) + " antwoorden.") if heeft_afdelingen else "."
     return BESLUIT_TERUGKOPPELING_BASIS[scan_type] + staart

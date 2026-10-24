@@ -33,7 +33,7 @@ describe('blok "Besluit vastleggen" (plan 3b, spec 2026-09-16 par. 7)', () => {
 
   it('volgt de besluitpagina: parkeerregel, richtlijn en terugkoppeling per scan', () => {
     expect(source).toContain('{DECISION_SECOND_POINT_HINT}')
-    expect(source).toContain('decisionFeedbackHintFor(scanType)')
+    expect(source).toContain('decisionFeedbackHintFor(scanType, hasDepartments)')
     expect(source).toContain('decisionFollowUpHintFor(scanType)')
     expect(source).not.toContain('Alleen als jullie er een kiezen.')
     expect(source).not.toContain('45 tot 90 dagen')

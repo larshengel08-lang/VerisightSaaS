@@ -28,6 +28,8 @@ interface DecisionBlockProps {
   decision: CampaignDecision | null
   loadError: string | null
   scanType: ScanType
+  /** Toont het rapport afdelingen (reportShowsDepartments)? Dan noemt de terugkoppelhint ze. */
+  hasDepartments: boolean
 }
 
 const labelClass = 'block text-xs font-semibold uppercase tracking-wide text-[color:var(--dashboard-muted)]'
@@ -94,8 +96,8 @@ function ReadOnlyDecision({ decision }: { decision: CampaignDecision | null }) {
   )
 }
 
-export function DecisionBlock({ campaignId, canManage, decision, loadError, scanType }: DecisionBlockProps) {
-  const feedbackHint = decisionFeedbackHintFor(scanType)
+export function DecisionBlock({ campaignId, canManage, decision, loadError, scanType, hasDepartments }: DecisionBlockProps) {
+  const feedbackHint = decisionFeedbackHintFor(scanType, hasDepartments)
   const followUpHint = decisionFollowUpHintFor(scanType)
   const router = useRouter()
   const [busy, setBusy] = useState(false)
