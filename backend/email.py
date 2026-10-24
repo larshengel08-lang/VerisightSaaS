@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 _ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 _RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-_EMAIL_FROM = os.getenv("EMAIL_FROM", "Loep <noreply@verisight.nl>")
+_EMAIL_FROM = os.getenv("EMAIL_FROM", "Loep <hallo@getloep.nl>")
 _CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "hallo@getloep.nl")
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "")
 _BACKEND_URL = os.getenv("BACKEND_URL", "")

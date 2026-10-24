@@ -1,9 +1,10 @@
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-// Default-afzender blijft op het Resend-geverifieerde verisight-domein tot getloep.nl
-// in Resend is geverifieerd (DNS/SPF/DKIM). Prod zet LOEP_FROM_EMAIL expliciet.
-const FROM = process.env.LOEP_FROM_EMAIL ?? 'hallo@verisight.nl'
+// Kale vorm (de From-header wordt hieronder als `Loep <${FROM}>` opgebouwd).
+// getloep.nl is in Resend geverifieerd; prod zet LOEP_FROM_EMAIL expliciet, dit
+// is alleen het vangnet.
+const FROM = process.env.LOEP_FROM_EMAIL ?? 'hallo@getloep.nl'
 
 export interface LoepEmail {
   to: string
