@@ -47,7 +47,7 @@ def test_zonder_richtingdata_reist_het_raster_mee(scan_type):
 def test_met_richtingblok_verandert_er_niets():
     blok = _werkvragen_block(RANKED, {}, DIRECTION, "retention")
     html = _prioriteringsraster(ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
-                                deepening_active=True, mgmt_q="Opener?", review_when="Later.",
+                                deepening_active=True, mgmt_q="Opener?",
                                 opener_html="<h2>kop</h2>", direction_agg=DIRECTION,
                                 n_total=17, werkvragen_html=blok)
     assert "Wat er moet gebeuren" in html
@@ -57,7 +57,7 @@ def test_met_richtingblok_verandert_er_niets():
 
 def test_zonder_werkvragen_verandert_er_niets():
     html = _prioriteringsraster(ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
-                                deepening_active=True, mgmt_q="Opener?", review_when="Later.",
+                                deepening_active=True, mgmt_q="Opener?",
                                 opener_html="<h2>kop</h2>")
     assert "raster-mee" not in html
 

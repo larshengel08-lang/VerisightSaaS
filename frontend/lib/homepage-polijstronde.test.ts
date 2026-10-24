@@ -3,14 +3,14 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const bron = readFileSync(join(__dirname, '..', 'components', 'marketing', 'home-page-content.tsx'), 'utf8')
-const grens = bron.indexOf('function SuitePreviewSection')
-const live = bron.slice(0, grens)
+// Sinds de opruimronde (2026-10-24) staat er geen dood blok meer in dit
+// bestand: alles wat er staat, rendert. De test meet dus het hele bestand.
+const live = bron
 
 describe('homepage polijstronde (spec par. 7)', () => {
-  it('meet het live deel van de homepage, niet een lege of volledige bron', () => {
-    // Verdwijnt het gearchiveerde blok, dan zou slice(0, -1) stilletjes bijna
-    // alles meten; dan moet deze test de grens opnieuw kiezen.
-    expect(grens).toBeGreaterThan(0)
+  it('meet een bron zonder dood blok, zodat het hele bestand live is', () => {
+    expect(bron).not.toContain('SuitePreviewSection')
+    expect(bron).toContain('export function HomePageContent')
   })
 
   it('hero zegt niets meer wat het rapport niet zegt', () => {

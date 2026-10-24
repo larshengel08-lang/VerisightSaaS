@@ -1025,9 +1025,16 @@ def test_dashboard_gebruikt_dezelfde_labels_en_hints_als_de_besluitpagina():
         assert "'" + tekst + "'" in bron, tekst
     scans = {"retention", "exit", "onboarding"}
     assert set(BESLUIT_TERUGKOPPELING_BASIS) == set(BESLUIT_REVIEW_HINT) == scans
-    # Het dashboard weet niet of het rapport afdelingen toont en toont altijd
-    # de volledige regel (polijstronde V14).
-    assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == {s: besluit_terugkoppeling(s, True) for s in scans}
+    # Opruimronde 2026-10-24 (polijstronde V14, beslispunt 19): het dashboard
+    # kent nu dezelfde twee vormen als besluit_terugkoppeling. De basis per scan
+    # staat in DECISION_FEEDBACK_HINTS, het afdelingsdeel in een eigen
+    # constante; zonder afdelingen sluit de regel met een punt.
+    assert _ts_map(bron, "DECISION_FEEDBACK_HINTS") == BESLUIT_TERUGKOPPELING_BASIS
+    staart = re.search(r"const DECISION_FEEDBACK_DEPARTMENT_TAIL = '([^']*)'", bron).group(1)
+    for s in scans:
+        assert BESLUIT_TERUGKOPPELING_BASIS[s] + staart == besluit_terugkoppeling(s, True)
+        assert BESLUIT_TERUGKOPPELING_BASIS[s] + "." == besluit_terugkoppeling(s, False)
+    assert "hasDepartments ? DECISION_FEEDBACK_DEPARTMENT_TAIL : '.'" in bron
     assert _ts_map(bron, "DECISION_REVIEW_HINTS") == BESLUIT_REVIEW_HINT
 
 

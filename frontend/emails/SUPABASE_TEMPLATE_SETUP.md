@@ -1,6 +1,6 @@
-# Supabase Auth setup voor Verisight
+# Supabase Auth setup voor Loep
 
-Deze map bevat de twee templates die nu passen bij de huidige Verisight-authflow:
+Deze map bevat de twee templates die passen bij de huidige Loep-authflow:
 
 - `supabase-magic-link-template.html`
 - `supabase-reset-password-template.html`
@@ -15,30 +15,35 @@ In `Supabase Dashboard -> Authentication -> Email -> SMTP settings`:
 - `Password`: je actieve `RESEND_API_KEY`
 - `Minimum interval per user`: `60`
 
-Aanbevolen afzender:
+Afzender:
 
-- `Sender name`: `Verisight`
-- `Sender email`: `hallo@verisight.nl`
+- `Sender name`: `Loep`
+- `Sender email`: `hallo@getloep.nl`
 
-Als `hallo@verisight.nl` in Resend nog niet als afzender geverifieerd is, gebruik tijdelijk:
-
-- `Sender email`: `noreply@verisight.nl`
+getloep.nl is in Resend geverifieerd (SPF/DKIM), dus `hallo@getloep.nl` kan direct als afzender.
+Dezelfde afzender staat als vangnet in de code (`backend/email.py`, `frontend/lib/email.ts`,
+`frontend/app/api/contact/route.ts`); in productie zetten de env-vars `EMAIL_FROM`
+(Vercel en Railway, verpakte vorm `Loep <hallo@getloep.nl>`) en `LOEP_FROM_EMAIL`
+(Vercel, kale vorm `hallo@getloep.nl`) de afzender.
 
 ## 2. URL configuration
 
 In `Supabase Dashboard -> Authentication -> URL Configuration`:
 
-- `Site URL`: `https://www.verisight.nl`
+- `Site URL`: `https://www.getloep.nl`
 
 Gebruik als redirect URLs minimaal:
 
-- `https://www.verisight.nl/**`
-- `https://verisight.nl/**`
+- `https://www.getloep.nl/**`
+- `https://getloep.nl/**`
 - `http://localhost:3000/**`
+
+Staat een redirect niet op deze lijst, dan negeert Supabase hem en valt terug op de Site URL;
+de link landt dan op de homepage in plaats van in de app.
 
 Dat past bij de huidige codeflow:
 
-- magic link uitnodiging -> `/auth/callback?next=/complete-account`
+- magic link uitnodiging -> `/complete-account`
 - reset password -> `/reset-password`
 
 ## 3. Email templates
@@ -51,7 +56,9 @@ Gebruik:
 
 - `supabase-magic-link-template.html`
 
-Dit template hoort bij de huidige klantuitnodigingsflow vanuit:
+Onderwerpregel: `Je activatielink voor Loep`.
+
+Dit template hoort bij de klantuitnodigingsflow vanuit:
 
 - `frontend/app/api/org-invites/route.ts`
 
@@ -75,7 +82,7 @@ Laat deze Supabase placeholders intact:
 
 ## 5. Wat al in code is rechtgezet
 
-De reset-passwordflow gebruikt nu:
+De reset-passwordflow gebruikt:
 
 - `/reset-password`
 
@@ -83,7 +90,7 @@ en niet meer:
 
 - `/auth/reset-password`
 
-Dat sluit nu aan op de echte route in de app.
+Dat sluit aan op de echte route in de app.
 
 ## 6. Wat nog handmatig moet
 

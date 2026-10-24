@@ -39,7 +39,7 @@ SCAN_DEFINITION: dict[str, Any] = {
     },
     "survey_minutes": SURVEY_MINUTES,
     "survey_intro": "Bedankt voor je tijd. Je antwoorden helpen de organisatie beter te worden. Invullen kost ongeveer " + str(SURVEY_MINUTES) + " minuten.",
-    "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op gegroepeerd niveau gerapporteerd. De uitkomsten zijn bedoeld als groepsinzichten en gespreksinput, niet als individueel oordeel of harde voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
+    "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen als groepsbeeld gerapporteerd. De uitkomsten zijn bedoeld als groepsinzichten en gespreksinput, niet als individueel oordeel of harde voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit tabblad open houdt.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk ervoer. Geef aan in welke mate elke stelling voor jou van toepassing was (1 = helemaal niet mee eens, 5 = helemaal mee eens).",
     "org_intro": "Geef aan in welke mate de volgende uitspraken van toepassing waren op jouw werksituatie.",
     "enps_item": (
@@ -48,7 +48,7 @@ SCAN_DEFINITION: dict[str, Any] = {
     ),
     "open_text_label": "Wat had de organisatie volgens jou eerder moeten begrijpen, bespreken of zien rond je vertrek?",
     "open_text_placeholder": "Beschrijf wat voor management of HR eerder zichtbaar of bespreekbaar had mogen worden.",
-    "open_text_help": "Je antwoord wordt geanonimiseerd opgeslagen. Noem bij voorkeur geen namen of direct herleidbare details.",
+    "open_text_help": "Je antwoord wordt vertrouwelijk bewaard. Herkende namen haalt Loep er automatisch uit. Noem liever zelf geen namen of herleidbare details.",
     "invite_intro": "De organisatie waar je werkt of werkte, nodigt je uit om een korte vragenlijst in te vullen over jouw ervaringen binnen die organisatie. Dit helpt de organisatie concreet te verbeteren.",
     "invite_duration": "ongeveer " + str(SURVEY_MINUTES) + " minuten",
     "contact_subject": "Kennismakingsaanvraag Loep Vertrek",

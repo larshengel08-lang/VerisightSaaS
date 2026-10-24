@@ -222,7 +222,7 @@ def _raster_tekst(ranked) -> str:
     resp = {r["key"]: RESP.get(r["key"], [4.0] * 2 + [7.0] * 11) for r in ranked}
     return _plain(_prioriteringsraster(
         ranked=ranked, scan_type="retention", factor_resp_scores=resp,
-        deepening_active=False, mgmt_q="Vraag?", review_when="over 90 dagen",
+        deepening_active=False, mgmt_q="Vraag?",
         opener_html="<span>kop</span>"))
 
 

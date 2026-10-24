@@ -21,6 +21,14 @@ describe('campagnedetail: besluit vastleggen (plan 3b)', () => {
     expect(blok).toContain('scanType={stats.scan_type}')
   })
 
+  it('noemt afdelingen in de terugkoppelhint alleen als het rapport ze toont (V14)', () => {
+    const blok = source.slice(source.indexOf('<DecisionBlock'), source.indexOf('/>', source.indexOf('<DecisionBlock')))
+    expect(blok).toContain('hasDepartments={reportShowsDepartments(completedPerDepartment)}')
+    // Op ingevulde vragenlijsten, net als het rapport, niet op alle uitnodigingen.
+    expect(source).toContain(".select('department, completed')")
+    expect(source).toContain('r.completed === true')
+  })
+
   it('haalt het besluit alleen op als er een rapport is, en laat een queryfout de pagina niet omvallen', () => {
     expect(source).toContain(".from('campaign_decisions')")
     expect(source).toContain('decisionLoadError')

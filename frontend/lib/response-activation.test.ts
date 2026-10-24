@@ -8,6 +8,7 @@ import {
   MIN_INVITED_TOTAL,
   buildResponseActivationState,
   isReportReleaseReady,
+  reportShowsDepartments,
   validateDepartmentInvitedCount,
   validateInvitedTotal,
 } from '@/lib/response-activation'
@@ -147,5 +148,14 @@ describe('drempels voor uitgenodigden (spec 2026-09-16 par. 5.1)', () => {
   it('de meldingen bevatten geen em- of en-dashes', () => {
     expect(validateInvitedTotal(1)).not.toMatch(/[—–]/)
     expect(validateDepartmentInvitedCount('Zorg', 1)).not.toMatch(/[—–]/)
+  })
+
+  it('reportShowsDepartments volgt _department_segment_rows: minstens twee afdelingen met elk 5 ingevuld', () => {
+    expect(reportShowsDepartments({})).toBe(false)
+    expect(reportShowsDepartments({ Zorg: 30 })).toBe(false)
+    expect(reportShowsDepartments({ Zorg: 30, Staf: 4 })).toBe(false)
+    expect(reportShowsDepartments({ Zorg: 4, Staf: 4, Sales: 4 })).toBe(false)
+    expect(reportShowsDepartments({ Zorg: 5, Staf: 5 })).toBe(true)
+    expect(reportShowsDepartments({ Zorg: 12, Staf: 6, Sales: 1 })).toBe(true)
   })
 })

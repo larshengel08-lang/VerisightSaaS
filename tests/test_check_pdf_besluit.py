@@ -57,20 +57,20 @@ def test_markers_komen_uit_de_renderer():
 
 def test_besluitpagina_op_een_vel_is_goed(tmp_path):
     pad = _pdf(tmp_path / "goed.pdf", [_vol("cover"), _vol("01 Kop"), _vol("03 Agenda") + [BELOFTE],
-                                       _besluit(), _vol("05 Appendix"), _vol("06 Methodiek")])
+                                       _besluit(), _vol("05 Bijlage"), _vol("06 Methodiek")])
     assert cpr.check(pad, regels=(cpr.REGEL_BESLUIT,)) == []
 
 
 def test_belofte_zonder_besluitpagina_is_een_bevinding(tmp_path):
     pad = _pdf(tmp_path / "weg.pdf", [_vol("cover"), _vol("01 Kop"), _vol("03 Agenda") + [BELOFTE],
-                                      _vol("04 Appendix"), _vol("05 Methodiek")])
+                                      _vol("04 Bijlage"), _vol("05 Methodiek")])
     meldingen = [b.melding for b in cpr.check(pad, regels=(cpr.REGEL_BESLUIT,))]
     assert len(meldingen) == 1 and "geen pagina die met" in meldingen[0]
 
 
 def test_overgelopen_besluitpagina_is_een_bevinding(tmp_path):
     pad = _pdf(tmp_path / "over.pdf", [_vol("cover"), _vol("01 Kop"), _vol("03 Agenda") + [BELOFTE],
-                                       _besluit(met_voet=False), [SLOT, VOET], _vol("05 Appendix")])
+                                       _besluit(met_voet=False), [SLOT, VOET], _vol("05 Bijlage")])
     meldingen = [b.melding for b in cpr.check(pad, regels=(cpr.REGEL_BESLUIT,))]
     assert any("laatste vaste label" in m for m in meldingen)
     assert any("begint niet met een hoofdstukkop" in m for m in meldingen)
@@ -81,7 +81,7 @@ def test_voorgedrukt_besluit_zonder_voetregel_is_geen_bevinding(tmp_path):
     Dat is geen overloop; de eindmarker is het laatste vaste label."""
     gevuld = [(70.0, "04 " + BESLUIT_TITEL), (120.0, "Startpunt"), (400.0, "Eigenaar"), SLOT]
     pad = _pdf(tmp_path / "gevuld.pdf", [_vol("cover"), _vol("01 Kop"), _vol("03 Agenda") + [BELOFTE],
-                                         gevuld, _vol("05 Appendix")])
+                                         gevuld, _vol("05 Bijlage")])
     assert cpr.check(pad, regels=(cpr.REGEL_BESLUIT,)) == []
 
 
@@ -111,7 +111,7 @@ def test_besluitpagina_houdt_de_appendix_van_het_vel():
 # ── (b) appendixstaart ───────────────────────────────────────────────────────
 
 def _met_appendix(staart: list[tuple[float, str]]) -> list[list[tuple[float, str]]]:
-    return [_vol("cover"), _vol("01 Kop"), _vol("02 Cijfers"), _vol("05 Appendix"), staart,
+    return [_vol("cover"), _vol("01 Kop"), _vol("02 Cijfers"), _vol("05 Bijlage"), staart,
             _vol("06 Methodiek, privacy"), _dun("slot")]
 
 
@@ -129,7 +129,7 @@ def test_uitzondering_is_met_een_schakelaar_terug_te_draaien(tmp_path, monkeypat
 
 def test_dunne_openingspagina_van_de_appendix_is_niet_uitgezonderd(tmp_path):
     pad = _pdf(tmp_path / "open.pdf", [_vol("cover"), _vol("01 Kop"), _vol("02 Cijfers"),
-                                       _dun("05 Appendix"), _vol("06 Methodiek, privacy"), _dun("slot")])
+                                       _dun("05 Bijlage"), _vol("06 Methodiek, privacy"), _dun("slot")])
     meldingen = [b.melding for b in cpr.check(pad, regels=(cpr.REGEL_VULLING,))]
     assert len(meldingen) == 1 and meldingen[0].startswith("pagina 4 is")
 

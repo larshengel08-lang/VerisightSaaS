@@ -46,7 +46,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         "Invullen kost ongeveer " + str(SURVEY_MINUTES) + " minuten."
     ),
     "survey_privacy_note": (
-        "Je antwoorden worden vertrouwelijk verwerkt en alleen op groepsniveau gebruikt. Deze meting helpt de "
+        "Je antwoorden worden vertrouwelijk verwerkt en alleen als groepsbeeld gerapporteerd. Deze meting helpt de "
         "organisatie zien waar vroege integratie of duidelijkheid aandacht vraagt, niet om personen te beoordelen. "
         "Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat zolang je dit "
         "tabblad open houdt."
@@ -71,8 +71,8 @@ SCAN_DEFINITION: dict[str, Any] = {
     "open_text_label": "Welke ene verandering zou voor nieuwe medewerkers in deze fase het meeste verschil maken?",
     "open_text_placeholder": "Welke verandering zou in deze fase het meeste verschil maken?",
     "open_text_help": (
-        "Je antwoord wordt geanonimiseerd opgeslagen en alleen als groepssignaal gebruikt om vroege frictie of "
-        "verbeterpunten te richten."
+        "Je antwoord wordt vertrouwelijk bewaard en alleen in het groepsbeeld gebruikt. Herkende namen haalt "
+        "Loep er automatisch uit. Noem liever zelf geen namen."
     ),
     "invite_intro": (
         "Je bent uitgenodigd voor een korte onboarding-check over hoe je nu landt in je rol, team en werkcontext. "

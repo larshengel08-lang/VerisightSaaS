@@ -200,8 +200,7 @@ def test_segment_state_b_uses_spec_copy():
 def test_managementspoor_avoids_hard_language():
     html = _eerste_managementspoor(
         primary_theme="Groeiperspectief + vertrekcontext", second_point="Beloning",
-        mgmt_q="Welke loopbaanstappen ontbreken?",
-        review_when="over 1 kwartaal")
+        mgmt_q="Welke loopbaanstappen ontbreken?")
     low = html.lower()
     assert "risicofactor" not in low
     assert "interventie" not in low
@@ -214,8 +213,7 @@ def test_managementspoor_eigenaarschap_is_blank_not_ai_suggested():
     """
     html = _eerste_managementspoor(
         primary_theme="Groeiperspectief + vertrekcontext", second_point="Beloning",
-        mgmt_q="Welke loopbaanstappen ontbreken?",
-        review_when="over 1 kwartaal")
+        mgmt_q="Welke loopbaanstappen ontbreken?")
     assert "Uit de bespreking" not in html
     assert "step-fill" not in html
     assert "Leg het besluit vast op pagina" in html

@@ -410,3 +410,42 @@ def test_submit_met_lange_waarde_en_newline_logt_begrensd(client, db_session, ca
     assert "\n" not in regels[0] and "ERROR nep" not in regels[0]
     assert "...[afgekapt]" in regels[0]
     assert str(r.campaign_id) in regels[0]
+
+
+# ── Opruimronde 2026-10-24 (polijstronde beslispunt 14) ─────────────────────
+
+BELOFTE = "vertrouwelijk verwerkt en alleen als groepsbeeld gerapporteerd"
+
+
+@pytest.mark.parametrize("definitie", [EXIT, RET, ONB], ids=["exit", "retention", "onboarding"])
+def test_vragenlijst_en_startpagina_beloven_hetzelfde(definitie):
+    """Startpagina en vragenlijst beloven allebei: vertrouwelijk verwerkt, alleen
+    als groepsbeeld gerapporteerd. "Anoniem" (of "geanonimiseerd") is geen
+    garantie: open antwoorden en kleine groepen maken dat onzeker."""
+    intro = re.sub(r"\s+", " ", (ROOT / "templates" / "survey-intro.html").read_text(encoding="utf-8"))
+    assert BELOFTE in intro
+    assert BELOFTE in definitie["survey_privacy_note"]
+    for veld in ("survey_intro", "survey_privacy_note", "open_text_help", "invite_intro"):
+        assert "anoniem" not in definitie[veld].lower(), veld
+        assert "geanonimiseerd" not in definitie[veld].lower(), veld
+
+
+@pytest.mark.parametrize("pad", RESPONDENT, ids=lambda p: p.name)
+def test_respondenttemplates_beloven_geen_anonimiteit(pad):
+    tekst = pad.read_text(encoding="utf-8").lower()
+    # Commentaar in de code mag het woord noemen; zichtbare tekst niet.
+    zichtbaar = re.sub(r"<!--.*?-->|/\*.*?\*/|//[^\n]*|\{#.*?#\}", "", tekst, flags=re.S)
+    assert "anoniem" not in zichtbaar and "geanonimiseerd" not in zichtbaar
+
+
+def test_bedankpagina_klopt_ook_voor_vertrekkers():
+    tekst = (ROOT / "templates" / "complete.html").read_text(encoding="utf-8")
+    assert "gerichter te verbeteren" not in tekst
+    assert "tellen mee in het groepsbeeld dat de organisatie krijgt" in tekst
+
+
+def test_verduidelijkingsstap_heeft_een_naam():
+    tekst = (ROOT / "templates" / "survey" / "shared-deepening.html").read_text(encoding="utf-8")
+    assert 'data-label="Korte verduidelijking"' in tekst
+    assert "Korte verduidelijking</div>" in tekst
+    assert 'data-label="Verduidelijking"' not in tekst

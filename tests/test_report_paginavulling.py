@@ -123,7 +123,7 @@ def test_appendix_staat_in_een_kolom():
     """
     d = _volle_sdt(_fixture("retention", n=25, profile=True))
     body = _body(render_retention_report_html(d))
-    app = body[body.index('<h2 class="ch-title">Appendix</h2>'):]
+    app = body[body.index('<h2 class="ch-title">Bijlage</h2>'):]
     assert "app-cols" not in app and 'class="tcol' not in app
     # De gedeelde helper blijft: &eacute;&eacute;n tabel per onderwerp, kop "Stelling".
     assert app.count('<th class="aq">Stelling</th>') == len(d["factor_items_map"]) + 1
@@ -159,13 +159,13 @@ def test_appendix_noemt_de_enps_score_met_tellingen():
     d["enps_available"], d["enps_score"] = True, -4
     d["enps_detail"] = {"n": 25, "promoters": 5, "detractors": 6}
     body = _body(render_retention_report_html(d))
-    app = body[body.index('<h2 class="ch-title">Appendix</h2>'):]
+    app = body[body.index('<h2 class="ch-title">Bijlage</h2>'):]
     assert "Werkgeversaanbeveling (eNPS): −4, 5 aanraders en 6 critici van 25." in app
     assert "zie hoofdrapport" not in app
 
     d2 = _fixture("retention", n=25, profile=True)
     body2 = _body(render_retention_report_html(d2))
-    app2 = body2[body2.index('<h2 class="ch-title">Appendix</h2>'):]
+    app2 = body2[body2.index('<h2 class="ch-title">Bijlage</h2>'):]
     # Niet "niet gemeten": onder de rapportagedrempel is de vraag wel gesteld,
     # alleen niet gerapporteerd. Spiegelt de meetgegevens op pagina twee, die
     # ook alleen "Niet in dit rapport" zeggen (codereview taak 8).
@@ -449,7 +449,7 @@ def test_appendix_stroomt_en_houdt_de_kop_bij_de_eerste_tabel():
     hoofdstuk en breekt alleen tussen tabellen; kop en eerste tabel samen."""
     d = _volle_sdt(_fixture("retention", n=25, profile=True))
     body = _body(render_retention_report_html(d))
-    i = body.index('<h2 class="ch-title">Appendix</h2>')
+    i = body.index('<h2 class="ch-title">Bijlage</h2>')
     open_sec = body.rindex('<div class="sec">', 0, i)
     assert 'class="pb sec"' not in body[open_sec:i]
     kop = body[open_sec:body.index('<div class="no-break" style="margin-bottom:14px;">', i)]

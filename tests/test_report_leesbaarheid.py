@@ -40,10 +40,13 @@ def test_agenda_na_bewijs_voor_appendix():
     # lockstep raster 2026-07-18: agendapagina heet nu "Waar begint het gesprek?"
     # (prioriteringsraster) i.p.v. de oude "Gespreksagenda"-titel.
     agenda = html.find("Waar begint het gesprek?")
-    appendix = html.find("Appendix")
+    # Opruimronde 2026-10-24: de kop heet "Bijlage", het Engelse woord staat
+    # nergens meer in het rapport.
+    appendix = html.find('<h2 class="ch-title">Bijlage</h2>')
     werkbeleving = html.find("Werkbeleving")
     assert -1 not in (agenda, appendix, werkbeleving)
-    assert werkbeleving < agenda < appendix, "agenda moet na het bewijs en voor de appendix staan"
+    assert werkbeleving < agenda < appendix, "agenda moet na het bewijs en voor de bijlage staan"
+    assert "appendix" not in html.casefold()
 
 
 def test_geen_erkenning_label_meer():

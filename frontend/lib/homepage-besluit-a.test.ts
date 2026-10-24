@@ -16,8 +16,12 @@ describe('homepage na besluit A', () => {
 
   it('zegt dat jij het gesprek leidt en dat het rapport je leidraad is', () => {
     expect(bron()).toContain('Loep meet niet alleen. Het rapport brengt je MT tot één eerste keuze.')
+    // Opruimronde 2026-10-24: de zin 'Daarna leid jij het gesprek met je MT, met
+    // het rapport als leidraad, ...' stond alleen in het dode blok
+    // SuitePreviewSection en is daarmee verdwenen. Bezoekers lazen hem nooit;
+    // de live zin met dezelfde belofte staat in stap 3 van de werkwijze.
     expect(bron()).toContain(
-      'Daarna leid jij het gesprek met je MT, met het rapport als leidraad, en leggen jullie vast: wat, wie, wanneer.',
+      'Jij leidt het gesprek met je MT; het rapport is je leidraad van 45 minuten.',
     )
     expect(bron()).toContain('én de leidraad voor je MT-gesprek.')
     expect(bron()).toContain("title: 'Kiezen met je MT: wat, wie, wanneer'")
@@ -55,10 +59,9 @@ describe('homepage na besluit A', () => {
     // homepagekaart het waarom daarom aan de twee scans met een raster; voor
     // elke scan belooft hij alleen wat laag scoort en waar je begint.
     expect(bron()).toContain('Bij Loep Vertrek en Loep Behoud zie je ook waarom iets bovenaan staat,')
-    // De ontkenningen dekken ook SuitePreviewSection en suiteFlowPoints. Die
-    // staan wel in dit bestand maar hangen niet in de renderboom, dus daar
-    // wordt bewust geen zin vastgepind: verdwijnt dat dode blok ooit, dan hoort
-    // deze test niet mee te vallen.
+    // De ontkenningen dekten ook het dode blok SuitePreviewSection; dat is in
+    // de opruimronde van 2026-10-24 verwijderd, de ontkenningen gelden nu voor
+    // het hele bestand, dat helemaal live is.
     expect(bron()).not.toContain('en je ziet waarom')
     expect(bron()).not.toContain('en je ziet precies waarom')
     expect(bron()).not.toContain('Je ziet per onderwerp wat meewoog')

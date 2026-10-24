@@ -15,6 +15,20 @@ export const CULTURE_ASSESSMENT_INSIGHT_THRESHOLD = 30
 export const MIN_INVITED_TOTAL = FIRST_INSIGHT_THRESHOLD
 export const MIN_INVITED_PER_DEPARTMENT = 5
 
+/**
+ * Toont het rapport een tabel per afdeling? Dezelfde regel als
+ * `_department_segment_rows` in backend/report_html.py: minstens twee
+ * afdelingen met elk minstens MIN_INVITED_PER_DEPARTMENT (= MIN_SEGMENT_N)
+ * ingevulde vragenlijsten; anders laat het rapport de uitsplitsing weg. Het
+ * rapport geeft die uitkomst door aan de terugkoppelingsregel op de
+ * besluitpagina (besluit_terugkoppeling); het dashboard volgt hem hiermee.
+ * Invoer: per afdeling het aantal ingevulde vragenlijsten.
+ */
+export function reportShowsDepartments(completedPerDepartment: Record<string, number>): boolean {
+  const eligible = Object.values(completedPerDepartment).filter((n) => n >= MIN_INVITED_PER_DEPARTMENT)
+  return eligible.length >= 2
+}
+
 function toInteger(value: unknown): number {
   const n = typeof value === 'number' ? value : Number(value)
   return Number.isInteger(n) ? n : Number.NaN
