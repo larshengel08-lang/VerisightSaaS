@@ -457,7 +457,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .wq-weging { font-size: 9.5px; line-height: 1.4; font-style: italic; color: """ + STEEL + r"""; margin-top: 4px; }
 
 /* ── Besluitpagina "Besluit van het MT" (plan 3b): lijnen voor de pen ── */
-/* break-after: de appendix stroomt (.sec zonder .pb) en zou anders onder het
+/* break-after: de bijlage stroomt (.sec zonder .pb) en zou anders onder het
    invulvel beginnen; dat vel moet los te printen zijn. */
 .besluit { break-inside: avoid; break-after: page; }
 .bl-rij, .bl-drie { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
@@ -492,12 +492,12 @@ p  { margin-bottom: 6px; font-size: 11px; }
 .tt { font-family: 'Inter Tight', sans-serif; font-weight: 700; font-size: 11px; color: """ + INK + r"""; margin-bottom: 4px; }
 .tb { font-size: 9px; color: #374151; line-height: 1.55; }
 
-/* ── Two-col / appendix / misc ── */
+/* ── Two-col / bijlage / misc ── */
 .tcol { display: table; width: 100%; border-collapse: separate; border-spacing: 14px 0; }
 .tc-l { display: table-cell; vertical-align: top; width: 55%; }
 .tc-r { display: table-cell; vertical-align: top; width: 45%; }
 /* table-layout: fixed + expliciete kolombreedtes: elke factortabel in de
-   appendix is een los <table>-element, dus zonder vaste breedtes schuiven
+   bijlage is een los <table>-element, dus zonder vaste breedtes schuiven
    Gem./Beeld per sectie mee met de langste vraagtekst in díé tabel. */
 .app-tbl { width: 100%; border-collapse: collapse; font-size: 9px; table-layout: fixed; }
 .app-tbl th { background: #EFE9DD; color: """ + STEEL + r"""; font-weight: 700; padding: 5px 8px;
@@ -516,7 +516,7 @@ p  { margin-bottom: 6px; font-size: 11px; }
 /* Werkbeleving in twee kolommen (B9): 287mm in een kolom werd 233mm, dus een
    pagina minder. Via de bestaande .tcol-tabel (display: table), niet via
    column-count of flex met gap: WeasyPrint kent geen gap op flex en verdeelt
-   kolommen van een multicol-blok niet over paginagrenzen. De appendix staat
+   kolommen van een multicol-blok niet over paginagrenzen. De bijlage staat
    bewust NIET in twee kolommen: daar spaarde het geen pagina (360mm werd 303mm,
    beide meer dan een vel) en werd de staartpagina juist leger. */
 /* Vaste tabelopmaak: zonder die groeide een cel met zijn breedste inhoud en

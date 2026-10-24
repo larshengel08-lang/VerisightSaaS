@@ -331,7 +331,7 @@ def _begint_met_hoofdstukkop(page: pymupdf.Page) -> bool:
 def _appendix_staart(doc: pymupdf.Document) -> int | None:
     """Index van de laatste vervolgpagina van de appendix, of None.
 
-    De appendix begint op de pagina die met "NN Appendix" opent en loopt tot de
+    De bijlage (de appendix) begint op de pagina die met "NN Bijlage" opent en loopt tot de
     eerstvolgende pagina die met een hoofdstukkop begint. Alleen een
     vervolgpagina telt: de openingspagina zelf is nooit uitgezonderd.
     """
@@ -339,7 +339,7 @@ def _appendix_staart(doc: pymupdf.Document) -> int | None:
     for i in range(doc.page_count):
         kop = first_text(doc[i]).casefold()
         if start is None:
-            if re.match(r"^\d{2}\s+appendix\b", kop):
+            if re.match(r"^\d{2}\s+bijlage\b", kop):
                 start = i
         elif re.match(r"^\d{2}\b", kop):
             return i - 1 if i - 1 > start else None

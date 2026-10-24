@@ -105,7 +105,7 @@ def _should_show_quotes(open_texts: list[str]) -> bool:
 
 
 def _should_show_appendix(n: int, n_factors: int) -> bool:
-    """Gate: toon Appendix alleen bij dataset > 20 respondenten EN > 5 factoren."""
+    """Gate: toon de bijlage (volledige vraagresultaten) alleen bij dataset > 20 respondenten EN > 5 factoren."""
     return n > 20 and n_factors > 5
 
 
@@ -3629,7 +3629,7 @@ def _direction_totals(direction_agg: dict) -> tuple[int, int, int]:
 
 # V12 (polijstronde): de kop van het blok onderaan de appendix met de keuzes
 # bij de onderwerpen buiten de agenda. De totaalregel noemt het blok bij deze
-# naam (niet "de bijlage": de sectie heet Appendix), en de paginaverwijzing
+# naam (niet "de bijlage": zo heet de hele sectie), en de paginaverwijzing
 # landt op het blok zelf (LEIDRAAD_ANKERS["richting_overig"]), niet op de
 # appendixkop, die een pagina eerder kan staan.
 BIJLAGE_RICHTING_KOP = "Richtingvraag bij de andere onderwerpen"
@@ -8486,7 +8486,7 @@ def render_exit_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type="exit", n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
+            opener_html=ch.opener("Bijlage", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving: alle stellingen",
             direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
@@ -8940,7 +8940,7 @@ def render_retention_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
+            opener_html=ch.opener("Bijlage", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving: alle stellingen",
             direction_agg=direction_agg, agenda_keys=_agenda_sleutels(_raster_rows))
 
@@ -9461,7 +9461,7 @@ def render_onboarding_report_html(data: dict) -> str:
             fa=fa, oim=oim, sim=sim, factor_items_map=data["factor_items_map"],
             sdt_items=data["sdt_items"], scan_type=ST, n=n,
             enps_score=_enps_score, enps_detail=_enps_detail,
-            opener_html=ch.opener("Appendix", kicker="Volledige vraagresultaten"),
+            opener_html=ch.opener("Bijlage", kicker="Volledige vraagresultaten"),
             sdt_title="Werkbeleving: stellingen bij het checkpoint")
 
     # ── Methodiek (LAST) ──────────────────────────────────────────────────────

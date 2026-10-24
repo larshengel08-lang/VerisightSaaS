@@ -44,7 +44,7 @@ pytestmark = pytest.mark.usefixtures("stresstest_naar_tmp")
 # werkdruk ligt net boven leiderschap en groei, dus een deel van de
 # respondenten heeft werkdruk als eigen laagste onderwerp.
 VERTREK_BIJLAGE = st.Scenario(
-    "zz_vertrek_bijlage", "Vertrek, n=36, met appendix",
+    "zz_vertrek_bijlage", "Vertrek, n=36, alle onderwerpen",
     "Polijstronde V12: keuzes buiten de agenda in de bijlage.",
     scan_type="exit", n=36, invited=50,
     factors=st.prof(leadership=(4.6, 1.2), growth=(4.8, 1.2), workload=(5.0, 1.2)),
@@ -351,10 +351,13 @@ def test_v12_vertrek_met_bijlage_gerenderd():
     anker = LEIDRAAD_ANKERS["richting_overig"]
     assert html.count('href="#' + anker + '"') == 1
     assert html.count('id="' + anker + '"') == 1
-    # Het anker staat op het blok zelf, niet op de appendixkop.
+    # Het anker staat op het blok zelf, niet op de kop van de bijlage.
     i = html.index('id="' + anker + '"')
     assert "Richtingvraag bij de andere onderwerpen" in html[i:i + 400]
-    assert "bijlage" not in t.lower()
+    # Opruimronde 2026-10-24: de sectie heet nu "Bijlage". Dat woord staat
+    # alleen in die kop; de totaalregel noemt het blok bij zijn eigen naam.
+    assert t.lower().count("bijlage") == 1
+    assert "appendix" not in t.lower()
     assert "Dit zijn de keuzes van respondenten, geen advies van Loep." in t
     _assert_ankers_bestaan(html)
 
