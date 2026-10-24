@@ -35,7 +35,7 @@ def _tekst(html):
 
 def _raster():
     return _prioriteringsraster(ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
-                                deepening_active=True, mgmt_q="V?", review_when="R.",
+                                deepening_active=True, mgmt_q="V?",
                                 opener_html="<h2>A</h2>")
 
 

@@ -240,7 +240,6 @@ def test_block_empty_without_data_and_missing_factor_raises_keyerror():
 def test_raster_integration_gate():
     kwargs = dict(ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
                   deepening_active=True, mgmt_q="Testvraag?",
-                  review_when="Plan binnen 45-90 dagen een vervolgmoment.",
                   opener_html="<h2>Gespreksagenda</h2>")
     without = _prioriteringsraster(**kwargs)
     with_dir = _prioriteringsraster(**kwargs, direction_agg={"growth": CLEAR, "workload": DIVIDED}, n_total=17)
@@ -253,7 +252,6 @@ def test_raster_integration_gate():
 def test_prioriteringsraster_raises_without_n_total():
     kwargs = dict(ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
                   deepening_active=True, mgmt_q="Testvraag?",
-                  review_when="Plan binnen 45-90 dagen een vervolgmoment.",
                   opener_html="<h2>Gespreksagenda</h2>")
     with pytest.raises(ValueError):
         _prioriteringsraster(**kwargs, direction_agg={"growth": CLEAR})

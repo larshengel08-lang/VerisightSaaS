@@ -17,16 +17,19 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource.toLowerCase()).toContain('opvolging')
   })
 
-  it('still keeps the archived suite section in code while removing it from the live homepage flow', () => {
+  it('has no archived suite section left in code and does not render it', () => {
+    // Opruimronde 2026-10-24: het gearchiveerde blok (met de oude
+    // Behoudssignaal-naam in suiteSignalMetrics) is verwijderd.
     const homepageSource = fs.readFileSync(
       path.join(process.cwd(), 'components', 'marketing', 'home-page-content.tsx'),
       'utf8',
     )
 
-    expect(homepageSource).toContain('function SuitePreviewSection()')
-    expect(homepageSource).toContain('id="suite"')
+    expect(homepageSource).not.toContain('SuitePreviewSection')
+    expect(homepageSource).not.toContain('suiteSignalMetrics')
+    expect(homepageSource).not.toContain('id="suite"')
     expect(homepageSource).not.toContain('<HomeInsightActionDemo />')
-    expect(homepageSource).not.toContain('<SuitePreviewSection />')
+    expect(fs.existsSync(path.join(process.cwd(), 'components', 'marketing', 'hero-motion-dashboard.tsx'))).toBe(false)
   })
 
   it('uses the spreadsheet-driven homepage copy for hero, problem, flow and baseline section', () => {

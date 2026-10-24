@@ -37,8 +37,7 @@ def test_agenda_is_navy_vlak_met_amber_labels():
     html = _eerste_managementspoor(
         primary_theme="Bespreek eerst 'X' (4.8/10)",
         second_point="Werkdruk en herstelruimte (5.5/10)",
-        mgmt_q="Waar begint het gesprek?",
-        review_when="Plan binnen 45-90 dagen een vervolgmoment.")
+        mgmt_q="Waar begint het gesprek?")
     assert 'class="agenda-dark"' in html
     assert "Gespreksopener" in html
 
@@ -48,14 +47,14 @@ def test_agenda_waarom_regels_alleen_bij_dataclaim():
     html = _eerste_managementspoor(
         primary_theme="Bespreek eerst 'X' (4.8/10)",
         second_point="Werkdruk en herstelruimte (5.5/10)",
-        mgmt_q="Q?", review_when="R.",
+        mgmt_q="Q?",
         primary_why="Laagste item in het cijferbeeld (4.8/10); 6 van de 9 respondenten met verdieping kozen deze toelichting.",
         second_why="Tweede laagste score in het overzichtsprofiel.")
     assert html.count('class="agenda-why"') == 2
     assert "6 van de 9" in html
     # Zonder why-regels: geen agenda-why spans
     html2 = _eerste_managementspoor(
-        primary_theme="X", second_point="Y", mgmt_q="Q?", review_when="R.")
+        primary_theme="X", second_point="Y", mgmt_q="Q?")
     assert 'class="agenda-why"' not in html2
 
 

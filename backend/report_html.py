@@ -2721,7 +2721,6 @@ def _laagste_stelling_zin(factor_label: str, stelling: str, score: float,
 
 
 def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: str,
-                            review_when: str,
                             primary_why: str | None = None,
                             second_why: str | None = None,
                             opener_html: str = "",
@@ -2733,9 +2732,6 @@ def _eerste_managementspoor(*, primary_theme: str, second_point: str, mgmt_q: st
     Navy anker (designsprong §2a): kaarten + gespreksopener vormen één donker
     vlak. primary_why/second_why (designsprong §3) zijn feitelijke
     onderbouwingsregels uit bestaande berekeningen — geen nieuwe duiding.
-
-    review_when: sinds plan 3b ongebruikt (de hint staat op de besluitpagina);
-    blijft in de signatuur tot de aanroepers zijn opgeschoond.
 
     TIJDELIJK (spec 2026-07-18 par. 10): sinds het prioriteringsraster
     (_prioriteringsraster) exit en retention heeft overgenomen, wordt deze
@@ -3012,7 +3008,7 @@ def _bijna_gelijk_zinnen(ranked: list[dict]) -> list[str]:
 def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
                          factor_resp_scores: dict[str, list[float]],
                          deepening_active: bool,
-                         mgmt_q: str, review_when: str,
+                         mgmt_q: str,
                          opener_html: str,
                          direction_agg: dict | None = None, n_total: int = 0,
                          direction_block_html: str | None = None,
@@ -3057,9 +3053,6 @@ def _prioriteringsraster(*, ranked: list[dict], scan_type: str,
     sectie doorstroomde) die staart, maar sinds de besluitpagina ertussen staat
     kan dat niet meer, en bleef het navy vlak als enige op een vel achter (11
     tot 13% gevuld in acht van de 21 stresstestscenario's).
-
-    review_when: sinds plan 3b ongebruikt (de hint staat op de besluitpagina);
-    blijft in de signatuur tot de aanroepers zijn opgeschoond.
     """
     # Fail-loud: direction_agg en n_total horen bij elkaar (_direction_chain
     # rekent de noemer-zin uit met n_total) — zonder n_total zou "Van de 0
@@ -8453,7 +8446,6 @@ def render_exit_report_html(data: dict) -> str:
         deepening_active=bool(deep_agg),
         mgmt_q=(_gespreksopener(deep_agg, "exit", _startpunt_fk) if _startpunt_fk
                 else (nsp.get("first_decision") or "")),
-        review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit onderwerp nog voorrang verdient.",
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda", anchor=LEIDRAAD_ANKERS["agenda"]),
         direction_agg=direction_agg,
         n_total=n,
@@ -8907,7 +8899,6 @@ def render_retention_report_html(data: dict) -> str:
         deepening_active=bool(deep_agg),
         mgmt_q=(_gespreksopener(deep_agg, ST, _startpunt_fk) if _startpunt_fk
                 else (nsp.get("first_decision") or "")),
-        review_when="Plan binnen 45-90 dagen een vervolgmoment: bespreek dan wat er is opgepakt en of dit onderwerp nog voorrang verdient.",
         opener_html=ch.opener("Waar begint het gesprek?", kicker="Prioritering & gespreksagenda", anchor=LEIDRAAD_ANKERS["agenda"]),
         direction_agg=direction_agg,
         n_total=n,
@@ -9430,7 +9421,6 @@ def render_onboarding_report_html(data: dict) -> str:
         # gelijkheidstest blijft staan als goedkope guard: hij is er om te
         # voorkomen dat de verwijzing ooit stil onwaar wordt.
         opener_op_p02=(not br_degraded_note and _ob_agenda_q == br_mgmt_q),
-        review_when="Plan een vervolgmoment rond het volgende checkpoint: bespreek dan wat er is opgepakt en of dit onderwerp nog voorrang verdient.",
         primary_why=None,
         second_why=_second_why,
         opener_html=ch.opener("Gespreksagenda", kicker="Eerste managementspoor", anchor=LEIDRAAD_ANKERS["agenda"]),

@@ -313,7 +313,7 @@ def test_aansturing_hint_verschijnt_niet_zonder_vertaalvraag(gevuld):
 def test_raster_zet_het_blok_onder_wat_er_moet_gebeuren():
     blok = _werkvragen_block(RANKED, {}, DIRECTION, "retention")
     html = _prioriteringsraster(ranked=RANKED, scan_type="retention", factor_resp_scores=RESP,
-                                deepening_active=True, mgmt_q="Opener?", review_when="Later.",
+                                deepening_active=True, mgmt_q="Opener?",
                                 opener_html="<h2>kop</h2>", direction_agg=DIRECTION,
                                 n_total=N_TOTAL, werkvragen_html=blok)
     assert html.index("Wat er moet gebeuren") < html.index("Zo maak je er een besluit van")

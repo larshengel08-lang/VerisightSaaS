@@ -404,7 +404,6 @@ def _raster(ranked):
     return _prioriteringsraster(
         ranked=ranked, scan_type="retention", factor_resp_scores={},
         deepening_active=False, mgmt_q="Testvraag?",
-        review_when="Plan binnen 45-90 dagen een vervolgmoment.",
         opener_html="<h2>Gespreksagenda</h2>", direction_agg=None, n_total=0)
 
 
@@ -420,8 +419,7 @@ def test_agenda_verwijst_naar_pagina_twee_alleen_met_rasterrijen():
 
 
 def test_onboarding_agenda_verwijst_naar_pagina_twee():
-    kw = dict(primary_theme="A (5.0/10)", second_point="B (5.5/10)", mgmt_q="V?",
-              review_when="Later.")
+    kw = dict(primary_theme="A (5.0/10)", second_point="B (5.5/10)", mgmt_q="V?")
     assert _OPENER_P02 in _eerste_managementspoor(**kw, opener_op_p02=True)
     assert _OPENER_P02 not in _eerste_managementspoor(**kw)
     assert _OPENER_P02 not in _eerste_managementspoor(
