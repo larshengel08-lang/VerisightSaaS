@@ -197,7 +197,7 @@ def test_quotes_cap_12_met_expliciete_regel():
     html = _themed_quotes(texts, "retention")
     assert "Toelichting nummer 11" in html
     assert "Toelichting nummer 12" not in html
-    assert "eerste 12 van 15 in ontvangstvolgorde" in html
+    assert "eerste 12 van 15 verschillende toelichtingen (15 antwoorden) in ontvangstvolgorde" in html
 
 
 def test_quotes_geen_thema_indeling():

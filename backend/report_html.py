@@ -99,6 +99,15 @@ MIN_QUOTES_N = 5
 MAX_QUOTES   = 12
 
 
+def _collect_open_texts(raw_texts) -> list[str]:
+    """Eén geanonimiseerde tekst per niet-leeg antwoord, in ontvangstvolgorde.
+
+    Bewust NIET ontdubbeld: het kopje telt mensen ("31 medewerkersstemmen"), en
+    _themed_quotes toont gelijke teksten één keer met hun aantal.
+    """
+    return [anonymize_text(t) for t in raw_texts if t and t.strip()]
+
+
 def _should_show_quotes(open_texts: list[str]) -> bool:
     """Gate: toon Open toelichtingen alleen als ≥ MIN_QUOTES_N niet-lege teksten."""
     return len([t for t in open_texts if t and t.strip()]) >= MIN_QUOTES_N
@@ -6487,8 +6496,12 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
 
     Trefwoord-classificatie is bewust verwijderd (besluit 2026-04-09 + spec
     2026-07-11): trefwoorden onderscheiden geen negatie ("met mijn leidinggevende
-    was niets mis" kreeg het label Leiderschap). Duiding gebeurt in de
-    begeleide managementbespreking, niet geautomatiseerd in het rapport.
+    was niets mis" kreeg het label Leiderschap). Duiding gebeurt in het
+    MT-gesprek, niet geautomatiseerd in het rapport.
+
+    `texts` bevat één tekst per antwoord (zie _collect_open_texts). Gelijke
+    teksten verschijnen één keer, met het aantal mensen dat hem schreef; zo
+    verdwijnt niet stil dat iets vaker gezegd is (bug 2026-11-23).
 
     top_fkeys/n_total: ongebruikt, alleen behouden voor call-site-compatibiliteit
     (bestaande aanroepen geven ze positioneel door). Niet nodig voor nieuwe callers.
@@ -6497,21 +6510,25 @@ def _themed_quotes(texts: list[str], scan_type: str = "exit",
         return (f'<div class="empty-state">Open toelichtingen worden getoond bij minimaal '
                 f'{MIN_QUOTES_N} antwoorden. Huidig: {len(texts)}.</div>')
 
-    note = ""
-    if len(texts) > MAX_QUOTES:
-        note = (f'<div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">'
-                f'Getoond: de eerste {MAX_QUOTES} van {len(texts)} in ontvangstvolgorde, '
-                f'geen inhoudelijke selectie.</div>')
+    counts: dict[str, int] = {}
+    for t in texts:  # dict behoudt ontvangstvolgorde van het eerste voorkomen
+        counts[t] = counts.get(t, 0) + 1
+    unique = list(counts)
 
-    seen: set[str] = set()
+    note = ""
+    if len(unique) > MAX_QUOTES:
+        note = (f'<div class="cbox" style="margin-bottom:12px;font-size:10px;color:#374151;">'
+                f'Getoond: de eerste {MAX_QUOTES} van {len(unique)} verschillende toelichtingen '
+                f'({len(texts)} antwoorden) in ontvangstvolgorde, geen inhoudelijke selectie.</div>')
+
     cards = ""
-    for t in texts[:MAX_QUOTES]:
-        if t in seen:
-            continue
-        seen.add(t)
+    for t in unique[:MAX_QUOTES]:
+        c = counts[t]
+        tally = (f'<div class="quote-anon" style="margin-top:4px;">{c} keer genoemd</div>'
+                 if c > 1 else "")
         cards += (
             f'<div class="theme-card">'
-            f'<div class="quote-txt">{_h(t)}</div></div>'
+            f'<div class="quote-txt">{_h(t)}</div>{tally}</div>'
         )
     # C2: het anonimiseringslabel stond onder elke kaart en werd zo bij twaalf
     # toelichtingen twaalf keer afgedrukt. Het geldt voor de hele lijst, dus
@@ -7046,8 +7063,7 @@ def build_report_data(campaign_id: str, db: Session) -> dict[str, Any]:
     prev_cnt    = Counter(r.preventability for r in responses if r.preventability)
     prev_dist   = dict(prev_cnt)
 
-    raw_texts  = [r.open_text_raw for r in responses if r.open_text_raw and r.open_text_raw.strip()]
-    open_texts = list(dict.fromkeys(anonymize_text(t) for t in raw_texts))
+    open_texts = _collect_open_texts(r.open_text_raw for r in responses)
 
     # Verdiepingsvragen (spec 6): alleen exit/retention hebben verdiepingsdata.
     deepening_agg: dict[str, Any] = {}
